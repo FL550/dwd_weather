@@ -16,18 +16,21 @@ _LOGGER = logging.getLogger(__name__)
 
 class DWDWeatherData:
 
-    def __init__(self, hass, latitude, longitude):
+    def __init__(self, hass, latitude, longitude, station_id):
         """Initialize the data object."""
         self._hass = hass
-        self._site = None
         self.forecast = None
 
         # Public attributes
         self.latitude = latitude
         self.longitude = longitude
 
-        # Holds the current data from the Met Office
-        self.site_id = dwdforecast.get_nearest_station_id(latitude, longitude)
+        # Holds the current data from DWD
+        if (station_id != ""):
+            self.site_id = station_id
+        else:
+            self.site_id = dwdforecast.get_nearest_station_id(
+                latitude, longitude)
         self.weather_data = dwdforecast.Weather(self.site_id)
 
     async def async_update(self):
@@ -35,7 +38,7 @@ class DWDWeatherData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
-        """Get the latest data from DWD."""
+        """Get the latest data from DWD and generate forecast array."""
         self.weather_data.update()
         forecast_data = []
         timestamp = datetime.now(timezone.utc)

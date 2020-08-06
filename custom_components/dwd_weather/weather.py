@@ -30,7 +30,7 @@ class DWDWeather(WeatherEntity):
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{self._data.latitude}_{self._data.longitude}"
+        self._unique_id = f"{self._data.weather_data.get_station_name(False).lower()}"
 
     @property
     def should_poll(self):

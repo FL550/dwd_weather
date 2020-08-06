@@ -4,10 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.const import (CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, CONF_LATITUDE, CONF_LONGITUDE, CONF_STATION_ID
+from .const import DOMAIN, CONF_STATION_ID
 
 from .connector import DWDWeatherData
 
@@ -21,13 +22,17 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     latitude = data[CONF_LATITUDE]
     longitude = data[CONF_LONGITUDE]
+    station_id = data[CONF_STATION_ID]
 
-    dwd_weather_data = DWDWeatherData(hass, latitude, longitude)
+    dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
     await dwd_weather_data.async_update()
     if dwd_weather_data.weather_data.get_station_name(False) == '':
         raise CannotConnect()
 
-    return {"site_name": dwd_weather_data.weather_data.get_station_name(False)}
+    return {
+        "site_name":
+            dwd_weather_data.weather_data.get_station_name(False).title()
+    }
 
 
 class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -40,9 +45,6 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}")
-            self._abort_if_unique_id_configured()
 
             try:
                 info = await validate_input(self.hass, user_input)
@@ -53,8 +55,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 user_input[CONF_NAME] = info["site_name"]
-                return self.async_create_entry(title=user_input[CONF_NAME],
-                                               data=user_input)
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_NAME].lower()}")
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME].title(), data=user_input)
 
         data_schema = vol.Schema(
             {
@@ -62,7 +67,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     cv.latitude,
                 vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude):
                     cv.longitude,
-                vol.Optional(CONF_STATION_ID):
+                vol.Optional(CONF_STATION_ID, default=""):
                     str,
             },)
 

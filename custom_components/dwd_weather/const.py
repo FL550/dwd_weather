@@ -13,6 +13,4 @@ DWDWEATHER_COORDINATOR = "dwd_weather_coordinator"
 DWDWEATHER_MONITORED_CONDITIONS = "dwd_weather_monitored_conditions"
 DWDWEATHER_NAME = "dwd_weather_name"
 
-CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
 CONF_STATION_ID = "station_id"

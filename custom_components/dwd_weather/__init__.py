@@ -7,9 +7,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-# from .config_flow import DWDWeatherConfigFlow  # noqa: F401
-from .const import (DOMAIN, DEFAULT_SCAN_INTERVAL, DWDWEATHER_DATA,
-                    DWDWEATHER_COORDINATOR, DWDWEATHER_NAME)  # noqa: F401
+from .const import (CONF_STATION_ID, DOMAIN, DEFAULT_SCAN_INTERVAL,
+                    DWDWEATHER_DATA, DWDWEATHER_COORDINATOR, DWDWEATHER_NAME)
 from .connector import DWDWeatherData
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,8 +25,9 @@ async def async_setup_entry(hass, entry):
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     site_name = entry.data[CONF_NAME]
+    station_id = entry.data[CONF_STATION_ID]
 
-    dwd_weather_data = DWDWeatherData(hass, latitude, longitude)
+    dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
 
     await dwd_weather_data.async_update()
     if dwd_weather_data.weather_data.get_station_name(False) == '':
