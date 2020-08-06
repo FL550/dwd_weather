@@ -4,5 +4,5 @@
         "weather"
     ],
     "iot_class": "Cloud Polling",
-    "render_readme": true
+    "render_readme": false
 }

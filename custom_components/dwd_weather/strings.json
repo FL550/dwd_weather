@@ -1,19 +1,20 @@
 {
-  "#TODO": "Check values",
   "title": "Deutscher Wetterdienst",
   "config": {
     "step": {
       "user": {
+        "description": "The latitude and longitude will be used to find the closest weather station. If you specify a station id, this will be used and latitude and longitude will be ignored. You can search available station-ids here: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
+        "title": "Deutscher Wetterdienst",
+        "station_id": "Station ID",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "station_id": "Station ID"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

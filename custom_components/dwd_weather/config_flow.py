@@ -4,10 +4,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_LATITUDE, CONF_LONGITUDE, CONF_STATION_ID
 
 from .connector import DWDWeatherData
 
@@ -62,6 +62,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     cv.latitude,
                 vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude):
                     cv.longitude,
+                vol.Optional(CONF_STATION_ID):
+                    str,
             },)
 
         return self.async_show_form(step_id="user",

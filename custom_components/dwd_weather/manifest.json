@@ -1,7 +1,8 @@
 {
   "domain": "dwd_weather",
-  "name": "DWD Weather",
+  "name": "Deutscher Wetterdienst (DWD)",
   "documentation": "https://github.com/FL550/dwd_weather",
+  "issue_tracker": "https://github.com/FL550/dwd_weather/issues",
   "dependencies": [],
   "config_flow": true,
   "codeowners": [

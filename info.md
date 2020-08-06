@@ -1,54 +1,33 @@
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
+<!-- [![GitHub Release][releases-shield]][releases] -->
 [![License][license-shield]](LICENSE)
-
 [![hacs][hacsbadge]](hacs)
-![Project Maintenance][maintenance-shield]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+<!-- [![Community Forum][forum-shield]][forum] -->
 
-[![Discord][discord-shield]][discord]
-[![Community Forum][forum-shield]][forum]
-
-_Component to integrate with [blueprint][blueprint]._
-
-**This component will set up the following platforms.**
-
-Platform | Description
--- | --
-`binary_sensor` | Show something `True` or `False`.
-`sensor` | Show info from blueprint API.
-`switch` | Switch something `True` or `False`.
-
-![example][exampleimg]
+{% if prerelease %}
+### NB!: This is a Beta version! Please report any errors and bugs!
+{% endif %}
 
 {% if not installed %}
 ## Installation
 
 1. Click install.
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Blueprint".
+1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst".
+1. Change the coordinates to your needs or insert a station_id directly. This will override the search for the nearest station.
 
 {% endif %}
 
-
 ## Configuration is done in the UI
 
+station_ids can be found [here](https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py) if needed. For further infos about the usage and reporting issuesplease visit GITHUB
+<!-- TODO Github URL -->
 <!---->
 
 ***
 
-[blueprint]: https://github.com/custom-components/blueprint
-[buymecoffee]: https://www.buymeacoffee.com/ludeeus
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/custom-components/blueprint.svg?style=for-the-badge
-[commits]: https://github.com/custom-components/blueprint/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[discord]: https://discord.gg/Qa5fW2R
-[discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
-[exampleimg]: example.png
-[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
-[forum]: https://community.home-assistant.io/
+<!-- [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge -->
+<!-- [forum]: https://community.home-assistant.io/ -->
 [license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-Joakim%20Sørensen%20%40ludeeus-blue.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/custom-components/blueprint.svg?style=for-the-badge
-[releases]: https://github.com/custom-components/blueprint/releases
+<!-- [releases]: https://github.com/custom-components/blueprint/releases -->
