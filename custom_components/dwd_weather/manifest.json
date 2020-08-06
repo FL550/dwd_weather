@@ -1,0 +1,11 @@
+{
+  "domain": "dwd_weather",
+  "name": "DWD Weather",
+  "documentation": "https://github.com/FL550/dwd_weather",
+  "dependencies": [],
+  "config_flow": true,
+  "codeowners": [
+    "@FL550"
+  ],
+  "requirements": ["simple_dwd_weatherforecast==0.9.10"]
+}
