@@ -5,7 +5,6 @@
       "user": {
         "description": "The latitude and longitude will be used to find the closest weather station. If you specify a station id, this will be used and latitude and longitude will be ignored. You can search available station-ids here: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
         "title": "Deutscher Wetterdienst",
-        "station_id": "Station ID",
         "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
