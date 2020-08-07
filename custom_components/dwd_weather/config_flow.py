@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.core import callback
 from homeassistant.const import (CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 
@@ -16,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input 
+    """Validate the user input
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
@@ -50,6 +49,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except ValueError:
+                errors["base"] = "invalid_station_id"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

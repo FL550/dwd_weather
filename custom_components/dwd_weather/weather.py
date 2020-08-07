@@ -26,11 +26,16 @@ class DWDWeather(WeatherEntity):
 
     def __init__(self, entry_data, hass_data):
         """Initialise the platform with a data instance and site."""
-        self._data = hass_data[DWDWEATHER_DATA]
+        self._connector = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{self._data.weather_data.get_station_name(False).lower()}"
+        self._unique_id = f"{self._connector.weather_data.get_station_name(False).lower()}"
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state))
 
     @property
     def should_poll(self):
@@ -50,14 +55,14 @@ class DWDWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self._data.weather_data.get_forecast_condition(
+        return self._connector.weather_data.get_forecast_condition(
             datetime.now(timezone.utc), False)
 
     @property
     def temperature(self):
         """Return the temperature."""
         return float(
-            self._data.weather_data.get_forecast_temperature(
+            self._connector.weather_data.get_forecast_temperature(
                 datetime.now(timezone.utc), False))
 
     @property
@@ -69,27 +74,27 @@ class DWDWeather(WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         return float(
-            self._data.weather_data.get_forecast_pressure(
+            self._connector.weather_data.get_forecast_pressure(
                 datetime.now(timezone.utc), False))
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
         return float(
-            self._data.weather_data.get_forecast_wind_speed(
+            self._connector.weather_data.get_forecast_wind_speed(
                 datetime.now(timezone.utc), False))
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._data.weather_data.get_forecast_wind_direction(
+        return self._connector.weather_data.get_forecast_wind_direction(
             datetime.now(timezone.utc), False)
 
     @property
     def visibility(self):
         """Return the visibility."""
         return float(
-            self._data.weather_data.get_forecast_visibility(
+            self._connector.weather_data.get_forecast_visibility(
                 datetime.now(timezone.utc), False)) / 1000
 
     @property
@@ -105,4 +110,9 @@ class DWDWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self._data.forecast
+        return self._connector.forecast
+
+    @property
+    def device_state_attributes(self):
+        """Return data validity infos."""
+        return self._connector.infos

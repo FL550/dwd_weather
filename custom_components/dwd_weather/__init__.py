@@ -22,6 +22,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass, entry):
     """Set up DWD Weather as config entry."""
 
+    # Load values from settings
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     site_name = entry.data[CONF_NAME]
@@ -29,10 +30,12 @@ async def async_setup_entry(hass, entry):
 
     dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
 
+    # Update data initially
     await dwd_weather_data.async_update()
     if dwd_weather_data.weather_data.get_station_name(False) == '':
         raise ConfigEntryNotReady()
-
+    
+    # Coordinator checks for new updates
     dwdweather_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -41,6 +44,7 @@ async def async_setup_entry(hass, entry):
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    # Save the data
     dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
     dwdweather_hass_data[entry.entry_id] = {
         DWDWEATHER_DATA: dwd_weather_data,

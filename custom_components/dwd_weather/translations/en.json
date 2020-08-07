@@ -14,6 +14,7 @@
     },
     "error": {
       "cannot_connect": "Cannot connect",
+      "invalid_station_id": "Invalid Station-ID",
       "unknown": "Unknown Error"
     },
     "abort": {
