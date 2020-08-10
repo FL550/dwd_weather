@@ -62,17 +62,20 @@ class DWDWeatherData:
                     ATTR_FORECAST_CONDITION:
                         self.weather_data.get_daily_condition(timestamp, False),
                     ATTR_FORECAST_TEMP:
-                        float(
-                            self.weather_data.get_daily_temp_max(
-                                timestamp, False)),
+                        round(
+                            float(
+                                self.weather_data.get_daily_temp_max(
+                                    timestamp, False)), 1),
                     ATTR_FORECAST_TEMP_LOW:
-                        float(
-                            self.weather_data.get_daily_temp_min(
-                                timestamp, False)),
+                        round(
+                            float(
+                                self.weather_data.get_daily_temp_min(
+                                    timestamp, False)), 1),
                     ATTR_FORECAST_PRECIPITATION:
-                        float(
-                            self.weather_data.get_daily_precipitation(
-                                timestamp, False)),
+                        round(
+                            float(
+                                self.weather_data.get_daily_precipitation(
+                                    timestamp, False)), 1),
                     "precipitation_probability":
                         int(
                             self.weather_data.

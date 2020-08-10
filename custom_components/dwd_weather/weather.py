@@ -61,9 +61,10 @@ class DWDWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return float(
-            self._connector.weather_data.get_forecast_temperature(
-                datetime.now(timezone.utc), False))
+        return round(
+            float(
+                self._connector.weather_data.get_forecast_temperature(
+                    datetime.now(timezone.utc), False)), 1)
 
     @property
     def temperature_unit(self):
@@ -73,29 +74,34 @@ class DWDWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return float(
-            self._connector.weather_data.get_forecast_pressure(
-                datetime.now(timezone.utc), False))
+        return round(
+            float(
+                self._connector.weather_data.get_forecast_pressure(
+                    datetime.now(timezone.utc), False)), 1)
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return float(
-            self._connector.weather_data.get_forecast_wind_speed(
-                datetime.now(timezone.utc), False))
+        return round(
+            float(
+                self._connector.weather_data.get_forecast_wind_speed(
+                    datetime.now(timezone.utc), False)), 1)
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return self._connector.weather_data.get_forecast_wind_direction(
-            datetime.now(timezone.utc), False)
+        return round(
+            float(
+                self._connector.weather_data.get_forecast_wind_direction(
+                    datetime.now(timezone.utc), False)), 1)
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return float(
-            self._connector.weather_data.get_forecast_visibility(
-                datetime.now(timezone.utc), False)) / 1000
+        return round(
+            float(
+                self._connector.weather_data.get_forecast_visibility(
+                    datetime.now(timezone.utc), False)) / 1000, 1)
 
     @property
     def humidity(self):
