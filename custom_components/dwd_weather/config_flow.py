@@ -22,8 +22,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     latitude = data[CONF_LATITUDE]
     longitude = data[CONF_LONGITUDE]
     station_id = data[CONF_STATION_ID]
+    _LOGGER.debug(
+        "validate_input:: CONF_LATITUDE: {}, CONF_LONGITUDE: {}, CONF_STATION_ID: {}"
+        .format(latitude, longitude, station_id))
 
     dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
+    _LOGGER.debug("Initialized new DWDWeatherData with id: {}".format(
+        dwd_weather_data.site_id))
     await dwd_weather_data.async_update()
     if dwd_weather_data.weather_data.get_station_name(False) == '':
         raise CannotConnect()

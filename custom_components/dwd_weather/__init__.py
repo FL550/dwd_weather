@@ -31,10 +31,10 @@ async def async_setup_entry(hass, entry):
     dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
 
     # Update data initially
-    await dwd_weather_data.async_update()
-    if dwd_weather_data.weather_data.get_station_name(False) == '':
-        raise ConfigEntryNotReady()
-    
+    # await dwd_weather_data.async_update()
+    # if dwd_weather_data.weather_data.get_station_name(False) == '':
+    #    raise ConfigEntryNotReady()
+
     # Coordinator checks for new updates
     dwdweather_coordinator = DataUpdateCoordinator(
         hass,

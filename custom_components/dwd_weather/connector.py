@@ -51,6 +51,8 @@ class DWDWeatherData:
             _LOGGER.info("Updating ", self.weather_data.get_station_name(False))
             self.infos["latest_update_utc"] = datetime.now(timezone.utc)
             self.infos["forecast_time_utc"] = self.weather_data.issue_time
+            _LOGGER.debug("forecast_data for station_id '{}': {}".format(
+                self.site_id, self.weather_data.forecast_data))
             forecast_data = []
             timestamp = datetime.now(timezone.utc)
             for x in range(0, 8):
