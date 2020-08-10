@@ -1,7 +1,7 @@
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]](hacs)
-<!-- [![Community Forum][forum-shield]][forum] -->
+[![Community Forum][forum-shield]][forum]
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
@@ -25,9 +25,9 @@ You can add as many stations as you like. Each will appear as an individual enti
 ***
 
 [hacs]: https://github.com/custom-components/hacs
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-<!-- [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge -->
-<!-- [forum]: https://community.home-assistant.io/ -->
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
+[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
+[forum]: https://community.home-assistant.io/t/deutscher-wetterdienst-dwd/217488
 [license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/custom-components/blueprint.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/FL550/dwd_weather.svg?style=for-the-badge
 [releases]: https://github.com/FL550/dwd_weather/releases
