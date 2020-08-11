@@ -5,6 +5,7 @@ import logging
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_PRESSURE,
     LENGTH_KILOMETERS,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_OK,
     ATTR_ATTRIBUTION,
+    PRESSURE_HPA,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -35,18 +37,36 @@ SENSOR_TYPES = {
         None,
         None,
         None,
-        True,
+        False,
     ],
     "temperature": [
         "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, False
     ],
-    # "wind_speed": [
-    #     "Wind Speed",
-    #     None,
-    #     SPEED_METERS_PER_SECOND,
-    #     "mdi:weather-windy",
-    #     False,
-    # ],
+    "dewpoint": [
+        "Dewpoint", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, False
+    ],
+    "pressure": [
+        "Pressure", DEVICE_CLASS_PRESSURE, PRESSURE_HPA, None, False
+    ],
+    "wind_speed": [
+        "Wind Speed",
+        None,
+        SPEED_METERS_PER_SECOND,
+        "mdi:weather-windy",
+        False,
+    ],
+
+    # WIND_DIRECTION = "DD" # Unit: Degrees
+    # WIND_GUSTS = "FX1" # Unit: m/s
+    # PRECIPITATION = "RR1c" # Unit: kg/m2
+    # PRECIPITATION_PROBABILITY = "wwP" # Unit: % (0..100)
+    # PRECIPITATION_DURATION = "DRR1" # Unit: s
+    # CLOUD_COVERAGE = "N" # Unit: % (0..100)
+    # VISIBILITY = "VV" # Unit: m
+    # SUN_DURATION = "SunD1" # Unit: s
+    # SUN_IRRADIANCE = "Rad1h" # Unit: kJ/m2
+    # FOG_PROBABILITY = "wwM" # Unit: % (0..100)
+    # HUMIDITY
     # "wind_direction": [
     #     "Wind Direction", None, None, "mdi:compass-outline", False
     # ],
@@ -146,10 +166,29 @@ class DWDWeatherForecastSensor(Entity):
         """Return the state attributes of the device."""
         attributes = {}
 
-        if self._type == "temperature":
-            attributes["data"] = self._connector.get_temperature_hourly()
-        elif self._type == "weather":
+        if self._type == "weather":
             attributes["data"] = self._connector.get_condition_hourly()
+        elif self._type == "temperature":
+            attributes["data"] = self._connector.get_temperature_hourly()
+        elif self._type == "dewpoint":
+            attributes["data"] = self._connector.get_dewpoint_hourly()
+        elif self._type == "pressure":
+            attributes["data"] = self._connector.get_pressure_hourly()    
+        elif self._type == "wind_speed":
+            attributes["data"] = self._connector.get_wind_speed_hourly()
+
+        # WIND_DIRECTION = "DD" # Unit: Degrees
+    # WIND_GUSTS = "FX1" # Unit: m/s
+    # PRECIPITATION = "RR1c" # Unit: kg/m2
+    # PRECIPITATION_PROBABILITY = "wwP" # Unit: % (0..100)
+    # PRECIPITATION_DURATION = "DRR1" # Unit: s
+    # CLOUD_COVERAGE = "N" # Unit: % (0..100)
+    # VISIBILITY = "VV" # Unit: m
+    # SUN_DURATION = "SunD1" # Unit: s
+    # SUN_IRRADIANCE = "Rad1h" # Unit: kJ/m2
+    # FOG_PROBABILITY = "wwM" # Unit: % (0..100)
+    # HUMIDITY
+
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[
@@ -159,22 +198,6 @@ class DWDWeatherForecastSensor(Entity):
             ATTR_STATION_NAME]
         attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attributes
-        # if self._type == "visibility" and hasattr(self.metoffice_now,
-        #                                           "visibility"):
-        #     value = VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)
-
-        # elif self._type == "weather" and hasattr(self.metoffice_now,
-        #                                          self._type):
-        #     value = [
-        #         k for k, v in CONDITION_CLASSES.items()
-        #         if self.metoffice_now.weather.value in v
-        #     ][0]
-
-        # elif hasattr(self.metoffice_now, self._type):
-        #     value = getattr(self.metoffice_now, self._type)
-
-        #     if not isinstance(value, int):
-        #         value = value.value
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
