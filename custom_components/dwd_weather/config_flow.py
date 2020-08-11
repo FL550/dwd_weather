@@ -28,14 +28,14 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
     _LOGGER.debug("Initialized new DWDWeatherData with id: {}".format(
-        dwd_weather_data.site_id))
+        dwd_weather_data.station_id))
     await dwd_weather_data.async_update()
-    if dwd_weather_data.weather_data.get_station_name(False) == '':
+    if dwd_weather_data.dwd_weather.get_station_name(False) == '':
         raise CannotConnect()
 
     return {
         "site_name":
-            dwd_weather_data.weather_data.get_station_name(False).title()
+            dwd_weather_data.dwd_weather.get_station_name(False).title()
     }
 
 

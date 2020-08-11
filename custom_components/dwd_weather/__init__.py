@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry):
 
     # Fetch initial data so we have data when entities subscribe
     await dwdweather_coordinator.async_refresh()
-    if dwd_weather_data.weather_data.get_station_name == '':
+    if dwd_weather_data.dwd_weather.get_station_name == '':
         raise ConfigEntryNotReady()
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "weather"))

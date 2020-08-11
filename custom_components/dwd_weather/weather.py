@@ -30,7 +30,7 @@ class DWDWeather(WeatherEntity):
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{self._connector.weather_data.get_station_name(False).lower()}"
+        self._unique_id = f"{self._connector.dwd_weather.get_station_name(False).lower()}"
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
@@ -55,16 +55,12 @@ class DWDWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self._connector.weather_data.get_forecast_condition(
-            datetime.now(timezone.utc), False)
+        return self._connector.get_condition()
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return round(
-            float(
-                self._connector.weather_data.get_forecast_temperature(
-                    datetime.now(timezone.utc), False)), 1)
+        return self._connector.get_temperature()
 
     @property
     def temperature_unit(self):
@@ -74,39 +70,27 @@ class DWDWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return round(
-            float(
-                self._connector.weather_data.get_forecast_pressure(
-                    datetime.now(timezone.utc), False)), 1)
+        return self._connector.get_pressure()
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return round(
-            float(
-                self._connector.weather_data.get_forecast_wind_speed(
-                    datetime.now(timezone.utc), False)), 1)
+        return self._connector.get_wind_speed()
 
     @property
     def wind_bearing(self):
         """Return the wind direction."""
-        return round(
-            float(
-                self._connector.weather_data.get_forecast_wind_direction(
-                    datetime.now(timezone.utc), False)), 1)
+        return self._connector.get_wind_direction()
 
     @property
     def visibility(self):
         """Return the visibility."""
-        return round(
-            float(
-                self._connector.weather_data.get_forecast_visibility(
-                    datetime.now(timezone.utc), False)) / 1000, 1)
+        return self._connector.get_visibility()
 
     @property
     def humidity(self):
         """Return the relative humidity."""
-        return None
+        return self._connector.get_humidity()
 
     @property
     def attribution(self):
