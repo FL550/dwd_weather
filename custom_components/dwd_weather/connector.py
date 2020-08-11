@@ -12,7 +12,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
 )
 
-from .const import (ATTR_LATEST_UPDATE, ATTR_ISSUE_TIME)
+from .const import (ATTR_LATEST_UPDATE, ATTR_ISSUE_TIME, ATTR_STATION_ID,
+                    ATTR_STATION_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +24,8 @@ class DWDWeatherData:
         """Initialize the data object."""
         self._hass = hass
         self.forecast = None
+        self.station_id = None
+        self.latest_update = None
 
         # Public attributes
         self.latitude = latitude
@@ -53,7 +56,12 @@ class DWDWeatherData:
         else:
             _LOGGER.info("Updating ", self.dwd_weather.get_station_name(False))
             self.infos[ATTR_LATEST_UPDATE] = datetime.now(timezone.utc)
+            self.latest_update = datetime.now(timezone.utc)
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
+            self.infos[ATTR_STATION_ID] = self.dwd_weather.station_id
+            self.infos[ATTR_STATION_NAME] = self.dwd_weather.get_station_name(
+                False)
+
             _LOGGER.debug("forecast_data for station_id '{}': {}".format(
                 self.station_id, self.dwd_weather.forecast_data))
             forecast_data = []
@@ -67,11 +75,11 @@ class DWDWeatherData:
                     ATTR_FORECAST_TEMP:
                         self.dwd_weather.get_daily_max(
                             dwdforecast.WeatherDataType.TEMPERATURE, timestamp,
-                            False) - 274.1,
+                            False) - 273.1,
                     ATTR_FORECAST_TEMP_LOW:
                         self.dwd_weather.get_daily_min(
                             dwdforecast.WeatherDataType.TEMPERATURE, timestamp,
-                            False) - 274.1,
+                            False) - 273.1,
                     ATTR_FORECAST_PRECIPITATION:
                         self.dwd_weather.get_daily_sum(
                             dwdforecast.WeatherDataType.PRECIPITATION,
@@ -93,7 +101,7 @@ class DWDWeatherData:
     def get_temperature(self):
         return self.dwd_weather.get_forecast_data(
             dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc),
-            False) - 274.1
+            False) - 273.1
 
     def get_pressure(self):
         return self.dwd_weather.get_forecast_data(
@@ -122,11 +130,41 @@ class DWDWeatherData:
         rh_c3 = 241.2
         T = self.dwd_weather.get_forecast_data(
             dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc),
-            False)
+            False) - 273.1
         TD = self.dwd_weather.get_forecast_data(
             dwdforecast.WeatherDataType.DEWPOINT, datetime.now(timezone.utc),
-            False)
+            False) - 273.1
         _LOGGER.debug("T: {}, TD: {}".format(T, TD))
         RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T /
                                                            (rh_c3 + T)))
         return round(RH, 1)
+
+    def get_temperature_hourly(self):
+        data = []
+        for key in self.dwd_weather.forecast_data:
+            item = self.dwd_weather.forecast_data[key]
+            data.append({
+                ATTR_FORECAST_TIME:
+                    key,
+                "value":
+                    round(
+                        item[dwdforecast.WeatherDataType.TEMPERATURE.value] -
+                        273.1, 1),
+            })
+        return data
+
+    def get_condition_hourly(self):
+        data = []
+        for key in self.dwd_weather.forecast_data:
+            item = self.dwd_weather.forecast_data[key][
+                dwdforecast.WeatherDataType.CONDITION.value]
+            if item != "-":
+                value = self.dwd_weather.weather_codes[item][0]
+            else:
+                value = None
+            data.append({
+                ATTR_FORECAST_TIME: key,
+                "value": value,
+            })
+
+        return data

@@ -1,7 +1,8 @@
 {
     "name": "Deutscher Wetterdienst",
     "domains": [
-        "weather"
+        "weather",
+        "sensor"
     ],
     "iot_class": "Cloud Polling",
     "render_readme": false

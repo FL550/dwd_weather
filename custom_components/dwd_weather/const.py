@@ -7,6 +7,8 @@ DEFAULT_NAME = "DWD Weather"
 ATTRIBUTION = "Data provided by Deutscher Wetterdienst (DWD)"
 ATTR_LATEST_UPDATE = "latest_update_utc"
 ATTR_ISSUE_TIME = "forecast_time_utc"
+ATTR_STATION_ID = "station_id"
+ATTR_STATION_NAME = "station_name"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 

@@ -1,8 +1,10 @@
 """The DWD Weather component."""
 
 import logging
+import asyncio
 
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -13,13 +15,15 @@ from .connector import DWDWeatherData
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor", "weather"]
+
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured DWD Weather."""
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DWD Weather as config entry."""
 
     # Load values from settings
@@ -56,8 +60,11 @@ async def async_setup_entry(hass, entry):
     await dwdweather_coordinator.async_refresh()
     if dwd_weather_data.dwd_weather.get_station_name == '':
         raise ConfigEntryNotReady()
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "weather"))
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component))
+
     return True
 
 
@@ -66,8 +73,14 @@ async def async_update(self):
     return await self._hass.async_add_executor_job(self._update)
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, "weather")
-    return True
+    unload_ok = all(await asyncio.gather(*[
+        hass.config_entries.async_forward_entry_unload(entry, component)
+        for component in PLATFORMS
+    ]))
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload_ok
