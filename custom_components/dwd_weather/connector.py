@@ -66,7 +66,7 @@ class DWDWeatherData:
                 self.station_id, self.dwd_weather.forecast_data))
             forecast_data = []
             timestamp = datetime.now(timezone.utc)
-            for x in range(0, 8):
+            for x in range(0, 9):
                 forecast_data.append({
                     ATTR_FORECAST_TIME:
                         timestamp.strftime("%Y-%m-%d"),
@@ -282,7 +282,7 @@ class DWDWeatherData:
                     key,
                 "value":
                     round(
-                        item[dwdforecast.WeatherDataType.CLOUD_COVERAGE.value] /
+                        item[dwdforecast.WeatherDataType.VISIBILITY.value] /
                         1000, 1),
             })
         return data

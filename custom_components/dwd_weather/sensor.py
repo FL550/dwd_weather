@@ -14,6 +14,8 @@ from homeassistant.const import (
     STATE_OK,
     ATTR_ATTRIBUTION,
     PRESSURE_HPA,
+    DEGREE,
+    TIME_SECONDS,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -36,18 +38,18 @@ SENSOR_TYPES = {
         "Weather",
         None,
         None,
-        None,
+        "mdi:weather-partly-cloudy",
         False,
     ],
     "temperature": [
-        "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, False
+        "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
+        "mdi:temperature-celsius", False
     ],
     "dewpoint": [
-        "Dewpoint", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None, False
+        "Dewpoint", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
+        "mdi:temperature-celsius", False
     ],
-    "pressure": [
-        "Pressure", DEVICE_CLASS_PRESSURE, PRESSURE_HPA, None, False
-    ],
+    "pressure": ["Pressure", DEVICE_CLASS_PRESSURE, PRESSURE_HPA, None, False],
     "wind_speed": [
         "Wind Speed",
         None,
@@ -55,50 +57,91 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         False,
     ],
-
-    # WIND_DIRECTION = "DD" # Unit: Degrees
-    # WIND_GUSTS = "FX1" # Unit: m/s
-    # PRECIPITATION = "RR1c" # Unit: kg/m2
-    # PRECIPITATION_PROBABILITY = "wwP" # Unit: % (0..100)
-    # PRECIPITATION_DURATION = "DRR1" # Unit: s
-    # CLOUD_COVERAGE = "N" # Unit: % (0..100)
-    # VISIBILITY = "VV" # Unit: m
-    # SUN_DURATION = "SunD1" # Unit: s
-    # SUN_IRRADIANCE = "Rad1h" # Unit: kJ/m2
-    # FOG_PROBABILITY = "wwM" # Unit: % (0..100)
-    # HUMIDITY
-    # "wind_direction": [
-    #     "Wind Direction", None, None, "mdi:compass-outline", False
-    # ],
-    # "wind_gust": [
-    #     "Wind Gust", None, SPEED_METERS_PER_SECOND, "mdi:weather-windy", False
-    # ],
-    # "visibility": ["Visibility", None, None, "mdi:eye", False],
-    # "visibility_distance": [
-    #     "Visibility Distance",
-    #     None,
-    #     LENGTH_KILOMETERS,
-    #     "mdi:eye",
-    #     False,
-    # ],
-    # "precipitation": [
-    #     "Probability of Precipitation",
-    #     None,
-    #     UNIT_PERCENTAGE,
-    #     "mdi:weather-rainy",
-    #     False,
-    # ],
-    # "humidity": [
-    #     "Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE, None, False
-    # ],
+    "wind_direction": [
+        "Wind Direction",
+        None,
+        DEGREE,
+        "mdi:compass-outline",
+        False,
+    ],
+    "wind_gusts": [
+        "Wind Gusts",
+        None,
+        SPEED_METERS_PER_SECOND,
+        "mdi:weather-windy",
+        False,
+    ],
+    "precipitation": [
+        "Precipitation",
+        None,
+        "kg/m^2",
+        "mdi:weather-rainy",
+        False,
+    ],
+    "precipitation_probability": [
+        "Precipitation Probability",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:weather-rainy",
+        False,
+    ],
+    "precipitation_duration": [
+        "Precipitation Duration",
+        None,
+        TIME_SECONDS,
+        "mdi:weather-rainy",
+        False,
+    ],
+    "cloud_coverage": [
+        "Cloud Coverage",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:cloud",
+        False,
+    ],
+    "visibility": [
+        "Visibility",
+        None,
+        LENGTH_KILOMETERS,
+        "mdi:eye",
+        False,
+    ],
+    "sun_duration": [
+        "Sun Duration",
+        None,
+        TIME_SECONDS,
+        "mdi:weather-sunset",
+        False,
+    ],
+    "sun_irradiance": [
+        "Sun Irradiance",
+        None,
+        "kJ/m^2",
+        "mdi:weather-sunny-alert",
+        False,
+    ],
+    "fog_probability": [
+        "Fog Probability",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:weather-fog",
+        False,
+    ],
+    "humidity": [
+        "Humidity",
+        DEVICE_CLASS_HUMIDITY,
+        UNIT_PERCENTAGE,
+        "mdi:water-percent",
+        False,
+    ],
 }
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType,
                             async_add_entities) -> None:
-    """Set up the Met Office weather sensor platform."""
+    """Set up the DWD weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
-
+    _LOGGER.debug("Sensor async_setup_entry")
     async_add_entities(
         [
             DWDWeatherForecastSensor(entry.data, hass_data, sensor_type)
@@ -109,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType,
 
 
 class DWDWeatherForecastSensor(Entity):
-    """Implementation of a Met Office current weather condition sensor."""
+    """Implementation of a DWD current weather condition sensor."""
 
     def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
@@ -173,29 +216,40 @@ class DWDWeatherForecastSensor(Entity):
         elif self._type == "dewpoint":
             attributes["data"] = self._connector.get_dewpoint_hourly()
         elif self._type == "pressure":
-            attributes["data"] = self._connector.get_pressure_hourly()    
+            attributes["data"] = self._connector.get_pressure_hourly()
         elif self._type == "wind_speed":
             attributes["data"] = self._connector.get_wind_speed_hourly()
-
-        # WIND_DIRECTION = "DD" # Unit: Degrees
-    # WIND_GUSTS = "FX1" # Unit: m/s
-    # PRECIPITATION = "RR1c" # Unit: kg/m2
-    # PRECIPITATION_PROBABILITY = "wwP" # Unit: % (0..100)
-    # PRECIPITATION_DURATION = "DRR1" # Unit: s
-    # CLOUD_COVERAGE = "N" # Unit: % (0..100)
-    # VISIBILITY = "VV" # Unit: m
-    # SUN_DURATION = "SunD1" # Unit: s
-    # SUN_IRRADIANCE = "Rad1h" # Unit: kJ/m2
-    # FOG_PROBABILITY = "wwM" # Unit: % (0..100)
-    # HUMIDITY
-
+        elif self._type == "wind_direction":
+            attributes["data"] = self._connector.get_wind_direction_hourly()
+        elif self._type == "wind_gusts":
+            attributes["data"] = self._connector.get_wind_gusts_hourly()
+        elif self._type == "precipitation":
+            attributes["data"] = self._connector.get_precipitation_hourly()
+        elif self._type == "precipitation_probability":
+            attributes[
+                "data"] = self._connector.get_precipitation_probability_hourly(
+                )
+        elif self._type == "precipitation_duration":
+            attributes[
+                "data"] = self._connector.get_precipitation_duration_hourly()
+        elif self._type == "cloud_coverage":
+            attributes["data"] = self._connector.get_cloud_coverage_hourly()
+        elif self._type == "visibility":
+            attributes["data"] = self._connector.get_visibility_hourly()
+        elif self._type == "sun_duration":
+            attributes["data"] = self._connector.get_sun_duration_hourly()
+        elif self._type == "sun_irradiance":
+            attributes["data"] = self._connector.get_sun_irradiance_hourly()
+        elif self._type == "fog_probability":
+            attributes["data"] = self._connector.get_fog_probability_hourly()
+        elif self._type == "humidity":
+            attributes["data"] = self._connector.get_humidity_hourly()
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[
             ATTR_LATEST_UPDATE]
         attributes[ATTR_STATION_ID] = self._connector.infos[ATTR_STATION_ID]
-        attributes[ATTR_STATION_NAME] = self._connector.infos[
-            ATTR_STATION_NAME]
+        attributes[ATTR_STATION_NAME] = self._connector.infos[ATTR_STATION_NAME]
         attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attributes
 

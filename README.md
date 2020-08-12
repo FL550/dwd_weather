@@ -20,6 +20,33 @@ The configuration is done via UI. If you insert a station_id in the setup dialog
 
 You can add as many stations as you like. Each will appear as an individual entity in home-assistant. You can add more stations by repeating the second step of the install instructions.
 
+# Additional sensor values
+
+This integration allows you to add a hourly forecast for the next 10 days of the following values:
+
+- Weather condition
+- Temperature
+- Dewpoint
+- Pressure
+- Wind Speed
+- Wind Direction
+- Wind Gusts
+- Precipitation
+- Precipitation Probability
+- Precipitation Duration
+- Cloud Coverage
+- Visibility
+- Sun Duration
+- Sun Irradiance
+- Fog Probability
+- Humidity
+
+The sensors are disabled per default, as they contain a lot of data. 
+
+You can enable the ones you like in HA UI under "Configuration" -> "Entities" -> click on the filter icon on the right -> Check "Show diabled entities" -> Check the ones you like to enable -> Click "ENABLE SELECTED" at the top -> Confirm the next dialog
+
+The sensor values will be set when the next update of dwd_weather is scheduled by HA. This is done every 15 minutes. You can skip the waiting time by restarting HA.
+
 <!---->
 
 ***
