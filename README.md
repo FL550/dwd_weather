@@ -47,6 +47,14 @@ You can enable the ones you like in HA UI under "Configuration" -> "Entities" ->
 
 The sensor values will be set when the next update of dwd_weather is scheduled by HA. This is done every 15 minutes. You can skip the waiting time by restarting HA.
 
+## Help and Contribution
+
+Feel free to open an issue if you find one and I will do my best to help you. If you want to contribute, your help is appreciated! If you want to add a new feature, add a pull request first so we can chat about the details.
+
+## Licenses
+
+This package uses public data from [DWD OpenData](https://www.dwd.de/DE/leistungen/opendata/opendata.html). The Copyright can be viewed [here](https://www.dwd.de/DE/service/copyright/copyright_node.html).
+
 <!---->
 
 ***
