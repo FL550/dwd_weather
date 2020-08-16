@@ -8,5 +8,5 @@
   "codeowners": [
     "@FL550"
   ],
-  "requirements": ["simple_dwd_weatherforecast==1.0.2"]
+  "requirements": ["simple_dwd_weatherforecast==1.0.3"]
 }
