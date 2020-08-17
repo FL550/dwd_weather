@@ -1,21 +1,25 @@
 """Support for DWD weather service."""
 import logging
-from datetime import datetime, timezone
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import (
-    TEMP_CELSIUS,)
-
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (DEFAULT_NAME, ATTRIBUTION, DOMAIN, DWDWEATHER_DATA,
-                    DWDWEATHER_COORDINATOR, DWDWEATHER_NAME)
+from .const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    DWDWEATHER_COORDINATOR,
+    DWDWEATHER_DATA,
+    DWDWEATHER_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+) -> None:
     """Add a weather entity from a config_entry."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([DWDWeather(entry.data, hass_data)], False)
@@ -30,12 +34,15 @@ class DWDWeather(WeatherEntity):
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{self._connector.dwd_weather.get_station_name(False).lower()}"
+        self._unique_id = (
+            f"{self._connector.dwd_weather.get_station_name(False).lower()}"
+        )
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state))
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     @property
     def should_poll(self):

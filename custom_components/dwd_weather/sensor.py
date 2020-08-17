@@ -1,28 +1,36 @@
-"""Support for Deutscher Wetterdienst weather service."""
+"""Sensor for Deutscher Wetterdienst weather service."""
 
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_PRESSURE,
-    LENGTH_KILOMETERS,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
-    STATE_UNAVAILABLE,
-    STATE_OK,
     ATTR_ATTRIBUTION,
-    PRESSURE_HPA,
     DEGREE,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    LENGTH_KILOMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    STATE_OK,
+    STATE_UNAVAILABLE,
+    TEMP_CELSIUS,
     TIME_SECONDS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (DOMAIN, DWDWEATHER_DATA, DWDWEATHER_COORDINATOR,
-                    DWDWEATHER_NAME, ATTRIBUTION, ATTR_LATEST_UPDATE,
-                    ATTR_ISSUE_TIME, ATTR_STATION_ID, ATTR_STATION_NAME)
+from .const import (
+    ATTR_ISSUE_TIME,
+    ATTR_LATEST_UPDATE,
+    ATTR_STATION_ID,
+    ATTR_STATION_NAME,
+    ATTRIBUTION,
+    DOMAIN,
+    DWDWEATHER_COORDINATOR,
+    DWDWEATHER_DATA,
+    DWDWEATHER_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,20 +42,20 @@ ATTR_SITE_NAME = "site_name"
 # Sensor types are defined as:
 #   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
 SENSOR_TYPES = {
-    "weather": [
-        "Weather",
-        None,
-        None,
-        "mdi:weather-partly-cloudy",
+    "weather": ["Weather", None, None, "mdi:weather-partly-cloudy", False],
+    "temperature": [
+        "Temperature",
+        DEVICE_CLASS_TEMPERATURE,
+        TEMP_CELSIUS,
+        "mdi:temperature-celsius",
         False,
     ],
-    "temperature": [
-        "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
-        "mdi:temperature-celsius", False
-    ],
     "dewpoint": [
-        "Dewpoint", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS,
-        "mdi:temperature-celsius", False
+        "Dewpoint",
+        DEVICE_CLASS_TEMPERATURE,
+        TEMP_CELSIUS,
+        "mdi:temperature-celsius",
+        False,
     ],
     "pressure": ["Pressure", DEVICE_CLASS_PRESSURE, PRESSURE_HPA, None, False],
     "wind_speed": [
@@ -57,13 +65,7 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         False,
     ],
-    "wind_direction": [
-        "Wind Direction",
-        None,
-        DEGREE,
-        "mdi:compass-outline",
-        False,
-    ],
+    "wind_direction": ["Wind Direction", None, DEGREE, "mdi:compass-outline", False],
     "wind_gusts": [
         "Wind Gusts",
         None,
@@ -71,13 +73,7 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         False,
     ],
-    "precipitation": [
-        "Precipitation",
-        None,
-        "kg/m^2",
-        "mdi:weather-rainy",
-        False,
-    ],
+    "precipitation": ["Precipitation", None, "kg/m^2", "mdi:weather-rainy", False],
     "precipitation_probability": [
         "Precipitation Probability",
         None,
@@ -92,27 +88,9 @@ SENSOR_TYPES = {
         "mdi:weather-rainy",
         False,
     ],
-    "cloud_coverage": [
-        "Cloud Coverage",
-        None,
-        UNIT_PERCENTAGE,
-        "mdi:cloud",
-        False,
-    ],
-    "visibility": [
-        "Visibility",
-        None,
-        LENGTH_KILOMETERS,
-        "mdi:eye",
-        False,
-    ],
-    "sun_duration": [
-        "Sun Duration",
-        None,
-        TIME_SECONDS,
-        "mdi:weather-sunset",
-        False,
-    ],
+    "cloud_coverage": ["Cloud Coverage", None, UNIT_PERCENTAGE, "mdi:cloud", False],
+    "visibility": ["Visibility", None, LENGTH_KILOMETERS, "mdi:eye", False],
+    "sun_duration": ["Sun Duration", None, TIME_SECONDS, "mdi:weather-sunset", False],
     "sun_irradiance": [
         "Sun Irradiance",
         None,
@@ -137,8 +115,9 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+) -> None:
     """Set up the DWD weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
     _LOGGER.debug("Sensor async_setup_entry")
@@ -226,12 +205,9 @@ class DWDWeatherForecastSensor(Entity):
         elif self._type == "precipitation":
             attributes["data"] = self._connector.get_precipitation_hourly()
         elif self._type == "precipitation_probability":
-            attributes[
-                "data"] = self._connector.get_precipitation_probability_hourly(
-                )
+            attributes["data"] = self._connector.get_precipitation_probability_hourly()
         elif self._type == "precipitation_duration":
-            attributes[
-                "data"] = self._connector.get_precipitation_duration_hourly()
+            attributes["data"] = self._connector.get_precipitation_duration_hourly()
         elif self._type == "cloud_coverage":
             attributes["data"] = self._connector.get_cloud_coverage_hourly()
         elif self._type == "visibility":
@@ -246,8 +222,7 @@ class DWDWeatherForecastSensor(Entity):
             attributes["data"] = self._connector.get_humidity_hourly()
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
-        attributes[ATTR_LATEST_UPDATE] = self._connector.infos[
-            ATTR_LATEST_UPDATE]
+        attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]
         attributes[ATTR_STATION_ID] = self._connector.infos[ATTR_STATION_ID]
         attributes[ATTR_STATION_NAME] = self._connector.infos[ATTR_STATION_NAME]
         attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
@@ -256,7 +231,8 @@ class DWDWeatherForecastSensor(Entity):
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state))
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self):
         """Schedule a custom update via the common entity update service."""
@@ -275,4 +251,7 @@ class DWDWeatherForecastSensor(Entity):
     @property
     def available(self):
         """Return if state is available."""
-        return self._connector.station_id is not None and self._connector.latest_update is not None
+        return (
+            self._connector.station_id is not None
+            and self._connector.latest_update is not None
+        )

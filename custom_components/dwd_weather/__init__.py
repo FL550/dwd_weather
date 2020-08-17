@@ -1,17 +1,23 @@
 """The DWD Weather component."""
 
-import logging
 import asyncio
+import logging
 
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (CONF_STATION_ID, DOMAIN, DEFAULT_SCAN_INTERVAL,
-                    DWDWEATHER_DATA, DWDWEATHER_COORDINATOR, DWDWEATHER_NAME)
 from .connector import DWDWeatherData
+from .const import (
+    CONF_STATION_ID,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    DWDWEATHER_COORDINATOR,
+    DWDWEATHER_DATA,
+    DWDWEATHER_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,12 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Fetch initial data so we have data when entities subscribe
     await dwdweather_coordinator.async_refresh()
-    if dwd_weather_data.dwd_weather.get_station_name == '':
+    if dwd_weather_data.dwd_weather.get_station_name == "":
         raise ConfigEntryNotReady()
 
     for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component))
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -75,10 +82,14 @@ async def async_update(self):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(await asyncio.gather(*[
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in PLATFORMS
-    ]))
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
