@@ -71,30 +71,37 @@ class DWDWeatherData:
             forecast_data = []
             timestamp = datetime.now(timezone.utc)
             for x in range(0, 9):
+                temp_max = self.dwd_weather.get_daily_max(
+                    dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
+                )
+                if temp_max is not None:
+                    temp_max -= 273.1
+
+                temp_min = self.dwd_weather.get_daily_min(
+                    dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
+                )
+                if temp_min is not None:
+                    temp_min -= 273.1
+
+                precipitation_prop = self.dwd_weather.get_daily_max(
+                    dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
+                    timestamp,
+                    False,
+                )
+                if precipitation_prop is not None:
+                    precipitation_prop = int(precipitation_prop)
                 forecast_data.append(
                     {
                         ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%d"),
                         ATTR_FORECAST_CONDITION: self.dwd_weather.get_daily_condition(
                             timestamp, False
                         ),
-                        ATTR_FORECAST_TEMP: self.dwd_weather.get_daily_max(
-                            dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
-                        )
-                        - 273.1,
-                        ATTR_FORECAST_TEMP_LOW: self.dwd_weather.get_daily_min(
-                            dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
-                        )
-                        - 273.1,
+                        ATTR_FORECAST_TEMP: temp_max,
+                        ATTR_FORECAST_TEMP_LOW: temp_min,
                         ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_daily_sum(
                             dwdforecast.WeatherDataType.PRECIPITATION, timestamp, False
                         ),
-                        "precipitation_probability": int(
-                            self.dwd_weather.get_daily_max(
-                                dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
-                                timestamp,
-                                False,
-                            )
-                        ),  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
+                        "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
                     }
                 )
                 timestamp = timestamp + timedelta(days=1)
@@ -386,4 +393,3 @@ class DWDWeatherData:
             RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T / (rh_c3 + T)))
             data.append({ATTR_FORECAST_TIME: key, "value": round(RH, 1)})
         return data
-
