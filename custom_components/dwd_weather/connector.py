@@ -136,7 +136,7 @@ class DWDWeatherData:
                 dwdforecast.WeatherDataType.WIND_SPEED,
                 datetime.now(timezone.utc),
                 False,
-            ),
+            ) * 3.6,
             1,
         )
 

@@ -22,6 +22,8 @@ You can add as many stations as you like. Each will appear as an individual enti
 
 # Additional sensor values
 
+## !!!These are only needed when you want hourly data. Daily values are included in the weather entity!!!
+
 This integration allows you to add a hourly forecast for the next 10 days of the following values:
 
 - Weather condition
