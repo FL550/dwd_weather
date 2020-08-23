@@ -1,7 +1,8 @@
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]](hacs)
-<!-- [![Community Forum][forum-shield]][forum] -->
+[![Community Forum][forum-shield]][forum]
+[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
@@ -61,9 +62,11 @@ If you insert a station_id, this will override the coordinates and use the speci
 
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-<!-- [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge -->
-<!-- [forum]: https://community.home-assistant.io/ -->
+[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
+[forum]: https://community.home-assistant.io/t/deutscher-wetterdienst-dwd/217488
 [license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/custom-components/blueprint.svg?style=for-the-badge
 [releases]: https://github.com/FL550/dwd_weather/releases
 [github]: https://github.com/FL550/dwd_weather
+[buymecoffee]: https://www.buymeacoffee.com/FL550
+[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=for-the-badge
