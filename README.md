@@ -2,6 +2,7 @@
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]](hacs)
 [![Community Forum][forum-shield]][forum]
+[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
@@ -68,3 +69,5 @@ This package uses public data from [DWD OpenData](https://www.dwd.de/DE/leistung
 [license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/FL550/dwd_weather.svg?style=for-the-badge
 [releases]: https://github.com/FL550/dwd_weather/releases
+[buymecoffee]: https://www.buymeacoffee.com/FL550
+[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=for-the-badge
