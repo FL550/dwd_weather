@@ -6,7 +6,9 @@
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
-This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html).
+This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html). 
+
+_Please note, that the "current" weather values are not measured values. The values shown are the forecasted values for the actual hour. The forecast itself is updated every 6 hours. If anyone knows a source for actual measurements, please let me know._
 
 # Installation
 
