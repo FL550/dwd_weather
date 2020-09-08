@@ -113,32 +113,25 @@ class DWDWeatherData:
         )
 
     def get_temperature(self):
-        return (
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.TEMPERATURE,
-                datetime.now(timezone.utc),
-                False,
-            )
-            - 273.1
+        value = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc), False,
         )
+        if value is not None:
+            return value - 273.1
 
     def get_pressure(self):
-        return (
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.PRESSURE, datetime.now(timezone.utc), False
-            )
-            / 100
+        value = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.PRESSURE, datetime.now(timezone.utc), False,
         )
+        if value is not None:
+            return value / 100
 
     def get_wind_speed(self):
-        return round(
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.WIND_SPEED,
-                datetime.now(timezone.utc),
-                False,
-            ) * 3.6,
-            1,
+        value = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.WIND_SPEED, datetime.now(timezone.utc), False,
         )
+        if value is not None:
+            return round(value * 3.6, 1,)
 
     def get_wind_direction(self):
         return self.dwd_weather.get_forecast_data(
@@ -148,36 +141,27 @@ class DWDWeatherData:
         )
 
     def get_visibility(self):
-        return round(
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.VISIBILITY,
-                datetime.now(timezone.utc),
-                False,
-            )
-            / 1000,
-            1,
+        value = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.VISIBILITY, datetime.now(timezone.utc), False,
         )
+        if value is not None:
+            return round(value / 1000, 1,)
 
     def get_humidity(self):
         rh_c2 = 17.5043
         rh_c3 = 241.2
-        T = (
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.TEMPERATURE,
-                datetime.now(timezone.utc),
-                False,
-            )
-            - 273.1
+        T = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc), False,
         )
-        TD = (
-            self.dwd_weather.get_forecast_data(
-                dwdforecast.WeatherDataType.DEWPOINT, datetime.now(timezone.utc), False
-            )
-            - 273.1
+        TD = self.dwd_weather.get_forecast_data(
+            dwdforecast.WeatherDataType.DEWPOINT, datetime.now(timezone.utc), False
         )
-        _LOGGER.debug("T: {}, TD: {}".format(T, TD))
-        RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T / (rh_c3 + T)))
-        return round(RH, 1)
+        if T is not None and TD is not None:
+            T -= 273.1
+            TD -= 273.1
+            _LOGGER.debug("T: {}, TD: {}".format(T, TD))
+            RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T / (rh_c3 + T)))
+            return round(RH, 1)
 
     def get_condition_hourly(self):
         data = []
