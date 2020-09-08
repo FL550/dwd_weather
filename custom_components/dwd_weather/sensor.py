@@ -15,7 +15,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -77,7 +76,7 @@ SENSOR_TYPES = {
     "precipitation_probability": [
         "Precipitation Probability",
         None,
-        UNIT_PERCENTAGE,
+        "%",
         "mdi:weather-rainy",
         False,
     ],
@@ -88,7 +87,7 @@ SENSOR_TYPES = {
         "mdi:weather-rainy",
         False,
     ],
-    "cloud_coverage": ["Cloud Coverage", None, UNIT_PERCENTAGE, "mdi:cloud", False],
+    "cloud_coverage": ["Cloud Coverage", None, "%", "mdi:cloud", False],
     "visibility": ["Visibility", None, LENGTH_KILOMETERS, "mdi:eye", False],
     "sun_duration": ["Sun Duration", None, TIME_SECONDS, "mdi:weather-sunset", False],
     "sun_irradiance": [
@@ -101,14 +100,14 @@ SENSOR_TYPES = {
     "fog_probability": [
         "Fog Probability",
         None,
-        UNIT_PERCENTAGE,
+        "%",
         "mdi:weather-fog",
         False,
     ],
     "humidity": [
         "Humidity",
         DEVICE_CLASS_HUMIDITY,
-        UNIT_PERCENTAGE,
+        "%",
         "mdi:water-percent",
         False,
     ],
