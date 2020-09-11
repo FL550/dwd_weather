@@ -12,7 +12,7 @@ _Please note, that the "current" weather values are not measured values. The val
 
 # Installation
 
-1. Click install.
+1. Install integration via HACS.
 1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst".
   _You can repeat this for as many stations as you like._
 1. Follow the setup instructions.
