@@ -56,7 +56,7 @@ class DWDWeatherData:
         if self.dwd_weather.get_station_name(False) == "":
             _LOGGER.exception("No update possible")
         else:
-            _LOGGER.info("Updating ", self.dwd_weather.get_station_name(False))
+            _LOGGER.info("Updating {}".format(self.dwd_weather.get_station_name(False)))
             self.infos[ATTR_LATEST_UPDATE] = datetime.now(timezone.utc)
             self.latest_update = datetime.now(timezone.utc)
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
