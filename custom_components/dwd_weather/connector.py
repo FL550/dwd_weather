@@ -96,8 +96,8 @@ class DWDWeatherData:
                         ATTR_FORECAST_CONDITION: self.dwd_weather.get_daily_condition(
                             timestamp, False
                         ),
-                        ATTR_FORECAST_TEMP: temp_max,
-                        ATTR_FORECAST_TEMP_LOW: temp_min,
+                        ATTR_FORECAST_TEMP: int(round(temp_max, 0)),
+                        ATTR_FORECAST_TEMP_LOW: int(round(temp_min, 0)),
                         ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_daily_sum(
                             dwdforecast.WeatherDataType.PRECIPITATION, timestamp, False
                         ),
