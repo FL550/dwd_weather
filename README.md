@@ -43,7 +43,7 @@ If you followed the previous steps, you should now have a weather entity inside 
    - `wind_speed`
    - `visibility`
 1. Click on "Save" and voila, you have your own DWD weather forecast.
-1. Finally if you like my work, I would be very happy if you [buy me a coffee](buymecoffee). :)
+1. Finally if you like my work, I would be very happy if you [buy me a coffee](https://www.buymeacoffee.com/FL550). :)
 
 ## YAML mode
 
