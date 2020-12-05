@@ -6,7 +6,7 @@
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
-This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html). 
+This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html).
 
 _Please note, that the "current" weather values are not measured values. The values shown are the forecasted values for the actual hour. The forecast itself is updated every 6 hours. If anyone knows a source for actual measurements, please let me know._
 
@@ -14,7 +14,7 @@ _Please note, that the "current" weather values are not measured values. The val
 
 1. Install integration via HACS.
 1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst".
-  _You can repeat this for as many stations as you like._
+   _You can repeat this for as many stations as you like._
 1. Follow the setup instructions.
 
 # Configuration
@@ -23,7 +23,44 @@ The configuration is done via UI. If you insert a station_id in the setup dialog
 
 You can add as many stations as you like. Each will appear as an individual entity in home-assistant. You can add more stations by repeating the second step of the install instructions.
 
-# Additional sensor values
+# Usage
+
+## Lovelace mode
+
+If you followed the previous steps, you should now have a weather entity inside HomeAssistant which contains the weather for today and the next 4 days. To display the weather, you can use the default weather-card where you can select the DWD-weather entity you configured earlier. To add the card follow these steps:
+
+1. Go to the view where you would like to a the weather card.
+1. Click on the three dots at the top right corner.
+1. Select "Edit Dashboard".
+1. Click on the round button with the "plus"-symbol.
+1. Pick the "Weather Forecast" card.
+1. In the following configuration dialog, choose the weather entity you need.
+1. If you would like to display the forecast, check the corresponding slider.
+1. Per default the info displayed below the current temperature are the temperature extrema for this day. If if would like to chaange this, you can enter the following in the field "Secondary Info Attribute":
+   - `humidity`
+   - `pressure`
+   - `wind_bearing`
+   - `wind_speed`
+   - `visibility`
+1. Click on "Save" and voila, you have your own DWD weather forecast.
+1. Finally if you like my work, I would be very happy if you [buy me a coffee](buymecoffee). :)
+
+## YAML mode
+
+If you are not using the graphical interface and want to use the yaml-mode, you can add the card like this:
+
+```yaml
+type: weather-forecast
+entity: weather.dwd_weather_*station_name*
+```
+
+If you would like to change the secondary info, you have to add this line and replace pressure with whatever info you like:
+
+```yaml
+secondary_info_attribute: pressure
+```
+
+# For experts: Additional sensor values
 
 ## !!!These are only needed when you want hourly data. Daily values are included in the weather entity!!!
 
@@ -46,7 +83,7 @@ This integration allows you to add a hourly forecast for the next 10 days of the
 - Fog Probability
 - Humidity
 
-The sensors are disabled per default, as they contain a lot of data. 
+The sensors are disabled per default, as they contain a lot of data.
 
 You can enable the ones you like in HA UI under "Configuration" -> "Entities" -> click on the filter icon on the right -> Check "Show diabled entities" -> Check the ones you like to enable -> Click "ENABLE SELECTED" at the top -> Confirm the next dialog
 
@@ -62,7 +99,7 @@ This package uses public data from [DWD OpenData](https://www.dwd.de/DE/leistung
 
 <!---->
 
-***
+---
 
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
