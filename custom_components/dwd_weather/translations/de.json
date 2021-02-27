@@ -1,0 +1,27 @@
+{
+  "title": "Deutscher Wetterdienst",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Der Längen- und Breitengrad wird genutzt um die nächste Wetterstation zu ermitteln. Wenn eine Stations-ID angegeben wird, werden die Längen- und Breitengrad Angaben ignoriert. Verfügbare Stations-Ids können unter folgendem Link eingesehen werden: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "latitude": "Längengrad",
+          "longitude": "Breitengrad",
+          "station_id": "Stations-ID",
+          "weather_interval": "Vorhersage Interval in Stunden"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Keine Verbindung möglich",
+      "invalid_station_id": "Stations-ID nicht korrekt",
+      "weather_interval_too_big": "Das maximale Intervall sind 24 Stunden",
+      "weather_interval_remainder_not_zero": "Der Rest von dem Wert geteilt durch 24 muss 0 ergeben",
+      "unknown": "Unbekannter Fehler"
+    },
+    "abort": {
+      "already_configured": "Diese Station wurde bereits konfiguriert"
+    }
+  }
+}

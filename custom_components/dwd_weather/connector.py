@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DWDWeatherData:
-    def __init__(self, hass, latitude, longitude, station_id):
+    def __init__(self, hass, latitude, longitude, station_id, time_window):
         """Initialize the data object."""
         self._hass = hass
         self.forecast = None
@@ -33,6 +33,7 @@ class DWDWeatherData:
         # Public attributes
         self.latitude = latitude
         self.longitude = longitude
+        self.time_window = time_window
         self.infos = {}
 
         # Checks if station_id was set by the user
@@ -70,41 +71,61 @@ class DWDWeatherData:
             )
             forecast_data = []
             timestamp = datetime.now(timezone.utc)
-            for x in range(0, 9):
-                temp_max = self.dwd_weather.get_daily_max(
-                    dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
-                )
-                if temp_max is not None:
-                    temp_max = int(round(temp_max - 273.1, 0))
+            timesteps = int(24 / self.time_window)  # 2
+            timestep = datetime(
+                timestamp.year, timestamp.month, timestamp.day, tzinfo=timezone.utc
+            )
+            while timestep < timestamp:
+                timestep += timedelta(hours=self.time_window)
 
-                temp_min = self.dwd_weather.get_daily_min(
-                    dwdforecast.WeatherDataType.TEMPERATURE, timestamp, False
-                )
-                if temp_min is not None:
-                    temp_min = int(round(temp_min - 273.1, 0))
+            for _ in range(0, 9):
+                for _ in range(timesteps):
+                    temp_max = self.dwd_weather.get_timeframe_max(
+                        dwdforecast.WeatherDataType.TEMPERATURE,
+                        timestep,
+                        self.time_window,
+                        False,
+                    )
+                    if temp_max is not None:
+                        temp_max = int(round(temp_max - 273.1, 0))
 
-                precipitation_prop = self.dwd_weather.get_daily_max(
-                    dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
-                    timestamp,
-                    False,
-                )
-                if precipitation_prop is not None:
-                    precipitation_prop = int(precipitation_prop)
-                forecast_data.append(
-                    {
-                        ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%d"),
-                        ATTR_FORECAST_CONDITION: self.dwd_weather.get_daily_condition(
-                            timestamp, False
-                        ),
-                        ATTR_FORECAST_TEMP: temp_max,
-                        ATTR_FORECAST_TEMP_LOW: temp_min,
-                        ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_daily_sum(
-                            dwdforecast.WeatherDataType.PRECIPITATION, timestamp, False
-                        ),
-                        "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
-                    }
-                )
-                timestamp = timestamp + timedelta(days=1)
+                    temp_min = self.dwd_weather.get_timeframe_min(
+                        dwdforecast.WeatherDataType.TEMPERATURE,
+                        timestep,
+                        self.time_window,
+                        False,
+                    )
+                    if temp_min is not None:
+                        temp_min = int(round(temp_min - 273.1, 0))
+
+                    precipitation_prop = self.dwd_weather.get_timeframe_max(
+                        dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
+                        timestep,
+                        self.time_window,
+                        False,
+                    )
+                    if precipitation_prop is not None:
+                        precipitation_prop = int(precipitation_prop)
+                    forecast_data.append(
+                        {
+                            ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%d %H:00:00"),
+                            ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
+                                timestep,
+                                self.time_window,
+                                False,
+                            ),
+                            ATTR_FORECAST_TEMP: temp_max,
+                            ATTR_FORECAST_TEMP_LOW: temp_min,
+                            ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
+                                dwdforecast.WeatherDataType.PRECIPITATION,
+                                timestep,
+                                self.time_window,
+                                False,
+                            ),
+                            "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
+                        }
+                    )
+                    timestep += timedelta(hours=self.time_window)
             self.forecast = forecast_data
 
     def get_condition(self):
@@ -114,24 +135,33 @@ class DWDWeatherData:
 
     def get_temperature(self):
         value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc), False,
+            dwdforecast.WeatherDataType.TEMPERATURE,
+            datetime.now(timezone.utc),
+            False,
         )
         if value is not None:
             return value - 273.1
 
     def get_pressure(self):
         value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.PRESSURE, datetime.now(timezone.utc), False,
+            dwdforecast.WeatherDataType.PRESSURE,
+            datetime.now(timezone.utc),
+            False,
         )
         if value is not None:
             return value / 100
 
     def get_wind_speed(self):
         value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.WIND_SPEED, datetime.now(timezone.utc), False,
+            dwdforecast.WeatherDataType.WIND_SPEED,
+            datetime.now(timezone.utc),
+            False,
         )
         if value is not None:
-            return round(value * 3.6, 1,)
+            return round(
+                value * 3.6,
+                1,
+            )
 
     def get_wind_direction(self):
         return self.dwd_weather.get_forecast_data(
@@ -142,16 +172,23 @@ class DWDWeatherData:
 
     def get_visibility(self):
         value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.VISIBILITY, datetime.now(timezone.utc), False,
+            dwdforecast.WeatherDataType.VISIBILITY,
+            datetime.now(timezone.utc),
+            False,
         )
         if value is not None:
-            return round(value / 1000, 1,)
+            return round(
+                value / 1000,
+                1,
+            )
 
     def get_humidity(self):
         rh_c2 = 17.5043
         rh_c3 = 241.2
         T = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.TEMPERATURE, datetime.now(timezone.utc), False,
+            dwdforecast.WeatherDataType.TEMPERATURE,
+            datetime.now(timezone.utc),
+            False,
         )
         TD = self.dwd_weather.get_forecast_data(
             dwdforecast.WeatherDataType.DEWPOINT, datetime.now(timezone.utc), False

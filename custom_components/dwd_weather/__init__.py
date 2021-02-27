@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .connector import DWDWeatherData
 from .const import (
     CONF_STATION_ID,
+    CONF_WEATHER_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     DWDWEATHER_COORDINATOR,
@@ -36,9 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     site_name = entry.data[CONF_NAME]
+    time_window = entry.data[CONF_WEATHER_INTERVAL]
     station_id = entry.data[CONF_STATION_ID]
 
-    dwd_weather_data = DWDWeatherData(hass, latitude, longitude, station_id)
+    dwd_weather_data = DWDWeatherData(
+        hass, latitude, longitude, station_id, time_window
+    )
 
     # Update data initially
     # await dwd_weather_data.async_update()

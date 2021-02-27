@@ -21,6 +21,8 @@ _Please note, that the "current" weather values are not measured values. The val
 
 The configuration is done via UI. If you insert a station_id in the setup dialog, you will override the coordinates and use the specific station_id instead. Possible station_ids can be found [here](https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py) if needed.
 
+If you like, you can change the interval for the weather forecast during setup of the sensor. For this, you have to enter the desired interval in the relevant field. The interval can't be larger than 24 hours and if you divide 24 by the value, the remainder have to be 0. For example 24 / 6 = 4.0 is fine, 24 / 5 = 4.8 is not.
+
 You can add as many stations as you like. Each will appear as an individual entity in home-assistant. You can add more stations by repeating the second step of the install instructions.
 
 # Usage

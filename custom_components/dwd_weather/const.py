@@ -18,3 +18,4 @@ DWDWEATHER_MONITORED_CONDITIONS = "dwd_weather_monitored_conditions"
 DWDWEATHER_NAME = "dwd_weather_name"
 
 CONF_STATION_ID = "station_id"
+CONF_WEATHER_INTERVAL = "weather_interval"

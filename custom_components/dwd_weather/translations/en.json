@@ -8,13 +8,16 @@
         "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "station_id": "Station ID"
-        }
+          "station_id": "Station-ID",
+          "weather_interval": "Forecast Interval in hours"
+       }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect",
       "invalid_station_id": "Invalid Station-ID",
+      "weather_interval_too_big": "Maximum interval is 24 hours",
+      "weather_interval_remainder_not_zero": "The remainder of 24 hours divided by the value have to be zero",
       "unknown": "Unknown Error"
     },
     "abort": {
