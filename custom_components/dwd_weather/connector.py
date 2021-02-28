@@ -108,7 +108,7 @@ class DWDWeatherData:
                         precipitation_prop = int(precipitation_prop)
                     forecast_data.append(
                         {
-                            ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%d %H:00:00"),
+                            ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                             ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
                                 timestep,
                                 self.time_window,
