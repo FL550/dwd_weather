@@ -79,6 +79,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        new[CONF_WEATHER_INTERVAL] = 24
+        config_entry.data = {**new}
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    return True
+
+
 async def async_update(self):
     """Async wrapper for update method."""
     return await self._hass.async_add_executor_job(self._update)
