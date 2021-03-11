@@ -71,15 +71,16 @@ class DWDWeatherData:
             )
             forecast_data = []
             timestamp = datetime.now(timezone.utc)
-            timesteps = int(24 / self.time_window)  # 2
             timestep = datetime(
                 timestamp.year, timestamp.month, timestamp.day, tzinfo=timezone.utc
             )
+            # Find the next timewindow from actual time
             while timestep < timestamp:
                 timestep += timedelta(hours=self.time_window)
-
+            # Reduce by one to include the current timewindow
+            timestep -= timedelta(hours=self.time_window)
             for _ in range(0, 9):
-                for _ in range(timesteps):
+                for _ in range(int(24 / self.time_window)):
                     temp_max = self.dwd_weather.get_timeframe_max(
                         dwdforecast.WeatherDataType.TEMPERATURE,
                         timestep,
