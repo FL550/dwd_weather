@@ -34,9 +34,7 @@ class DWDWeather(WeatherEntity):
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = (
-            f"{self._connector.dwd_weather.get_station_name(False).lower()}"
-        )
+        self._unique_id = f"{hass_data[DWDWEATHER_NAME]}"
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

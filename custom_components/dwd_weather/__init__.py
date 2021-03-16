@@ -37,11 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     site_name = entry.data[CONF_NAME]
-    time_window = entry.data[CONF_WEATHER_INTERVAL]
+    weather_interval = entry.data[CONF_WEATHER_INTERVAL]
     station_id = entry.data[CONF_STATION_ID]
 
     dwd_weather_data = DWDWeatherData(
-        hass, latitude, longitude, station_id, time_window
+        hass, latitude, longitude, station_id, weather_interval
     )
 
     # Update data initially
@@ -64,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DWDWEATHER_DATA: dwd_weather_data,
         DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         DWDWEATHER_NAME: site_name,
+        CONF_WEATHER_INTERVAL: weather_interval,
     }
 
     # Fetch initial data so we have data when entities subscribe

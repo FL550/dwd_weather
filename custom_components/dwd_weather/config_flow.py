@@ -46,7 +46,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     if dwd_weather_data.dwd_weather.get_station_name(False) == "":
         raise CannotConnect()
 
-    return {"site_name": dwd_weather_data.dwd_weather.get_station_name(False).title()}
+    return {
+        "site_name": dwd_weather_data.dwd_weather.get_station_name(False).title(),
+        "weather_interval": weather_interval,
+    }
 
 
 class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -75,7 +78,9 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                user_input[CONF_NAME] = info["site_name"]
+                user_input[
+                    CONF_NAME
+                ] = f"{info['site_name']} {info['weather_interval']}h"
                 await self.async_set_unique_id(f"{user_input[CONF_NAME].lower()}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

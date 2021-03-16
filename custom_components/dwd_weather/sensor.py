@@ -139,7 +139,7 @@ class DWDWeatherForecastSensor(Entity):
 
         self._type = sensor_type
         self._name = f"{SENSOR_TYPES[self._type][0]} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{self._connector.dwd_weather.get_station_name(False).lower()}"
+        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{hass_data[DWDWEATHER_NAME]}"
 
     @property
     def name(self):

@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DWDWeatherData:
-    def __init__(self, hass, latitude, longitude, station_id, time_window):
+    def __init__(self, hass, latitude, longitude, station_id, weather_interval):
         """Initialize the data object."""
         self._hass = hass
         self.forecast = None
@@ -33,7 +33,7 @@ class DWDWeatherData:
         # Public attributes
         self.latitude = latitude
         self.longitude = longitude
-        self.time_window = time_window
+        self.weather_interval = weather_interval
         self.infos = {}
 
         # Checks if station_id was set by the user
@@ -76,15 +76,15 @@ class DWDWeatherData:
             )
             # Find the next timewindow from actual time
             while timestep < timestamp:
-                timestep += timedelta(hours=self.time_window)
+                timestep += timedelta(hours=self.weather_interval)
             # Reduce by one to include the current timewindow
-            timestep -= timedelta(hours=self.time_window)
+            timestep -= timedelta(hours=self.weather_interval)
             for _ in range(0, 9):
-                for _ in range(int(24 / self.time_window)):
+                for _ in range(int(24 / self.weather_interval)):
                     temp_max = self.dwd_weather.get_timeframe_max(
                         dwdforecast.WeatherDataType.TEMPERATURE,
                         timestep,
-                        self.time_window,
+                        self.weather_interval,
                         False,
                     )
                     if temp_max is not None:
@@ -93,7 +93,7 @@ class DWDWeatherData:
                     temp_min = self.dwd_weather.get_timeframe_min(
                         dwdforecast.WeatherDataType.TEMPERATURE,
                         timestep,
-                        self.time_window,
+                        self.weather_interval,
                         False,
                     )
                     if temp_min is not None:
@@ -102,7 +102,7 @@ class DWDWeatherData:
                     precipitation_prop = self.dwd_weather.get_timeframe_max(
                         dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
                         timestep,
-                        self.time_window,
+                        self.weather_interval,
                         False,
                     )
                     if precipitation_prop is not None:
@@ -112,7 +112,7 @@ class DWDWeatherData:
                             ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                             ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
                                 timestep,
-                                self.time_window,
+                                self.weather_interval,
                                 False,
                             ),
                             ATTR_FORECAST_TEMP: temp_max,
@@ -120,13 +120,13 @@ class DWDWeatherData:
                             ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                                 dwdforecast.WeatherDataType.PRECIPITATION,
                                 timestep,
-                                self.time_window,
+                                self.weather_interval,
                                 False,
                             ),
                             "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
                         }
                     )
-                    timestep += timedelta(hours=self.time_window)
+                    timestep += timedelta(hours=self.weather_interval)
             self.forecast = forecast_data
 
     def get_condition(self):
