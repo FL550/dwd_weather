@@ -78,11 +78,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                unique_id = info["site_name"]
+                unique_id = info["site_name"].lower()
                 if info["weather_interval"] != "24":
                     unique_id += " " + info["weather_interval"] + "h"
                 user_input[CONF_NAME] = unique_id
-                await self.async_set_unique_id(f"{user_input[CONF_NAME].lower()}")
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_NAME].title(), data=user_input
