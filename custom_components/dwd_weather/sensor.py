@@ -11,8 +11,6 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
-    STATE_OK,
-    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
@@ -154,9 +152,40 @@ class DWDWeatherForecastSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._connector.latest_update:
-            return STATE_OK
-        return STATE_UNAVAILABLE
+        result = ""
+        if self._type == "weather":
+            result = self._connector.get_condition()
+        elif self._type == "temperature":
+            result = self._connector.get_temperature()
+        elif self._type == "dewpoint":
+            result = self._connector.get_dewpoint()
+        elif self._type == "pressure":
+            result = self._connector.get_pressure()
+        elif self._type == "wind_speed":
+            result = self._connector.get_wind_speed()
+        elif self._type == "wind_direction":
+            result = self._connector.get_wind_direction()
+        elif self._type == "wind_gusts":
+            result = self._connector.get_wind_gusts()
+        elif self._type == "precipitation":
+            result = self._connector.get_precipitation()
+        elif self._type == "precipitation_probability":
+            result = self._connector.get_precipitation_probability()
+        elif self._type == "precipitation_duration":
+            result = self._connector.get_precipitation_duration()
+        elif self._type == "cloud_coverage":
+            result = self._connector.get_cloud_coverage()
+        elif self._type == "visibility":
+            result = self._connector.get_visibility()
+        elif self._type == "sun_duration":
+            result = self._connector.get_sun_duration()
+        elif self._type == "sun_irradiance":
+            result = self._connector.get_sun_irradiance()
+        elif self._type == "fog_probability":
+            result = self._connector.get_fog_probability()
+        elif self._type == "humidity":
+            result = self._connector.get_humidity()
+        return result
 
     @property
     def unit_of_measurement(self):
