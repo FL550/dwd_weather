@@ -54,81 +54,87 @@ class DWDWeatherData:
 
     def _update(self):
         """Get the latest data from DWD and generate forecast array."""
-        self.dwd_weather.update()
-        if self.dwd_weather.get_station_name(False) == "":
-            _LOGGER.exception("No update possible")
-        else:
-            _LOGGER.info("Updating {}".format(self.dwd_weather.get_station_name(False)))
-            self.infos[ATTR_LATEST_UPDATE] = datetime.now(timezone.utc)
-            self.latest_update = datetime.now(timezone.utc)
-            self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
-            self.infos[ATTR_STATION_ID] = self.dwd_weather.station_id
-            self.infos[ATTR_STATION_NAME] = self.dwd_weather.get_station_name(False)
-
-            _LOGGER.debug(
-                "forecast_data for station_id '{}': {}".format(
-                    self.station_id, self.dwd_weather.forecast_data
+        timestamp = datetime.now(timezone.utc)
+        # Only update on the hour and when not updated yet
+        if timestamp.minute == 0 or self.latest_update is None:
+            self.dwd_weather.update()
+            if self.dwd_weather.get_station_name(False) == "":
+                _LOGGER.exception("No update possible")
+            else:
+                _LOGGER.info(
+                    "Updating {}".format(self.dwd_weather.get_station_name(False))
                 )
-            )
-            forecast_data = []
-            timestamp = datetime.now(timezone.utc)
-            timestep = datetime(
-                timestamp.year, timestamp.month, timestamp.day, tzinfo=timezone.utc
-            )
-            # Find the next timewindow from actual time
-            while timestep < timestamp:
-                timestep += timedelta(hours=self.weather_interval)
-            # Reduce by one to include the current timewindow
-            timestep -= timedelta(hours=self.weather_interval)
-            for _ in range(0, 9):
-                for _ in range(int(24 / self.weather_interval)):
-                    temp_max = self.dwd_weather.get_timeframe_max(
-                        WeatherDataType.TEMPERATURE,
-                        timestep,
-                        self.weather_interval,
-                        False,
-                    )
-                    if temp_max is not None:
-                        temp_max = int(round(temp_max - 273.1, 0))
+                self.infos[ATTR_LATEST_UPDATE] = timestamp
+                self.latest_update = timestamp
+                self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
+                self.infos[ATTR_STATION_ID] = self.dwd_weather.station_id
+                self.infos[ATTR_STATION_NAME] = self.dwd_weather.get_station_name(False)
 
-                    temp_min = self.dwd_weather.get_timeframe_min(
-                        WeatherDataType.TEMPERATURE,
-                        timestep,
-                        self.weather_interval,
-                        False,
+                _LOGGER.debug(
+                    "forecast_data for station_id '{}': {}".format(
+                        self.station_id, self.dwd_weather.forecast_data
                     )
-                    if temp_min is not None:
-                        temp_min = int(round(temp_min - 273.1, 0))
-
-                    precipitation_prop = self.dwd_weather.get_timeframe_max(
-                        WeatherDataType.PRECIPITATION_PROBABILITY,
-                        timestep,
-                        self.weather_interval,
-                        False,
-                    )
-                    if precipitation_prop is not None:
-                        precipitation_prop = int(precipitation_prop)
-                    forecast_data.append(
-                        {
-                            ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
-                            ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
-                                timestep,
-                                self.weather_interval,
-                                False,
-                            ),
-                            ATTR_FORECAST_TEMP: temp_max,
-                            ATTR_FORECAST_TEMP_LOW: temp_min,
-                            ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
-                                WeatherDataType.PRECIPITATION,
-                                timestep,
-                                self.weather_interval,
-                                False,
-                            ),
-                            "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
-                        }
-                    )
+                )
+                forecast_data = []
+                timestep = datetime(
+                    timestamp.year, timestamp.month, timestamp.day, tzinfo=timezone.utc
+                )
+                # Find the next timewindow from actual time
+                while timestep < timestamp:
                     timestep += timedelta(hours=self.weather_interval)
-            self.forecast = forecast_data
+                # Reduce by one to include the current timewindow
+                timestep -= timedelta(hours=self.weather_interval)
+                for _ in range(0, 9):
+                    for _ in range(int(24 / self.weather_interval)):
+                        temp_max = self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.TEMPERATURE,
+                            timestep,
+                            self.weather_interval,
+                            False,
+                        )
+                        if temp_max is not None:
+                            temp_max = int(round(temp_max - 273.1, 0))
+
+                        temp_min = self.dwd_weather.get_timeframe_min(
+                            WeatherDataType.TEMPERATURE,
+                            timestep,
+                            self.weather_interval,
+                            False,
+                        )
+                        if temp_min is not None:
+                            temp_min = int(round(temp_min - 273.1, 0))
+
+                        precipitation_prop = self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.PRECIPITATION_PROBABILITY,
+                            timestep,
+                            self.weather_interval,
+                            False,
+                        )
+                        if precipitation_prop is not None:
+                            precipitation_prop = int(precipitation_prop)
+                        forecast_data.append(
+                            {
+                                ATTR_FORECAST_TIME: timestep.strftime(
+                                    "%Y-%m-%dT%H:00:00Z"
+                                ),
+                                ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
+                                    timestep,
+                                    self.weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_TEMP: temp_max,
+                                ATTR_FORECAST_TEMP_LOW: temp_min,
+                                ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
+                                    WeatherDataType.PRECIPITATION,
+                                    timestep,
+                                    self.weather_interval,
+                                    False,
+                                ),
+                                "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
+                            }
+                        )
+                        timestep += timedelta(hours=self.weather_interval)
+                self.forecast = forecast_data
 
     def get_condition(self):
         return self.dwd_weather.get_forecast_condition(

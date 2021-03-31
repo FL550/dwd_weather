@@ -10,7 +10,7 @@ ATTR_ISSUE_TIME = "forecast_time_utc"
 ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 DWDWEATHER_DATA = "dwd_weather_data"
 DWDWEATHER_COORDINATOR = "dwd_weather_coordinator"
