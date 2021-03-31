@@ -1,7 +1,7 @@
 """Connector class to retrieve data, which is use by the weather and sensor enities."""
 import logging
-import math
 from datetime import datetime, timedelta, timezone
+import time
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -11,6 +11,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
 )
 from simple_dwd_weatherforecast import dwdforecast
+from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
 from .const import (
     ATTR_ISSUE_TIME,
@@ -82,7 +83,7 @@ class DWDWeatherData:
             for _ in range(0, 9):
                 for _ in range(int(24 / self.weather_interval)):
                     temp_max = self.dwd_weather.get_timeframe_max(
-                        dwdforecast.WeatherDataType.TEMPERATURE,
+                        WeatherDataType.TEMPERATURE,
                         timestep,
                         self.weather_interval,
                         False,
@@ -91,7 +92,7 @@ class DWDWeatherData:
                         temp_max = int(round(temp_max - 273.1, 0))
 
                     temp_min = self.dwd_weather.get_timeframe_min(
-                        dwdforecast.WeatherDataType.TEMPERATURE,
+                        WeatherDataType.TEMPERATURE,
                         timestep,
                         self.weather_interval,
                         False,
@@ -100,7 +101,7 @@ class DWDWeatherData:
                         temp_min = int(round(temp_min - 273.1, 0))
 
                     precipitation_prop = self.dwd_weather.get_timeframe_max(
-                        dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY,
+                        WeatherDataType.PRECIPITATION_PROBABILITY,
                         timestep,
                         self.weather_interval,
                         False,
@@ -118,7 +119,7 @@ class DWDWeatherData:
                             ATTR_FORECAST_TEMP: temp_max,
                             ATTR_FORECAST_TEMP_LOW: temp_min,
                             ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
-                                dwdforecast.WeatherDataType.PRECIPITATION,
+                                WeatherDataType.PRECIPITATION,
                                 timestep,
                                 self.weather_interval,
                                 False,
@@ -134,79 +135,95 @@ class DWDWeatherData:
             datetime.now(timezone.utc), False
         )
 
-    def get_temperature(self):
+    def get_weather_value(self, data_type: WeatherDataType):
         value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.TEMPERATURE,
+            data_type,
             datetime.now(timezone.utc),
             False,
         )
         if value is not None:
-            return value - 273.1
+            if data_type == WeatherDataType.TEMPERATURE:
+                value = round(value - 273.1, 1)
+            elif data_type == WeatherDataType.DEWPOINT:
+                value = round(value - 273.1, 1)
+            elif data_type == WeatherDataType.PRESSURE:
+                value = round(value / 100, 1)
+            elif data_type == WeatherDataType.WIND_SPEED:
+                value = round(value * 3.6, 1)
+            elif data_type == WeatherDataType.WIND_DIRECTION:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.WIND_GUSTS:
+                value = round(value, 1)
+            elif data_type == WeatherDataType.PRECIPITATION:
+                value = round(value, 1)
+            elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.PRECIPITATION_DURATION:
+                value = round(value, 1)
+            elif data_type == WeatherDataType.CLOUD_COVERAGE:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.VISIBILITY:
+                value = round(value / 1000, 1)
+            elif data_type == WeatherDataType.SUN_DURATION:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.SUN_IRRADIANCE:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.FOG_PROBABILITY:
+                value = round(value, 0)
+            elif data_type == WeatherDataType.HUMIDITY:
+                value = round(value, 1)
+
+        return value
+
+    def get_temperature(self):
+        return self.get_weather_value(WeatherDataType.TEMPERATURE)
+
+    def get_dewpoint(self):
+        return self.get_weather_value(WeatherDataType.DEWPOINT)
 
     def get_pressure(self):
-        value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.PRESSURE,
-            datetime.now(timezone.utc),
-            False,
-        )
-        if value is not None:
-            return value / 100
+        return self.get_weather_value(WeatherDataType.PRESSURE)
 
     def get_wind_speed(self):
-        value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.WIND_SPEED,
-            datetime.now(timezone.utc),
-            False,
-        )
-        if value is not None:
-            return round(
-                value * 3.6,
-                1,
-            )
+        return self.get_weather_value(WeatherDataType.WIND_SPEED)
 
     def get_wind_direction(self):
-        return self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.WIND_DIRECTION,
-            datetime.now(timezone.utc),
-            False,
-        )
+        return self.get_weather_value(WeatherDataType.WIND_DIRECTION)
+
+    def get_wind_gusts(self):
+        return self.get_weather_value(WeatherDataType.WIND_GUSTS)
+
+    def get_precipitation(self):
+        return self.get_weather_value(WeatherDataType.PRECIPITATION)
+
+    def get_precipitation_probability(self):
+        return self.get_weather_value(WeatherDataType.PRECIPITATION_PROBABILITY)
+
+    def get_precipitation_duration(self):
+        return self.get_weather_value(WeatherDataType.PRECIPITATION_DURATION)
+
+    def get_cloud_coverage(self):
+        return self.get_weather_value(WeatherDataType.CLOUD_COVERAGE)
 
     def get_visibility(self):
-        value = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.VISIBILITY,
-            datetime.now(timezone.utc),
-            False,
-        )
-        if value is not None:
-            return round(
-                value / 1000,
-                1,
-            )
+        return self.get_weather_value(WeatherDataType.VISIBILITY)
+
+    def get_sun_duration(self):
+        return self.get_weather_value(WeatherDataType.SUN_DURATION)
+
+    def get_sun_irradiance(self):
+        return self.get_weather_value(WeatherDataType.SUN_IRRADIANCE)
+
+    def get_fog_probability(self):
+        return self.get_weather_value(WeatherDataType.FOG_PROBABILITY)
 
     def get_humidity(self):
-        rh_c2 = 17.5043
-        rh_c3 = 241.2
-        T = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.TEMPERATURE,
-            datetime.now(timezone.utc),
-            False,
-        )
-        TD = self.dwd_weather.get_forecast_data(
-            dwdforecast.WeatherDataType.DEWPOINT, datetime.now(timezone.utc), False
-        )
-        if T is not None and TD is not None:
-            T -= 273.1
-            TD -= 273.1
-            _LOGGER.debug("T: {}, TD: {}".format(T, TD))
-            RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T / (rh_c3 + T)))
-            return round(RH, 1)
+        return self.get_weather_value(WeatherDataType.HUMIDITY)
 
     def get_condition_hourly(self):
         data = []
         for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key][
-                dwdforecast.WeatherDataType.CONDITION.value
-            ]
+            item = self.dwd_weather.forecast_data[key][WeatherDataType.CONDITION.value]
             if item != "-":
                 value = self.dwd_weather.weather_codes[item][0]
             else:
@@ -214,204 +231,109 @@ class DWDWeatherData:
             data.append({ATTR_FORECAST_TIME: key, "value": value})
         return data
 
-    def get_temperature_hourly(self):
+    def get_hourly(self, data_type: WeatherDataType):
         data = []
+        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime(
+            timestamp.year,
+            timestamp.month,
+            timestamp.day,
+            timestamp.hour,
+            tzinfo=timezone.utc,
+        )
         for key in self.dwd_weather.forecast_data:
+            if (
+                datetime(
+                    *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]),
+                    0,
+                    timezone.utc,
+                )
+                < timestamp
+            ):
+                continue
+
             item = self.dwd_weather.forecast_data[key]
+            value = item[data_type.value]
+            if value is not None:
+                if data_type == WeatherDataType.TEMPERATURE:
+                    value = round(value - 273.1, 1)
+                elif data_type == WeatherDataType.DEWPOINT:
+                    value = round(value - 273.1, 1)
+                elif data_type == WeatherDataType.PRESSURE:
+                    value = round(value / 100, 1)
+                elif data_type == WeatherDataType.WIND_SPEED:
+                    value = round(value, 1)
+                elif data_type == WeatherDataType.WIND_DIRECTION:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.WIND_GUSTS:
+                    value = round(value, 1)
+                elif data_type == WeatherDataType.PRECIPITATION:
+                    value = round(value, 1)
+                elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.PRECIPITATION_DURATION:
+                    value = round(value, 1)
+                elif data_type == WeatherDataType.CLOUD_COVERAGE:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.VISIBILITY:
+                    value = round(value / 1000, 1)
+                elif data_type == WeatherDataType.SUN_DURATION:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.SUN_IRRADIANCE:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.FOG_PROBABILITY:
+                    value = round(value, 0)
+                elif data_type == WeatherDataType.HUMIDITY:
+                    value = round(value, 1)
             data.append(
                 {
                     ATTR_FORECAST_TIME: key,
-                    "value": round(
-                        item[dwdforecast.WeatherDataType.TEMPERATURE.value] - 273.1, 1
-                    ),
+                    "value": value,
                 }
             )
         return data
+
+    def get_temperature_hourly(self):
+        return self.get_hourly(WeatherDataType.TEMPERATURE)
 
     def get_dewpoint_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": round(
-                        item[dwdforecast.WeatherDataType.DEWPOINT.value] - 273.1, 1
-                    ),
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.DEWPOINT)
 
     def get_pressure_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": round(
-                        item[dwdforecast.WeatherDataType.PRESSURE.value] / 100, 1
-                    ),
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.PRESSURE)
 
     def get_wind_speed_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.WIND_SPEED.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.WIND_SPEED)
 
     def get_wind_direction_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.WIND_DIRECTION.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.WIND_DIRECTION)
 
     def get_wind_gusts_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.WIND_GUSTS.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.WIND_GUSTS)
 
     def get_precipitation_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.PRECIPITATION.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.PRECIPITATION)
 
     def get_precipitation_probability_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[
-                        dwdforecast.WeatherDataType.PRECIPITATION_PROBABILITY.value
-                    ],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.PRECIPITATION_PROBABILITY)
 
     def get_precipitation_duration_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[
-                        dwdforecast.WeatherDataType.PRECIPITATION_DURATION.value
-                    ],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.PRECIPITATION_DURATION)
 
     def get_cloud_coverage_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.CLOUD_COVERAGE.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.CLOUD_COVERAGE)
 
     def get_visibility_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": round(
-                        item[dwdforecast.WeatherDataType.VISIBILITY.value] / 1000, 1
-                    ),
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.VISIBILITY)
 
     def get_sun_duration_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.SUN_DURATION.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.SUN_DURATION)
 
     def get_sun_irradiance_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.SUN_IRRADIANCE.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.SUN_IRRADIANCE)
 
     def get_fog_probability_hourly(self):
-        data = []
-        for key in self.dwd_weather.forecast_data:
-            item = self.dwd_weather.forecast_data[key]
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: key,
-                    "value": item[dwdforecast.WeatherDataType.FOG_PROBABILITY.value],
-                }
-            )
-        return data
+        return self.get_hourly(WeatherDataType.FOG_PROBABILITY)
 
     def get_humidity_hourly(self):
-        data = []
-        rh_c2 = 17.5043
-        rh_c3 = 241.2
-
-        for key in self.dwd_weather.forecast_data:
-            T = (
-                self.dwd_weather.forecast_data[key][
-                    dwdforecast.WeatherDataType.TEMPERATURE.value
-                ]
-                - 273.1
-            )
-            TD = (
-                self.dwd_weather.forecast_data[key][
-                    dwdforecast.WeatherDataType.DEWPOINT.value
-                ]
-                - 273.1
-            )
-            RH = 100 * math.exp((rh_c2 * TD / (rh_c3 + TD)) - (rh_c2 * T / (rh_c3 + T)))
-            data.append({ATTR_FORECAST_TIME: key, "value": round(RH, 1)})
-        return data
+        return self.get_hourly(WeatherDataType.HUMIDITY)
