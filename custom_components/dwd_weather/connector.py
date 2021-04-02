@@ -159,7 +159,7 @@ class DWDWeatherData:
             elif data_type == WeatherDataType.WIND_DIRECTION:
                 value = round(value, 0)
             elif data_type == WeatherDataType.WIND_GUSTS:
-                value = round(value, 1)
+                value = round(value * 3.6, 1)
             elif data_type == WeatherDataType.PRECIPITATION:
                 value = round(value, 1)
             elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
