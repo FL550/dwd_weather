@@ -11,7 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
@@ -66,7 +66,7 @@ SENSOR_TYPES = {
     "wind_speed": [
         "Wind Speed",
         None,
-        SPEED_METERS_PER_SECOND,
+        SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
     ],
@@ -74,7 +74,7 @@ SENSOR_TYPES = {
     "wind_gusts": [
         "Wind Gusts",
         None,
-        SPEED_METERS_PER_SECOND,
+        SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
     ],
