@@ -17,6 +17,7 @@ This integration adds a weather entity for Deutscher Wetterdienst (DWD). It incl
 Additionally this integration adds hourly forecast data as sensors for these values:
 
 - Weather condition
+- Weather report as text
 - Temperature
 - Dewpoint
 - Pressure
@@ -39,6 +40,8 @@ You can enable the ones you like in HA UI under "Configuration" -> "Entities" ->
 
 The sensor values will be set when the next update of dwd_weather is scheduled by HA. This is done every 15 minutes. You can skip the waiting time by restarting HA.
 
+For more information please read the [README](github).
+
 {% if not installed %}
 
 ## Installation
@@ -54,7 +57,7 @@ The sensor values will be set when the next update of dwd_weather is scheduled b
 
 If you insert a station_id, this will override the coordinates and use the specific station instead. station_ids can be found [here](https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py) if needed. For further infos about the usage and reporting issues please visit [GitHub](github).
 
-## If you want forecasts for multiple locations, just add a new integration as you did during first install
+## If you want forecasts for multiple locations, just add a new integration as you did during first install.
 
 
 

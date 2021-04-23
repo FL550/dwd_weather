@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 import time
+from markdownify import markdownify
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -130,7 +131,7 @@ class DWDWeatherData:
                                     self.weather_interval,
                                     False,
                                 ),
-                                "precipitation_probability": precipitation_prop,  # ATTR_FORECAST_PRECIPITATION_PROBABILITY
+                                "precipitation_probability": precipitation_prop,
                             }
                         )
                         timestep += timedelta(hours=self.weather_interval)
@@ -140,6 +141,9 @@ class DWDWeatherData:
         return self.dwd_weather.get_forecast_condition(
             datetime.now(timezone.utc), False
         )
+
+    def get_weather_report(self):
+        return markdownify(self.dwd_weather.weather_report, strip=["br"])
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = self.dwd_weather.get_forecast_data(

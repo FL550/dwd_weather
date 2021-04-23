@@ -23,13 +23,13 @@ The configuration is done via UI. If you insert a station_id in the setup dialog
 
 If you like, you can change the interval for the weather forecast during setup of the sensor. For this, you have to enter the desired interval in the relevant field. The interval can't be larger than 24 hours and if you divide 24 by the value, the remainder have to be 0. For example 24 / 6 = 4.0 is fine, 24 / 5 = 4.8 is not.
 
-You can add as many stations as you like. Each will appear as an individual entity in home-assistant. You can add more stations by repeating the second step of the install instructions.
+You can add as many stations as you like. Each will appear as an individual entity in Home Assistant. You can add more stations by repeating the second step of the install instructions.
 
 # Usage
 
 ## Lovelace mode
 
-If you followed the previous steps, you should now have a weather entity inside HomeAssistant which contains the weather for today and the next 4 days. To display the weather, you can use the default weather-card where you can select the DWD-weather entity you configured earlier. To add the card follow these steps:
+If you followed the previous steps, you should now have a weather entity inside Home Assistant which contains the weather for today and the next 4 days. To display the weather, you can use the default weather-card where you can select the DWD-weather entity you configured earlier. To add the card follow these steps:
 
 1. Go to the view where you would like to a the weather card.
 1. Click on the three dots at the top right corner.
@@ -38,7 +38,7 @@ If you followed the previous steps, you should now have a weather entity inside 
 1. Pick the "Weather Forecast" card.
 1. In the following configuration dialog, choose the weather entity you need.
 1. If you would like to display the forecast, check the corresponding slider.
-1. Per default the info displayed below the current temperature are the temperature extrema for this day. If if would like to chaange this, you can enter the following in the field "Secondary Info Attribute":
+1. Per default the info displayed below the current temperature are the temperature extrema for this day. If if would like to change this, you can enter the following in the field "Secondary Info Attribute":
    - `humidity`
    - `pressure`
    - `wind_bearing`
@@ -62,13 +62,24 @@ If you would like to change the secondary info, you have to add this line and re
 secondary_info_attribute: pressure
 ```
 
-# For experts: Additional sensor values
+## Weather report
 
-## !!!These are only needed when you want hourly data. Daily values are included in the weather entity!!!
+If you want to get the regional weather report as text, you have to enable the _weather_report_ sensor. For instructions on this see below at [Additional sensor values](Additional-sensor-values). You can then include the report in a markdown card. For this, you have to add the following template to the content field where you replace the part after _sensor._ with your weather station:
+
+```yaml
+{{ state_attr("sensor.weather_report_homburg_bad", "data") }}
+```
+
+To find the correct name for the configured station, have a look at the developer tools within Home Assistant.
+
+## Additional sensor values
+
+### These are only needed when you want hourly data or the weather report. Daily values are included in the weather entity!
 
 This integration allows you to add a hourly forecast for the next 10 days of the following values:
 
 - Weather condition
+- Weather report as text
 - Temperature
 - Dewpoint
 - Pressure
@@ -89,7 +100,7 @@ The sensors are disabled per default, as they contain a lot of data.
 
 You can enable the ones you like in HA UI under "Configuration" -> "Entities" -> click on the filter icon on the right -> Check "Show diabled entities" -> Check the ones you like to enable -> Click "ENABLE SELECTED" at the top -> Confirm the next dialog
 
-The sensor values will be set when the next update of dwd_weather is scheduled by HA. This is done every 15 minutes. You can skip the waiting time by restarting HA.
+The sensor values will be set when the next update of dwd_weather is scheduled by Home Assistant. This is done every 15 minutes. You can skip the waiting time by restarting HA.
 
 ## Help and Contribution
 

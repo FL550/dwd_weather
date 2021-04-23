@@ -1,6 +1,7 @@
 """Sensor for Deutscher Wetterdienst weather service."""
 
 import logging
+import re
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -40,6 +41,13 @@ ATTR_SITE_NAME = "site_name"
 #   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
 SENSOR_TYPES = {
     "weather": ["Weather", None, None, "mdi:weather-partly-cloudy", False],
+    "weather_report": [
+        "Weather Report",
+        None,
+        None,
+        "mdi:weather-partly-cloudy",
+        False,
+    ],
     "temperature": [
         "Temperature",
         DEVICE_CLASS_TEMPERATURE,
@@ -155,6 +163,11 @@ class DWDWeatherForecastSensor(Entity):
         result = ""
         if self._type == "weather":
             result = self._connector.get_condition()
+        elif self._type == "weather_report":
+            result = re.search(
+                "\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                self._connector.get_weather_report(),
+            ).group()
         elif self._type == "temperature":
             result = self._connector.get_temperature()
         elif self._type == "dewpoint":
@@ -218,6 +231,8 @@ class DWDWeatherForecastSensor(Entity):
 
         if self._type == "weather":
             attributes["data"] = self._connector.get_condition_hourly()
+        elif self._type == "weather_report":
+            attributes["data"] = self._connector.get_weather_report()
         elif self._type == "temperature":
             attributes["data"] = self._connector.get_temperature_hourly()
         elif self._type == "dewpoint":
