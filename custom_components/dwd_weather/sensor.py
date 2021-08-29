@@ -99,7 +99,7 @@ SENSOR_TYPES = {
     "sun_irradiance": [
         "Sun Irradiance",
         None,
-        "kJ/m^2",
+        "W/m^2",
         "mdi:weather-sunny-alert",
         False,
     ],
