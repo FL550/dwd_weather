@@ -1,6 +1,6 @@
 {
   "domain": "dwd_weather",
-  "version": "1.2.14",
+  "version": "1.2.15",
   "name": "Deutscher Wetterdienst (DWD)",
   "documentation": "https://github.com/FL550/dwd_weather",
   "issue_tracker": "https://github.com/FL550/dwd_weather/issues",
