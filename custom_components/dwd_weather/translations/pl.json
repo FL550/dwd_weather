@@ -1,0 +1,27 @@
+{
+  "title": "Deutscher Wetterdienst - Niemiecka Służba Pogodowa (DWD)",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Szerokość i długość geograficzna zostaną użyte do znalezienia najbliższej stacji pogodowej. Jeśli określisz identyfikator stacji, zostanie on użyty, a szerokość i długość geograficzna zostaną zignorowane. Możesz wyszukać dostępne identyfikatory stacji tutaj: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
+        "title": "Deutscher Wetterdienst - Niemiecka Służba Pogodowa (DWD)",
+        "data": {
+          "latitude": "Szerokość geograficzna",
+          "longitude": "Długość geograficzna",
+          "station_id": "Identyfikator stacji",
+          "weather_interval": "Interwał prognozy w godzinach"
+       }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie można się połączyć",
+      "invalid_station_id": "Nieprawidłowy identyfikator stacji",
+      "weather_interval_too_big": "Maksymalny interwał to 24 godziny",
+      "weather_interval_remainder_not_zero": "Reszta z dzielenia 24 godzin przez wartość musi wynosić zero",
+      "unknown": "Nieznany błąd"
+    },
+    "abort": {
+      "already_configured": "Ta stacja jest już skonfigurowana"
+    }
+  }
+}
