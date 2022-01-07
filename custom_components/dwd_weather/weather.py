@@ -108,6 +108,6 @@ class DWDWeather(WeatherEntity):
         return self._connector.forecast
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return data validity infos."""
         return self._connector.infos
