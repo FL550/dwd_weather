@@ -12,6 +12,8 @@ from .const import (
     CONF_STATION_ID,
     DOMAIN,
     CONF_WEATHER_INTERVAL,
+    CONF_WIND_DIRECTION_TYPE,
+    DEFAULT_WIND_DIRECTION_TYPE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,10 +27,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     latitude = data[CONF_LATITUDE]
     longitude = data[CONF_LONGITUDE]
     weather_interval = data[CONF_WEATHER_INTERVAL]
+    wind_direction_type = data[CONF_WIND_DIRECTION_TYPE]
     station_id = data[CONF_STATION_ID]
     _LOGGER.debug(
-        "validate_input:: CONF_LATITUDE: {}, CONF_LONGITUDE: {}, CONF_WEATHER_INTERVAL: {}, CONF_STATION_ID: {}".format(
-            latitude, longitude, weather_interval, station_id
+        """validate_input:: CONF_LATITUDE: {}, CONF_LONGITUDE: {}, CONF_WEATHER_INTERVAL: {}, CONF_WIND_DIRECTION_TYPE: {}
+        , CONF_STATION_ID: {}""".format(
+            latitude, longitude, weather_interval, wind_direction_type, station_id
         )
     )
     if weather_interval > 24:
@@ -37,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise WeatherIntervalRemainderNotZero()
 
     dwd_weather_data = DWDWeatherData(
-        hass, latitude, longitude, station_id, weather_interval
+        hass, latitude, longitude, station_id, weather_interval, wind_direction_type
     )
     _LOGGER.debug(
         "Initialized new DWDWeatherData with id: {}".format(dwd_weather_data.station_id)
@@ -55,7 +59,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DWD weather integration."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
@@ -97,6 +101,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
                 vol.Required(CONF_WEATHER_INTERVAL, default=24): cv.positive_int,
+                vol.Required(CONF_WIND_DIRECTION_TYPE, default=DEFAULT_WIND_DIRECTION_TYPE):
+                    vol.In(["DEGREES", "DIRECTION"]),
                 vol.Optional(CONF_STATION_ID, default=""): str,
             },
         )

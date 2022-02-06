@@ -13,7 +13,9 @@ from .connector import DWDWeatherData
 from .const import (
     CONF_STATION_ID,
     CONF_WEATHER_INTERVAL,
+    CONF_WIND_DIRECTION_TYPE,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_WIND_DIRECTION_TYPE,
     DOMAIN,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
@@ -38,10 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     longitude = entry.data[CONF_LONGITUDE]
     site_name = entry.data[CONF_NAME]
     weather_interval = entry.data[CONF_WEATHER_INTERVAL]
+    wind_direction_type = entry.data[CONF_WIND_DIRECTION_TYPE]
     station_id = entry.data[CONF_STATION_ID]
 
     dwd_weather_data = DWDWeatherData(
-        hass, latitude, longitude, station_id, weather_interval
+        hass, latitude, longitude, station_id, weather_interval, wind_direction_type
     )
 
     # Update data initially
@@ -65,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         DWDWEATHER_NAME: site_name,
         CONF_WEATHER_INTERVAL: weather_interval,
+        CONF_WIND_DIRECTION_TYPE: wind_direction_type,
     }
 
     # Fetch initial data so we have data when entities subscribe
@@ -89,6 +93,12 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new[CONF_WEATHER_INTERVAL] = 24
         config_entry.data = {**new}
         config_entry.version = 2
+
+    if config_entry.version == 2:
+        new = {**config_entry.data}
+        new[CONF_WIND_DIRECTION_TYPE] = DEFAULT_WIND_DIRECTION_TYPE
+        config_entry.data = {**new}
+        config_entry.version = 3
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

@@ -9,7 +9,8 @@
           "latitude": "Latitude",
           "longitude": "Longitude",
           "station_id": "Station-ID",
-          "weather_interval": "Forecast Interval in hours"
+          "weather_interval": "Forecast Interval in hours",
+          "wind_direction_type": "Wind direction type"
        }
       }
     },
