@@ -9,7 +9,8 @@
           "latitude": "Szerokość geograficzna",
           "longitude": "Długość geograficzna",
           "station_id": "Identyfikator stacji",
-          "weather_interval": "Interwał prognozy w godzinach"
+          "weather_interval": "Interwał prognozy w godzinach",
+          "wind_direction_type": "Rodzaj kierunku wiatru"
        }
       }
     },
