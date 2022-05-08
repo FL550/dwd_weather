@@ -1,6 +1,6 @@
 {
   "domain": "dwd_weather",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "name": "Deutscher Wetterdienst (DWD)",
   "documentation": "https://github.com/FL550/dwd_weather",
   "issue_tracker": "https://github.com/FL550/dwd_weather/issues",
@@ -9,5 +9,5 @@
   "codeowners": [
     "@FL550"
   ],
-  "requirements": ["simple_dwd_weatherforecast==1.1.2","markdownify==0.6.5"]
+  "requirements": ["simple_dwd_weatherforecast==1.1.3","markdownify==0.6.5"]
 }
