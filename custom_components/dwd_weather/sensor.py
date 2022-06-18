@@ -15,7 +15,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
+
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -38,15 +42,23 @@ ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
 # Sensor types are defined as:
-#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default
+#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default [5]state_class
 SENSOR_TYPES = {
-    "weather": ["Weather", None, None, "mdi:weather-partly-cloudy", False],
+    "weather": [
+        "Weather",
+        None,
+        None,
+        "mdi:weather-partly-cloudy",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "weather_report": [
         "Weather Report",
         None,
         None,
         "mdi:weather-partly-cloudy",
         False,
+        None,
     ],
     "temperature": [
         "Temperature",
@@ -54,6 +66,7 @@ SENSOR_TYPES = {
         TEMP_CELSIUS,
         "mdi:temperature-celsius",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
     "dewpoint": [
         "Dewpoint",
@@ -61,30 +74,55 @@ SENSOR_TYPES = {
         TEMP_CELSIUS,
         "mdi:temperature-celsius",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "pressure": ["Pressure", DEVICE_CLASS_PRESSURE, PRESSURE_HPA, None, False],
+    "pressure": [
+        "Pressure",
+        DEVICE_CLASS_PRESSURE,
+        PRESSURE_HPA,
+        None,
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "wind_speed": [
         "Wind Speed",
         None,
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "wind_direction": ["Wind Direction", None, DEGREE, "mdi:compass-outline", False],
+    "wind_direction": [
+        "Wind Direction",
+        None,
+        DEGREE,
+        "mdi:compass-outline",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "wind_gusts": [
         "Wind Gusts",
         None,
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "precipitation": ["Precipitation", None, "kg/m^2", "mdi:weather-rainy", False],
+    "precipitation": [
+        "Precipitation",
+        None,
+        "kg/m^2",
+        "mdi:weather-rainy",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "precipitation_probability": [
         "Precipitation Probability",
         None,
         "%",
         "mdi:weather-rainy",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
     "precipitation_duration": [
         "Precipitation Duration",
@@ -92,16 +130,39 @@ SENSOR_TYPES = {
         TIME_SECONDS,
         "mdi:weather-rainy",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "cloud_coverage": ["Cloud Coverage", None, "%", "mdi:cloud", False],
-    "visibility": ["Visibility", None, LENGTH_KILOMETERS, "mdi:eye", False],
-    "sun_duration": ["Sun Duration", None, TIME_SECONDS, "mdi:weather-sunset", False],
+    "cloud_coverage": [
+        "Cloud Coverage",
+        None,
+        "%",
+        "mdi:cloud",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "visibility": [
+        "Visibility",
+        None,
+        LENGTH_KILOMETERS,
+        "mdi:eye",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "sun_duration": [
+        "Sun Duration",
+        None,
+        TIME_SECONDS,
+        "mdi:weather-sunset",
+        False,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "sun_irradiance": [
         "Sun Irradiance",
         None,
         "W/m^2",
         "mdi:weather-sunny-alert",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
     "fog_probability": [
         "Fog Probability",
@@ -109,6 +170,7 @@ SENSOR_TYPES = {
         "%",
         "mdi:weather-fog",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
     "humidity": [
         "Humidity",
@@ -116,6 +178,7 @@ SENSOR_TYPES = {
         "%",
         "mdi:water-percent",
         False,
+        STATE_CLASS_MEASUREMENT,
     ],
 }
 
@@ -135,7 +198,7 @@ async def async_setup_entry(
     )
 
 
-class DWDWeatherForecastSensor(Entity):
+class DWDWeatherForecastSensor(SensorEntity):
     """Implementation of a DWD current weather condition sensor."""
 
     def __init__(self, entry_data, hass_data, sensor_type):
@@ -223,6 +286,11 @@ class DWDWeatherForecastSensor(Entity):
     def device_class(self):
         """Return the device class of the sensor."""
         return SENSOR_TYPES[self._type][1]
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SENSOR_TYPES[self._type][5]
 
     @property
     def extra_state_attributes(self):
