@@ -2,7 +2,13 @@
 import logging
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    TEMP_CELSIUS,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -63,24 +69,34 @@ class DWDWeather(WeatherEntity):
         return self._connector.get_condition()
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         return self._connector.get_temperature()
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
+    def native_temperature_unit(self):
+        """Return the temperature unit."""
         return TEMP_CELSIUS
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         return self._connector.get_pressure()
 
     @property
-    def wind_speed(self):
+    def native_pressure_unit(self):
+        """Return the pressure unit."""
+        return PRESSURE_HPA
+
+    @property
+    def native_wind_speed(self):
         """Return the wind speed."""
         return self._connector.get_wind_speed()
+
+    @property
+    def native_wind_speed_unit(self):
+        """Return the wind speed unit."""
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def wind_bearing(self):
@@ -88,14 +104,24 @@ class DWDWeather(WeatherEntity):
         return self._connector.get_wind_direction()
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the visibility."""
         return self._connector.get_visibility()
+
+    @property
+    def native_visibility_unit(self):
+        """Return the visibility unit."""
+        return LENGTH_KILOMETERS
 
     @property
     def humidity(self):
         """Return the relative humidity."""
         return self._connector.get_humidity()
+
+    @property
+    def native_precipitation_unit(self):
+        """Return the precipitation unit."""
+        return LENGTH_MILLIMETERS
 
     @property
     def attribution(self):

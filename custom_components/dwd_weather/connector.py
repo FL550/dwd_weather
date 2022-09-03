@@ -6,12 +6,13 @@ from markdownify import markdownify
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
 )
 from simple_dwd_weatherforecast import dwdforecast
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
@@ -28,7 +29,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DWDWeatherData:
-    def __init__(self, hass, latitude, longitude, station_id, weather_interval, wind_direction_type):
+    def __init__(
+        self,
+        hass,
+        latitude,
+        longitude,
+        station_id,
+        weather_interval,
+        wind_direction_type,
+    ):
         """Initialize the data object."""
         self._hass = hass
         self.forecast = None
@@ -137,16 +146,16 @@ class DWDWeatherData:
                                     self.weather_interval,
                                     False,
                                 ),
-                                ATTR_FORECAST_TEMP: temp_max,
-                                ATTR_FORECAST_TEMP_LOW: temp_min,
-                                ATTR_FORECAST_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
+                                ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                                ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
+                                ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                                     WeatherDataType.PRECIPITATION,
                                     timestep,
                                     self.weather_interval,
                                     False,
                                 ),
                                 ATTR_FORECAST_WIND_BEARING: wind_dir,
-                                ATTR_FORECAST_WIND_SPEED: self.dwd_weather.get_timeframe_max(
+                                ATTR_FORECAST_NATIVE_WIND_SPEED: self.dwd_weather.get_timeframe_max(
                                     WeatherDataType.WIND_SPEED,
                                     timestep,
                                     self.weather_interval,
@@ -383,20 +392,20 @@ class DWDWeatherData:
 
     def get_wind_direction_symbol(self, value):
         if value < 22.5:
-            return 'N'
+            return "N"
         elif value < 67.5:
-            return 'NO'
+            return "NO"
         elif value < 112.5:
-            return 'O'
+            return "O"
         elif value < 157.5:
-            return 'SO'
+            return "SO"
         elif value < 202.5:
-            return 'S'
+            return "S"
         elif value < 247.5:
-            return 'SW'
+            return "SW"
         elif value < 292.5:
-            return 'W'
+            return "W"
         elif value < 337.5:
-            return 'NW'
+            return "NW"
         else:
-            return 'N'
+            return "N"
