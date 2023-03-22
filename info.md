@@ -34,7 +34,7 @@ Additionally this integration adds hourly forecast data as sensors for these val
 - Fog Probability
 - Humidity
 
-The sensors are disabled per default, as they contain a lot of data. 
+The sensors are disabled per default, as they contain a lot of data.
 
 You can enable the ones you like in HA UI under "Configuration" -> "Entities" -> click on the filter icon on the right -> Check "Show diabled entities" -> Check the ones you like to enable -> Click "ENABLE SELECTED" at the top -> Confirm the next dialog
 
@@ -68,7 +68,7 @@ If you insert a station_id, this will override the coordinates and use the speci
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/t/deutscher-wetterdienst-dwd/217488
 [license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/custom-components/blueprint.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/FL550/dwd_weather.svg?style=for-the-badge
 [releases]: https://github.com/FL550/dwd_weather/releases
 [github]: https://github.com/FL550/dwd_weather
 [buymecoffee]: https://www.buymeacoffee.com/FL550
