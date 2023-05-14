@@ -332,7 +332,7 @@ class DWDWeatherData:
                 elif data_type == WeatherDataType.SUN_DURATION:
                     value = round(value, 0)
                 elif data_type == WeatherDataType.SUN_IRRADIANCE:
-                    value = round(value, 0)
+                    value = round(value / 3.6, 0)
                 elif data_type == WeatherDataType.FOG_PROBABILITY:
                     value = round(value, 0)
                 elif data_type == WeatherDataType.HUMIDITY:
