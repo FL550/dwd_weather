@@ -1,5 +1,5 @@
 [![GitHub Release][releases-shield]][releases]
-[![releases][downloads-shield]](releases)
+[![releases][downloads-shield]][releases]
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]](hacs)
 [![Community Forum][forum-shield]][forum]
