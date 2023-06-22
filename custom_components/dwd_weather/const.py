@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 DOMAIN = "dwd_weather"
+INTEGRATION_VERSION = "1.2.28"
 
 DEFAULT_NAME = "DWD Weather"
 ATTRIBUTION = "Data provided by Deutscher Wetterdienst (DWD)"

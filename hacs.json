@@ -6,5 +6,7 @@
         "sensor"
     ],
     "iot_class": "Cloud Polling",
-    "render_readme": false
+    "render_readme": false,
+    "zip_release": true,
+    "filename": "dwd_weather.zip"
 }
