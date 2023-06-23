@@ -1,2 +1,4 @@
 __pycache__
 .vscode
+homeassistant
+simple_dwd_weatherforecast
