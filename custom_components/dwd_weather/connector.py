@@ -179,7 +179,7 @@ class DWDWeatherData:
         )
 
     def get_weather_report(self):
-        return markdownify(self.dwd_weather.weather_report, strip=["br"])
+        return markdownify(self.dwd_weather.get_weather_report(), strip=["br"])
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = self.dwd_weather.get_forecast_data(
