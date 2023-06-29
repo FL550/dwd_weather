@@ -2,6 +2,8 @@
 
 import logging
 import re
+from custom_components.dwd_weather.connector import DWDWeatherData
+from custom_components.dwd_weather.entity import DWDWeatherEntity
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -29,9 +31,7 @@ from .const import (
     ATTR_STATION_NAME,
     ATTRIBUTION,
     DOMAIN,
-    DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
-    DWDWEATHER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,27 +198,16 @@ async def async_setup_entry(
     )
 
 
-class DWDWeatherForecastSensor(SensorEntity):
+class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
     """Implementation of a DWD current weather condition sensor."""
 
     def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
-        self._connector = hass_data[DWDWEATHER_DATA]
-        self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
-
         self._type = sensor_type
-        self._name = f"{SENSOR_TYPES[self._type][0]} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{SENSOR_TYPES[self._type][0]}_{hass_data[DWDWEATHER_NAME]}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique of the sensor."""
-        return self._unique_id
+        dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        name = f"{dwd_data.dwd_weather.station_name}: {SENSOR_TYPES[self._type][0]}"
+        unique_id = f"{dwd_data.dwd_weather.station_id}_{SENSOR_TYPES[self._type][0]}"
+        super().__init__(hass_data, unique_id, name)
 
     @property
     def state(self):
@@ -348,11 +337,6 @@ class DWDWeatherForecastSensor(SensorEntity):
     async def async_update(self):
         """Schedule a custom update via the common entity update service."""
         await self._coordinator.async_request_refresh()
-
-    @property
-    def should_poll(self) -> bool:
-        """Entities do not individually poll."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

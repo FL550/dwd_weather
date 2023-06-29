@@ -19,7 +19,6 @@ from .const import (
     DOMAIN,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
-    DWDWEATHER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,20 +60,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    # Fetch initial data so we have data when entities subscribe
+    await dwdweather_coordinator.async_refresh()
+    if dwd_weather_data.dwd_weather.get_station_name == "":
+        raise ConfigEntryNotReady()
+
     # Save the data
     dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
     dwdweather_hass_data[entry.entry_id] = {
         DWDWEATHER_DATA: dwd_weather_data,
         DWDWEATHER_COORDINATOR: dwdweather_coordinator,
-        DWDWEATHER_NAME: site_name,
         CONF_WEATHER_INTERVAL: weather_interval,
         CONF_WIND_DIRECTION_TYPE: wind_direction_type,
     }
-
-    # Fetch initial data so we have data when entities subscribe
-    await dwdweather_coordinator.async_refresh()
-    if dwd_weather_data.dwd_weather.get_station_name == "":
-        raise ConfigEntryNotReady()
 
     for component in PLATFORMS:
         hass.async_create_task(

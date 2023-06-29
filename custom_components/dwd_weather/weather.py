@@ -1,5 +1,7 @@
 """Support for DWD weather service."""
 import logging
+from custom_components.dwd_weather.connector import DWDWeatherData
+from custom_components.dwd_weather.entity import DWDWeatherEntity
 
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
@@ -9,15 +11,13 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
 )
+
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
-    DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
-    DWDWEATHER_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,16 +31,16 @@ async def async_setup_entry(
     async_add_entities([DWDWeather(entry.data, hass_data)], False)
 
 
-class DWDWeather(WeatherEntity):
+class DWDWeather(DWDWeatherEntity, WeatherEntity):
     """Implementation of DWD weather."""
 
     def __init__(self, entry_data, hass_data):
         """Initialise the platform with a data instance and site."""
-        self._connector = hass_data[DWDWEATHER_DATA]
-        self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
-        self._name = f"{DEFAULT_NAME} {hass_data[DWDWEATHER_NAME]}"
-        self._unique_id = f"{hass_data[DWDWEATHER_NAME]}"
+        dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        name = f"{dwd_data.dwd_weather.station_name}"
+        unique_id = f"{dwd_data.dwd_weather.station_id}_weather"
+        super().__init__(hass_data, unique_id, name)
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
@@ -48,20 +48,9 @@ class DWDWeather(WeatherEntity):
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        self._name
+    async def async_update(self):
+        """Schedule a custom update via the common entity update service."""
+        await self._coordinator.async_request_refresh()
 
     @property
     def condition(self):
