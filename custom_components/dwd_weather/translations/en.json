@@ -3,26 +3,81 @@
   "config": {
     "step": {
       "user": {
-        "description": "The latitude and longitude will be used to find the closest weather station. If you specify a station id, this will be used and latitude and longitude will be ignored. You can search available station-ids here: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
+        "description": "You can configure two types of entities: A weather station and a weather map. You can add as many as you like, the only restriction is, that each station id must be unique.",
         "title": "Deutscher Wetterdienst",
         "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude",
-          "station_id": "Station-ID",
-          "weather_interval": "Forecast Interval in hours",
-          "wind_direction_type": "Wind direction type"
-       }
+          "entity_type": "Which Entity Type would you like to configure?"
+        }
+      },
+      "station_select": {
+        "description": "Some stations offer actual measured values (with a slight delay), which could provide more accurate data. However, the forecasts are still very accurate.\n\nThe station name is configured in the next step.",
+        "title": "Station selection",
+        "data": {
+          "station_id": "Station"
+        }
+      },
+      "station_configure_report": {
+        "description": "You have selected a station where actual measurement data is available.\nThe measured values might provide values with higher accuracy, but they are available only with a slight time delay (under 1 hour).",
+        "title": "Data source configuration",
+        "data": {
+          "data_type": "Data source"
+        }
+      },
+      "station_configure": {
+        "description": "DWD provides an hourly data update, however, this will increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB per update).",
+        "title": "Station configuration",
+        "data": {
+          "station_name": "Station name",
+          "wind_direction_type": "Wind direction type",
+          "hourly_update": "Force hourly data update (see warning above before enabling)"
+        }
+      },
+      "granularity": {
+        "description": "It is possible to average the forecast values for the weather entity over a given period of time. Please select the ones you want to use, the data is only fetched once.",
+        "title": "Forecast granularity",
+        "data": {
+          "weather_interval": "Forecast granularity"
+        }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect",
-      "invalid_station_id": "Invalid Station-ID",
-      "weather_interval_too_big": "Maximum interval is 24 hours",
-      "weather_interval_remainder_not_zero": "The remainder of 24 hours divided by the value have to be zero",
+      "invalid_station_id": "Invalid Station! Please select one from the list below:",
+      "invalid_weather_interval": "You have to select at least one weather interval",
       "unknown": "Unknown Error"
     },
     "abort": {
       "already_configured": "This station is already configured"
+    }
+  },
+  "selector": {
+    "entity_type": {
+      "options": {
+        "weather_station": "Weather station",
+        "weather_map": "Weather map"
+      }
+    },
+    "data_type": {
+      "options": {
+        "report_data": "Use report data for current weather (slight delay in data possible)",
+        "forecast_data": "Use forecast data for current weather"
+      }
+    },
+    "wind_direction_type": {
+      "options": {
+        "degrees": "Degrees",
+        "direction": "Direction (N, NE, E, ...)"
+      }
+    },
+    "weather_interval": {
+      "options": {
+        "24": "daily",
+        "12": "half day",
+        "6": "6 hours",
+        "3": "3 hours",
+        "2": "2 hours",
+        "1": "1 hour"
+      }
     }
   }
 }

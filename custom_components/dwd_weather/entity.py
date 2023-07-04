@@ -1,7 +1,16 @@
 """DWDWeatherEntity class."""
+import logging
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
-from .const import DOMAIN, DWDWEATHER_COORDINATOR, DWDWEATHER_DATA, NAME
+from .const import (
+    CONF_STATION_NAME,
+    DOMAIN,
+    DWDWEATHER_COORDINATOR,
+    DWDWEATHER_DATA,
+    NAME,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DWDWeatherEntity:
@@ -14,7 +23,7 @@ class DWDWeatherEntity:
         self._device_id = self._connector.dwd_weather.station_id
         self._unique_id = unique_id
         self._name = name
-        self._station_name = self._connector.dwd_weather.station_name
+        self._station_name = self._connector._config[CONF_STATION_NAME]
 
         super().__init__()
 
@@ -29,6 +38,16 @@ class DWDWeatherEntity:
             model=f"Station {self._device_id}",
             name=self._station_name,
             entry_type=DeviceEntryType.SERVICE,
+        )
+
+    async def async_update(self):
+        """Schedule a custom update via the common entity update service."""
+        await self._coordinator.async_request_refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener and load data."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
         )
 
     @property

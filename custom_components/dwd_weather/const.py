@@ -21,12 +21,16 @@ ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
-DEFAULT_WIND_DIRECTION_TYPE = "DEGREES"
+DEFAULT_WIND_DIRECTION_TYPE = "degrees"
 
 DWDWEATHER_DATA = "dwd_weather_data"
 DWDWEATHER_COORDINATOR = "dwd_weather_coordinator"
 DWDWEATHER_MONITORED_CONDITIONS = "dwd_weather_monitored_conditions"
 
+CONF_ENTITY_TYPE = "entity_type"
 CONF_STATION_ID = "station_id"
-CONF_WEATHER_INTERVAL = "weather_interval"
+CONF_DATA_TYPE = "data_type"
+CONF_STATION_NAME = "station_name"
 CONF_WIND_DIRECTION_TYPE = "wind_direction_type"
+CONF_HOURLY_UPDATE = "hourly_update"
+CONF_WEATHER_INTERVAL = "weather_interval"

@@ -16,6 +16,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ATTRIBUTION,
+    CONF_STATION_ID,
+    CONF_STATION_NAME,
+    CONF_WEATHER_INTERVAL,
     DOMAIN,
     DWDWEATHER_DATA,
 )
@@ -28,29 +31,26 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([DWDWeather(entry.data, hass_data)], False)
+    if CONF_STATION_ID in entry.data:
+        for interval in entry.data[CONF_WEATHER_INTERVAL]:
+            async_add_entities([DWDWeather(entry.data, hass_data, interval)], False)
 
 
 class DWDWeather(DWDWeatherEntity, WeatherEntity):
     """Implementation of DWD weather."""
 
-    def __init__(self, entry_data, hass_data):
+    def __init__(self, entry_data, hass_data, weather_interval):
         """Initialise the platform with a data instance and site."""
 
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
-        name = f"{dwd_data.dwd_weather.station_name}"
-        unique_id = f"{dwd_data.dwd_weather.station_id}_weather"
-        super().__init__(hass_data, unique_id, name)
+        self._weather_interval = int(weather_interval)
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
+        name = f"{dwd_data._config[CONF_STATION_NAME]}{'_' + str(weather_interval) + 'h' if weather_interval != '24' else ''}"
+        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_weather{'_' + str(weather_interval) if weather_interval != '24' else ''}"
+        _LOGGER.debug(
+            "Setting up weather with id {} and name {}".format(unique_id, name)
         )
-
-    async def async_update(self):
-        """Schedule a custom update via the common entity update service."""
-        await self._coordinator.async_request_refresh()
+        super().__init__(hass_data, unique_id, name)
 
     @property
     def condition(self):
@@ -120,7 +120,7 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self._connector.forecast
+        return self._connector.get_forecast(self._weather_interval)
 
     @property
     def extra_state_attributes(self):
