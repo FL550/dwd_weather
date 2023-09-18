@@ -16,6 +16,7 @@ INTEGRATION_VERSION = "1.2.28"
 MIN_REQUIRED_HA_VERSION = "2022.7.1"
 
 ATTR_LATEST_UPDATE = "latest_update_utc"
+ATTR_REPORT_ISSUE_TIME = "report_time_utc"
 ATTR_ISSUE_TIME = "forecast_time_utc"
 ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"

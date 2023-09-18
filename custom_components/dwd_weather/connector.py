@@ -22,6 +22,7 @@ from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
 from .const import (
     ATTR_ISSUE_TIME,
+    ATTR_REPORT_ISSUE_TIME,
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
@@ -68,15 +69,17 @@ class DWDWeatherData:
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
             self.infos[ATTR_LATEST_UPDATE] = timestamp
             self.latest_update = timestamp
+
+            self.infos[ATTR_REPORT_ISSUE_TIME] = (
+                f"{self.dwd_weather.report_data['date']} {self.dwd_weather.report_data['time']}"
+                if self._config[CONF_DATA_TYPE] == "report_data"
+                else ""
+            )
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
 
-            # _LOGGER.debug(
-            #      "forecast_data for station_id '{}': {}".format(
-            #          self._config[CONF_STATION_ID], self.dwd_weather.forecast_data
-            #      )
-            # )
+            _LOGGER.debug("infos '{}'".format(self.infos))
 
     def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
         if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
@@ -180,12 +183,17 @@ class DWDWeatherData:
         return markdownify(self.dwd_weather.get_weather_report(), strip=["br"])
 
     def get_weather_value(self, data_type: WeatherDataType):
-        # TODO True if self._config[CONF_DATA_TYPE] == "report_data" else False
-        value = self.dwd_weather.get_forecast_data(
-            data_type,
-            datetime.now(timezone.utc),
-            False,
-        )
+        if self._config[CONF_DATA_TYPE] == "report_data":
+            value = self.dwd_weather.get_reported_weather(
+                data_type,
+                shouldUpdate=False,
+            )
+        else:
+            value = self.dwd_weather.get_forecast_data(
+                data_type,
+                datetime.now(timezone.utc),
+                shouldUpdate=False,
+            )
         if value is not None:
             if data_type == WeatherDataType.TEMPERATURE:
                 value = round(value - 273.1, 1)

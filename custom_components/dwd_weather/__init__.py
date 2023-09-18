@@ -46,7 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Fetch initial data so we have data when entities subscribe
-    await dwdweather_coordinator.async_refresh()
+    if dwd_weather_data.dwd_weather.forecast_data is None:
+        await dwdweather_coordinator.async_refresh()
+    _LOGGER.debug("issue_time: {}".format(dwd_weather_data.dwd_weather.issue_time))
     if dwd_weather_data.dwd_weather.forecast_data is None:
         _LOGGER.debug("ConfigEntryNotReady")
         raise ConfigEntryNotReady()

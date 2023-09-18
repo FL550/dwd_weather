@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
+    ATTR_REPORT_ISSUE_TIME,
     ATTR_ISSUE_TIME,
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
@@ -182,6 +183,22 @@ SENSOR_TYPES = {
         False,
         STATE_CLASS_MEASUREMENT,
     ],
+    "measured_values_time": [
+        "Report Time (UTC)",
+        "",
+        "",
+        "mdi:clock-time-four-outline",
+        True,
+        None,
+    ],
+    "forecast_values_time": [
+        "Forecast Time (UTC)",
+        "",
+        "",
+        "mdi:clock-time-four-outline",
+        True,
+        None,
+    ],
 }
 
 
@@ -263,6 +280,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_fog_probability()
         elif self._type == "humidity":
             result = self._connector.get_humidity()
+        elif self._type == "measured_values_time":
+            result = self._connector.infos[ATTR_REPORT_ISSUE_TIME]
+        elif self._type == "forecast_values_time":
+            result = self._connector.infos[ATTR_ISSUE_TIME]
         return result
 
     @property

@@ -25,8 +25,6 @@ class DWDWeatherEntity:
         self._name = name
         self._station_name = self._connector._config[CONF_STATION_NAME]
 
-        super().__init__()
-
     @property
     def device_info(self) -> DeviceInfo | None:
         if self._device_id is None:
