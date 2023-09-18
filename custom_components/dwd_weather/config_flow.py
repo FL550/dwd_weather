@@ -142,11 +142,13 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_DATA_TYPE,
-                    default="report_data",
+                    default="mixed_data",
                 ): selector(
                     {
                         "select": {
-                            "options": list(["report_data", "forecast_data"]),
+                            "options": list(
+                                ["mixed_data", "report_data", "forecast_data"]
+                            ),
                             "custom_value": False,
                             "mode": "list",
                             "translation_key": CONF_DATA_TYPE,

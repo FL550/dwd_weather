@@ -53,7 +53,7 @@ class DWDWeatherData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
-        """Get the latest data from DWD and generate forecast array."""
+        """Get the latest data from DWD."""
         timestamp = datetime.now(timezone.utc)
         # Only update on the hour and when not updated yet
         # TODO and report if new is available, vielleicht alle 10 MInuten?
@@ -63,18 +63,23 @@ class DWDWeatherData:
                 with_forecast=True,
                 with_measurements=True
                 if self._config[CONF_DATA_TYPE] == "report_data"
+                or self._config[CONF_DATA_TYPE] == "mixed_data"
                 else False,
                 with_report=True,
             )
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
             self.infos[ATTR_LATEST_UPDATE] = timestamp
             self.latest_update = timestamp
-
-            self.infos[ATTR_REPORT_ISSUE_TIME] = (
-                f"{self.dwd_weather.report_data['date']} {self.dwd_weather.report_data['time']}"
-                if self._config[CONF_DATA_TYPE] == "report_data"
-                else ""
-            )
+            if (
+                self._config[CONF_DATA_TYPE] == "report_data"
+                or self._config[CONF_DATA_TYPE] == "mixed_data"
+            ) and self.dwd_weather.report_data is not None:
+                report_date_array = self.dwd_weather.report_data["date"].split(".")
+                date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]} {self.dwd_weather.report_data['time']}"
+                _LOGGER.debug("date '{}'".format(date))
+                self.infos[ATTR_REPORT_ISSUE_TIME] = date
+            else:
+                self.infos[ATTR_REPORT_ISSUE_TIME] = ""
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
@@ -183,12 +188,18 @@ class DWDWeatherData:
         return markdownify(self.dwd_weather.get_weather_report(), strip=["br"])
 
     def get_weather_value(self, data_type: WeatherDataType):
-        if self._config[CONF_DATA_TYPE] == "report_data":
+        value = None
+        if (
+            self._config[CONF_DATA_TYPE] == "report_data"
+            or self._config[CONF_DATA_TYPE] == "mixed_data"
+        ):
             value = self.dwd_weather.get_reported_weather(
                 data_type,
                 shouldUpdate=False,
             )
-        else:
+        if self._config[CONF_DATA_TYPE] == "forecast_data" or (
+            self._config[CONF_DATA_TYPE] == "mixed_data" and value is None
+        ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,
                 datetime.now(timezone.utc),
