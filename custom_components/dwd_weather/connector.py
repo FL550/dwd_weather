@@ -30,6 +30,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
+    CONF_HOURLY_UPDATE,
     DEFAULT_WIND_DIRECTION_TYPE,
 )
 
@@ -55,11 +56,9 @@ class DWDWeatherData:
     def _update(self):
         """Get the latest data from DWD."""
         timestamp = datetime.now(timezone.utc)
-        # Only update on the hour and when not updated yet
-        # TODO and report if new is available, vielleicht alle 10 MInuten?
-        if timestamp.minute == 0 or self.latest_update is None:
+        if timestamp.minute % 10 == 0 or self.latest_update is None:
             self.dwd_weather.update(
-                force_hourly=False,
+                force_hourly=self._config[CONF_HOURLY_UPDATE],
                 with_forecast=True,
                 with_measurements=True
                 if self._config[CONF_DATA_TYPE] == "report_data"
@@ -67,6 +66,30 @@ class DWDWeatherData:
                 else False,
                 with_report=True,
             )
+            if self._config[CONF_HOURLY_UPDATE]:
+                # Hacky workaround: as the hourly data does not provide a forecast for the actual hour, we have to clone the next hour and pretend we have a forecast
+                first_date = datetime(
+                    *(
+                        time.strptime(
+                            next(iter(self.dwd_weather.forecast_data)),
+                            "%Y-%m-%dT%H:%M:%S.%fZ",
+                        )[0:6]
+                    ),
+                    0,
+                    timezone.utc,
+                )
+                self.dwd_weather.forecast_data[
+                    (first_date - timedelta(hours=1)).strftime("%Y-%m-%dT%H:00:00.000Z")
+                ] = self.dwd_weather.forecast_data[
+                    first_date.strftime("%Y-%m-%dT%H:00:00.000Z")
+                ]
+                self.dwd_weather.forecast_data.move_to_end(
+                    (first_date - timedelta(hours=1)).strftime(
+                        "%Y-%m-%dT%H:00:00.000Z"
+                    ),
+                    last=False,
+                )
+                # Hacky workaround end
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
             self.infos[ATTR_LATEST_UPDATE] = timestamp
             self.latest_update = timestamp
@@ -76,15 +99,12 @@ class DWDWeatherData:
             ) and self.dwd_weather.report_data is not None:
                 report_date_array = self.dwd_weather.report_data["date"].split(".")
                 date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]} {self.dwd_weather.report_data['time']}"
-                _LOGGER.debug("date '{}'".format(date))
                 self.infos[ATTR_REPORT_ISSUE_TIME] = date
             else:
                 self.infos[ATTR_REPORT_ISSUE_TIME] = ""
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
-
-            _LOGGER.debug("infos '{}'".format(self.infos))
 
     def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
         if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
