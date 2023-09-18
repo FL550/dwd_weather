@@ -11,7 +11,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .connector import DWDWeatherData
 from .const import (
     CONF_STATION_ID,
-    CONF_WEATHER_INTERVAL,
     CONF_WIND_DIRECTION_TYPE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WIND_DIRECTION_TYPE,
@@ -74,7 +73,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
     if config_entry.version == 1:
         new = {**config_entry.data}
-        new[CONF_WEATHER_INTERVAL] = 24
+        new["weather_interval"] = 24
         config_entry.data = {**new}
         config_entry.version = 2
 

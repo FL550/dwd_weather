@@ -3,26 +3,81 @@
   "config": {
     "step": {
       "user": {
-        "description": "Der Längen- und Breitengrad wird genutzt um die nächste Wetterstation zu ermitteln. Wenn eine Stations-ID angegeben wird, werden die Längen- und Breitengrad Angaben ignoriert. Verfügbare Stations-Ids können unter folgendem Link eingesehen werden: https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py",
+        "description": "Im Moment gibt es nur Wetterstationen, aber es kommen weitere Typen. Es können beliebig viele Stationen hinzugefügt werden. Die einzige Einschränkung ist, dass jede Station nur einmal eingerichtet sein darf.",
         "title": "Deutscher Wetterdienst",
         "data": {
-          "latitude": "Längengrad",
-          "longitude": "Breitengrad",
-          "station_id": "Stations-ID",
-          "weather_interval": "Vorhersage Interval in Stunden",
-          "wind_direction_type": "Windrichtungsangabentyp"
+          "entity_type": "Welcher Typ soll konfiguriert werden?"
+        }
+      },
+      "station_select": {
+        "description": "Some stations offer actual measured values (with a slight delay), which could provide more accurate data. However, the forecasts are still very accurate.\n\nThe station name is configured in the next step.",
+        "title": "Station selection",
+        "data": {
+          "station_id": "Station"
+        }
+      },
+      "station_configure_report": {
+        "description": "You have selected a station where actual measurement data is available.\nThe measured values might provide values with higher accuracy, but they are available only with a slight time delay (under 1 hour).",
+        "title": "Data source configuration",
+        "data": {
+          "data_type": "Data source"
+        }
+      },
+      "station_configure": {
+        "description": "DWD provides an hourly data update, however, this will increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB per update).",
+        "title": "Station configuration",
+        "data": {
+          "station_name": "Station name",
+          "wind_direction_type": "Wind direction type",
+          "hourly_update": "Force hourly data update (see warning above before enabling)"
+        }
+      },
+      "granularity": {
+        "description": "It is possible to average the forecast values for the weather entity over a given period of time. Please select the ones you want to use, the data is only fetched once.",
+        "title": "Forecast granularity",
+        "data": {
+          "weather_interval": "Forecast granularity"
         }
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung möglich",
-      "invalid_station_id": "Stations-ID nicht korrekt",
-      "weather_interval_too_big": "Das maximale Intervall sind 24 Stunden",
-      "weather_interval_remainder_not_zero": "Der Rest von dem Wert geteilt durch 24 muss 0 ergeben",
-      "unknown": "Unbekannter Fehler"
+      "cannot_connect": "Cannot connect",
+      "invalid_station_id": "Invalid Station! Please select one from the list below:",
+      "invalid_weather_interval": "You have to select at least one weather interval",
+      "unknown": "Unknown Error"
     },
     "abort": {
-      "already_configured": "Diese Station wurde bereits konfiguriert"
+      "already_configured": "This station is already configured"
+    }
+  },
+  "selector": {
+    "entity_type": {
+      "options": {
+        "weather_station": "Station",
+        "weather_map": "Karte"
+      }
+    },
+    "data_type": {
+      "options": {
+        "report_data": "Use report data for current weather (slight delay in data possible)",
+        "forecast_data": "Use forecast data for current weather"
+      }
+    },
+    "wind_direction_type": {
+      "options": {
+        "degrees": "Degrees",
+        "direction": "Direction (N, NE, E, ...)"
+      }
+    },
+    "weather_interval": {
+      "options": {
+        "24": "daily",
+        "12": "half day",
+        "6": "6 hours",
+        "3": "3 hours",
+        "2": "2 hours",
+        "1": "1 hour"
+      }
     }
   }
 }

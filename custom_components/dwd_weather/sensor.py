@@ -32,7 +32,6 @@ from .const import (
     ATTRIBUTION,
     CONF_STATION_ID,
     CONF_STATION_NAME,
-    CONF_WEATHER_INTERVAL,
     DOMAIN,
     DWDWEATHER_DATA,
 )
@@ -194,29 +193,25 @@ async def async_setup_entry(
     _LOGGER.debug("Sensor async_setup_entry {}".format(entry.data))
     if CONF_STATION_ID in entry.data:
         _LOGGER.debug("Sensor async_setup_entry")
-        for interval in entry.data[CONF_WEATHER_INTERVAL]:
-            async_add_entities(
-                [
-                    DWDWeatherForecastSensor(
-                        entry.data, hass_data, sensor_type, interval
-                    )
-                    for sensor_type in SENSOR_TYPES
-                ],
-                False,
-            )
+        async_add_entities(
+            [
+                DWDWeatherForecastSensor(entry.data, hass_data, sensor_type)
+                for sensor_type in SENSOR_TYPES
+            ],
+            False,
+        )
 
 
 class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
     """Implementation of a DWD current weather condition sensor."""
 
-    def __init__(self, entry_data, hass_data, sensor_type, weather_interval):
+    def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
         self._type = sensor_type
-        self._weather_interval = int(weather_interval)
 
-        name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}{' ' + str(weather_interval) + 'h' if weather_interval != '24' else ''}"
-        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{SENSOR_TYPES[self._type][0]}{'_' + str(weather_interval) if weather_interval != '24' else ''}"
+        name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}"
+        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{SENSOR_TYPES[self._type][0]}"
         _LOGGER.debug(
             "Setting up sensor with id {} and name {}".format(unique_id, name)
         )

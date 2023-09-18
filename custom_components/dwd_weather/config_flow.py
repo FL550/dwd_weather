@@ -20,7 +20,6 @@ from .const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
-    CONF_WEATHER_INTERVAL,
     CONF_WIND_DIRECTION_TYPE,
 )
 
@@ -53,7 +52,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif user_input[CONF_ENTITY_TYPE] == "weather_map":
                 # Show map config form
                 return self.async_create_entry(
-                    title="Weather Map TEst", data=self.config_data
+                    title="Weather Map Test", data=self.config_data
                 )
                 pass
 
@@ -65,7 +64,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): selector(
                     {
                         "select": {
-                            "options": list(["weather_station", "weather_map"]),
+                            "options": list(["weather_station"]),  # , "weather_map"
                             "custom_value": False,
                             "mode": "list",
                             "translation_key": CONF_ENTITY_TYPE,
@@ -86,10 +85,12 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             station = dwdforecast.load_station_id(user_input["station_id"])
             _LOGGER.debug("Station:validation: {}".format(station))
             if station is not None:
-                self.config_data.update(user_input)
                 if station["report_available"] == 1:
+                    self.config_data.update(user_input)
                     return await self.async_step_station_configure_report()
                 else:
+                    self.config_data[CONF_DATA_TYPE] = "forecast_data"
+                    self.config_data.update(user_input)
                     return await self.async_step_station_configure()
             else:
                 errors = {"base": "invalid_station_id"}
@@ -168,7 +169,12 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if user_input is not None:
             self.config_data.update(user_input)
-            return await self.async_step_granularity()
+            await self.async_set_unique_id(self.config_data[CONF_STATION_ID])
+            self._abort_if_unique_id_configured()
+            # The data is the data which is picked up by the async_setup_entry in sensor or weather
+            return self.async_create_entry(
+                title=self.config_data[CONF_STATION_ID], data=self.config_data
+            )
 
         _LOGGER.debug(
             "Station_configure:station_data: {}".format(
@@ -205,42 +211,4 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="station_configure", data_schema=data_schema, errors=errors
-        )
-
-    async def async_step_granularity(self, user_input=None):
-        errors = {}
-        _LOGGER.debug(
-            "granularity:config: {},user_input: {}".format(self.config_data, user_input)
-        )
-        if user_input is not None:
-            if len(user_input[CONF_WEATHER_INTERVAL]) == 0:
-                errors = {"base": "invalid_weather_interval"}
-            else:
-                self.config_data.update(user_input)
-
-                await self.async_set_unique_id(self.config_data[CONF_STATION_ID])
-                self._abort_if_unique_id_configured()
-                # The data is the data which is picked up by the async_setup_entry in sensor or weather
-                return self.async_create_entry(
-                    title=self.config_data[CONF_STATION_ID], data=self.config_data
-                )
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_WEATHER_INTERVAL): selector(
-                    {
-                        "select": {
-                            "options": list(["24", "12", "6", "3", "2", "1"]),
-                            "custom_value": False,
-                            "mode": "list",
-                            "multiple": True,
-                            "translation_key": CONF_WEATHER_INTERVAL,
-                        }
-                    }
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="granularity", data_schema=data_schema, errors=errors
         )

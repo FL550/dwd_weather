@@ -14,6 +14,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    WeatherEntityFeature,
+    Forecast,
 )
 from simple_dwd_weatherforecast import dwdforecast
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
@@ -58,7 +60,9 @@ class DWDWeatherData:
             self.dwd_weather.update(
                 force_hourly=False,
                 with_forecast=True,
-                with_measurements=True if self._config[CONF_DATA_TYPE] == "report_data" else False,
+                with_measurements=True
+                if self._config[CONF_DATA_TYPE] == "report_data"
+                else False,
                 with_report=True,
             )
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
@@ -74,7 +78,11 @@ class DWDWeatherData:
             #      )
             # )
 
-    def get_forecast(self, weather_interval):
+    def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
+        if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
+            weather_interval = 1
+        elif WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_DAILY:
+            weather_interval = 24
         timestep = datetime(
             self.latest_update.year,
             self.latest_update.month,
@@ -172,7 +180,7 @@ class DWDWeatherData:
         return markdownify(self.dwd_weather.get_weather_report(), strip=["br"])
 
     def get_weather_value(self, data_type: WeatherDataType):
-        #TODO True if self._config[CONF_DATA_TYPE] == "report_data" else False
+        # TODO True if self._config[CONF_DATA_TYPE] == "report_data" else False
         value = self.dwd_weather.get_forecast_data(
             data_type,
             datetime.now(timezone.utc),

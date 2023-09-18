@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "You can configure two types of entities: A weather station and a weather map. You can add as many as you like, the only restriction is, that each station id must be unique.",
+        "description": "Right now, only weather stations are supported, but more will come. You can add as many as you like, the only restriction is, that each station id must be unique.",
         "title": "Deutscher Wetterdienst",
         "data": {
           "entity_type": "Which Entity Type would you like to configure?"
