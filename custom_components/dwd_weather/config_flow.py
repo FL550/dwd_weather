@@ -1,21 +1,22 @@
 """Config flow for Deutscher Wetterdienst integration."""
 
 import logging
-from typing import Any
-
 import voluptuous as vol
-from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import selector
+from homeassistant import config_entries
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    SelectSelector,
+    TextSelector,
+)
 from simple_dwd_weatherforecast import dwdforecast
-from homeassistant.core import callback
 
-from .connector import DWDWeatherData
 from .const import (
     CONF_DATA_TYPE,
+    CONF_DATA_TYPE_FORECAST,
+    CONF_DATA_TYPE_MIXED,
+    CONF_DATA_TYPE_REPORT,
     CONF_ENTITY_TYPE,
+    CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -42,33 +43,27 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if len(errors) > 0:
                 _LOGGER.debug("error: {}".format(errors))
                 return self.async_show_form(
-                    step_id="user", data_schema=data_schema, errors=errors
+                    step_id="user", data_schema=data_schema, errors={errors}
                 )
             # Check selected option
-            if user_input[CONF_ENTITY_TYPE] == "weather_station":
+            if user_input[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
                 # Show station config form
                 _LOGGER.debug("Selected weather_station")
                 return await self.async_step_station_select()
-            elif user_input[CONF_ENTITY_TYPE] == "weather_map":
-                # Show map config form
-                return self.async_create_entry(
-                    title="Weather Map Test", data=self.config_data
-                )
+            else:
                 pass
 
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_ENTITY_TYPE,
-                    default="weather_station",
-                ): selector(
+                    default=CONF_ENTITY_TYPE_STATION,
+                ): SelectSelector(
                     {
-                        "select": {
-                            "options": list(["weather_station"]),  # , "weather_map"
-                            "custom_value": False,
-                            "mode": "list",
-                            "translation_key": CONF_ENTITY_TYPE,
-                        }
+                        "options": list([CONF_ENTITY_TYPE_STATION]),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_ENTITY_TYPE,
                     }
                 )
             },
@@ -82,7 +77,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug("Station:user_input: {}".format(user_input))
         if user_input is not None:
-            station = dwdforecast.load_station_id(user_input["station_id"])
+            station = dwdforecast.load_station_id(user_input[CONF_STATION_ID])
             _LOGGER.debug("Station:validation: {}".format(station))
             if station is not None:
                 if station["report_available"] == 1:
@@ -94,7 +89,6 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_station_configure()
             else:
                 errors = {"base": "invalid_station_id"}
-
         stations_list = dwdforecast.get_stations_sorted_by_distance(
             self.hass.config.latitude, self.hass.config.longitude
         )
@@ -104,7 +98,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             station_data = dwdforecast.load_station_id(station[0])
             stations.append(
                 {
-                    "label": f"{station[1]} km: {dwdforecast.load_station_id(station[0])['name']} ({station_data['elev']}m) — {'Report data available' if station_data['report_available'] == 1 else 'Only forecast'}",
+                    "label": f"[{'X' if station_data['report_available'] == 1 else '_'}] {station[1]} km: {dwdforecast.load_station_id(station[0])['name']} ({station_data['elev']}m)",
                     "value": station[0],
                 }
             )
@@ -114,13 +108,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_STATION_ID,
                     default=stations[0]["value"],
-                ): selector(
+                ): SelectSelector(
                     {
-                        "select": {
-                            "options": list(stations),
-                            "custom_value": True,
-                            "mode": "dropdown",
-                        }
+                        "options": list(stations),
+                        "custom_value": True,
+                        "mode": "dropdown",
                     }
                 ),
             }
@@ -142,17 +134,19 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_DATA_TYPE,
-                    default="mixed_data",
-                ): selector(
+                    default=CONF_DATA_TYPE_MIXED,
+                ): SelectSelector(
                     {
-                        "select": {
-                            "options": list(
-                                ["mixed_data", "report_data", "forecast_data"]
-                            ),
-                            "custom_value": False,
-                            "mode": "list",
-                            "translation_key": CONF_DATA_TYPE,
-                        }
+                        "options": list(
+                            [
+                                CONF_DATA_TYPE_MIXED,
+                                CONF_DATA_TYPE_REPORT,
+                                CONF_DATA_TYPE_FORECAST,
+                            ]
+                        ),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_DATA_TYPE,
                     }
                 )
             }
@@ -166,48 +160,48 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug(
             "Station_configure:id: {},user_input: {}".format(
-                self.config_data["station_id"], user_input
+                self.config_data[CONF_STATION_ID], user_input
             )
         )
         if user_input is not None:
-            self.config_data.update(user_input)
-            await self.async_set_unique_id(self.config_data[CONF_STATION_ID])
-            self._abort_if_unique_id_configured()
-            # The data is the data which is picked up by the async_setup_entry in sensor or weather
-            return self.async_create_entry(
-                title=self.config_data[CONF_STATION_ID], data=self.config_data
+            station_id = (
+                f"{self.config_data[CONF_STATION_ID]}: {user_input[CONF_STATION_NAME]}"
             )
+            if await self.async_set_unique_id(station_id) is not None:
+                errors = {"base": "already_configured"}
+            else:
+                self.config_data.update(user_input)
+                # The data is the data which is picked up by the async_setup_entry in sensor or weather
+                return self.async_create_entry(title=station_id, data=self.config_data)
 
         _LOGGER.debug(
             "Station_configure:station_data: {}".format(
-                dwdforecast.load_station_id(self.config_data["station_id"])
+                dwdforecast.load_station_id(self.config_data[CONF_STATION_ID])
             )
         )
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_STATION_NAME,
-                    default=dwdforecast.load_station_id(self.config_data["station_id"])[
-                        "name"
-                    ],
-                ): str,
+                    default=dwdforecast.load_station_id(
+                        self.config_data[CONF_STATION_ID]
+                    )["name"],
+                ): TextSelector({}),
                 vol.Required(
                     CONF_WIND_DIRECTION_TYPE,
                     default="degrees",
-                ): selector(
+                ): SelectSelector(
                     {
-                        "select": {
-                            "options": list(["degrees", "direction"]),
-                            "custom_value": False,
-                            "mode": "list",
-                            "translation_key": CONF_WIND_DIRECTION_TYPE,
-                        }
+                        "options": list(["degrees", "direction"]),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_WIND_DIRECTION_TYPE,
                     }
                 ),
                 vol.Required(
                     CONF_HOURLY_UPDATE,
                     default=False,
-                ): bool,
+                ): BooleanSelector({}),
             }
         )
 

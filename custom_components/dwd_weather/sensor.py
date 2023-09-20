@@ -31,6 +31,8 @@ from .const import (
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
     ATTRIBUTION,
+    CONF_DATA_TYPE,
+    CONF_DATA_TYPE_FORECAST,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
@@ -210,13 +212,29 @@ async def async_setup_entry(
     _LOGGER.debug("Sensor async_setup_entry {}".format(entry.data))
     if CONF_STATION_ID in entry.data:
         _LOGGER.debug("Sensor async_setup_entry")
+        # Only add the report sensor if a report is available
+        sensor_list = {
+            k: v for k, v in SENSOR_TYPES.items() if k != "measured_values_time"
+        }
         async_add_entities(
             [
                 DWDWeatherForecastSensor(entry.data, hass_data, sensor_type)
-                for sensor_type in SENSOR_TYPES
+                for sensor_type in sensor_list
             ],
             False,
         )
+        if (
+            hass_data[DWDWEATHER_DATA]._config[CONF_DATA_TYPE]
+            != CONF_DATA_TYPE_FORECAST
+        ):
+            async_add_entities(
+                [
+                    DWDWeatherForecastSensor(
+                        entry.data, hass_data, "measured_values_time"
+                    )
+                ],
+                False,
+            )
 
 
 class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
