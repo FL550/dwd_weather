@@ -3,80 +3,69 @@
   "config": {
     "step": {
       "user": {
-        "description": "Im Moment gibt es nur Wetterstationen, aber es kommen weitere Typen. Es können beliebig viele Stationen hinzugefügt werden. Die einzige Einschränkung ist, dass jede Station nur einmal eingerichtet sein darf.",
+        "description": "Die Konfiguration kann beliebig oft wiederholt werden und beliebig viele Einträge hinzugefügt werden.",
         "title": "Deutscher Wetterdienst",
         "data": {
           "entity_type": "Welcher Typ soll konfiguriert werden?"
         }
       },
       "station_select": {
-        "description": "Some stations offer actual measured values (with a slight delay), which could provide more accurate data. However, the forecasts are still very accurate.\n\nThe station name is configured in the next step.",
-        "title": "Station selection",
+        "description": "Manche Stationen bieten aktuelle Messwerte an (mit einer leichten Verzögerung von ungefähr einer Stunde), die möglicherweise eine höhere Genauigkeit bieten. Sie sind in der Liste durch '[X]' markiert. Die Vorhersagen sind aber auch sehr genau und sind für die meisten Fälle ausreichend.",
+        "title": "Stationsauswahl",
         "data": {
           "station_id": "Station"
+        },
+        "data_description": {
+          "station_id": "Es kann entweder eine Station aus der Liste ausgewählt werden, oder man kann direkt in der Box nach einer passenden Station suchen und sie dann auswählen."
         }
       },
       "station_configure_report": {
-        "description": "You have selected a station where actual measurement data is available.\nThe measured values might provide values with higher accuracy, but they are available only with a slight time delay (under 1 hour).",
-        "title": "Data source configuration",
+        "description": "Es wurde eine Station ausgewählt, bei der tatsächliche Messwerte vorhanden sind. Die gemessenen Werte bieten eine höhere Genauigkeit, die aber nur mit einer leichten Verzögerung von ungefähr einer Stunde verfügbar sind. Die Aktualität der Wetterdaten kann als Sensorwert angezeigt werden.\n\nDie Vorhersage enthält mehr Datenpunkte als die gemessenen Werte. Es kann ausgewählt werden, welche Daten verwendet werden sollen.",
+        "title": "Datenquellen configuration",
         "data": {
-          "data_type": "Data source"
+          "data_type": "Datenquelle für das aktuelle Wetter"
+        },
+        "data_description": {
+          "data_type": "Diese Einstellung betrifft nur die Sensorwerte für das aktuelle Wetter. Die Vorhersagedaten werden nicht beeinflusst."
         }
       },
       "station_configure": {
-        "description": "DWD provides an hourly data update, however, this will increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB per update).",
-        "title": "Station configuration",
+        "title": "Stationskonfiguration",
         "data": {
-          "station_name": "Station name",
-          "wind_direction_type": "Wind direction type",
-          "hourly_update": "Force hourly data update (see warning above before enabling)"
-        }
-      },
-      "granularity": {
-        "description": "It is possible to average the forecast values for the weather entity over a given period of time. Please select the ones you want to use, the data is only fetched once.",
-        "title": "Forecast granularity",
-        "data": {
-          "weather_interval": "Forecast granularity"
+          "station_name": "Stationsname",
+          "wind_direction_type": "Art der Windrichtungsangabe",
+          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)"
+        },
+        "data_description": {
+          "station_name": "Der angezeigte Stationsname",
+          "wind_direction_type": "Betrifft den Sensorwert für die Windrichtung",
+          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich, da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind."
         }
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect",
-      "invalid_station_id": "Invalid Station! Please select one from the list below:",
-      "invalid_weather_interval": "You have to select at least one weather interval",
-      "unknown": "Unknown Error"
-    },
-    "abort": {
-      "already_configured": "This station is already configured"
+      "invalid_station_id": "Ungültige Station! Bitte eine von der Liste auswählen.",
+      "already_configured": "Eine Station mit der selben ID und Namen ist bereits konfiguriert, bitte einen anderen Namen wählen.",
+      "unknown": "Unbekannter Fehler"
     }
   },
   "selector": {
     "entity_type": {
       "options": {
-        "weather_station": "Station",
-        "weather_map": "Karte"
+        "weather_station": "Wetterstation"
       }
     },
     "data_type": {
       "options": {
-        "report_data": "Use report data for current weather (slight delay in data possible)",
-        "forecast_data": "Use forecast data for current weather"
+        "mixed_data": "Nutze Messwerte wenn vorhanden und andernfalls Vorhersagedaten (empfohlen)",
+        "report_data": "Nutze nur Messwerte für das aktuelle Wetter (weniger Sensorarten verfügbar)",
+        "forecast_data": "Nutze nur Vorhersagedaten für das aktuelle Wetter"
       }
     },
     "wind_direction_type": {
       "options": {
-        "degrees": "Degrees",
-        "direction": "Direction (N, NE, E, ...)"
-      }
-    },
-    "weather_interval": {
-      "options": {
-        "24": "daily",
-        "12": "half day",
-        "6": "6 hours",
-        "3": "3 hours",
-        "2": "2 hours",
-        "1": "1 hour"
+        "degrees": "Grad",
+        "direction": "Richtung (N, NE, E, ...)"
       }
     }
   }
