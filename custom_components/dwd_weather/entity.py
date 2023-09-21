@@ -60,11 +60,6 @@ class DWDWeatherEntity:
         return self._device_id
 
     @property
-    def translation_key(self):
-        """Return the current condition."""
-        return self._type
-
-    @property
     def should_poll(self):
         """No polling needed."""
         return False

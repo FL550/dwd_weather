@@ -255,6 +255,11 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         super().__init__(hass_data, unique_id)
 
     @property
+    def translation_key(self):
+        """Return the current condition."""
+        return self._type
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         result = ""
