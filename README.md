@@ -9,22 +9,22 @@ _DISCLAIMER: This project is a private open source project and doesn't have any 
 
 This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html).
 
-_Please note, that the "current" weather values are not measured values. The values shown are the forecasted values for the actual hour. The forecast itself is updated every 6 hours. If anyone knows a source for actual measurements, please let me know._
+![Screenshot Weather Card](./Weather-Card.png)
+
+![Screenshot Weather Details](./Weather-Details.png)
 
 # Installation
 
 1. Install integration via HACS.
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst".
+[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FL550repository=dwd_weather&category=integration)
+1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst" or "DWD".
+[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=dwd)
    _You can repeat this for as many stations as you like._
 1. Follow the setup instructions.
 
 # Configuration
 
-The configuration is done via UI. If you insert a station_id in the setup dialog, you will override the coordinates and use the specific station_id instead. Possible station_ids can be found [here](https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py) if needed.
-
-If you like, you can change the interval for the weather forecast during setup of the sensor. For this, you have to enter the desired interval in the relevant field. The interval can't be larger than 24 hours and if you divide 24 by the value, the remainder have to be 0. For example 24 / 6 = 4.0 is fine, 24 / 5 = 4.8 is not.
-
-You can add as many stations as you like. Each will appear as an individual entity in Home Assistant. You can add more stations by repeating the second step of the install instructions.
+The configuration is done via UI. You can add as many stations as you like. Each will appear as an individual entity in Home Assistant. You can add more stations by repeating the second step of the install instructions.
 
 # Usage
 

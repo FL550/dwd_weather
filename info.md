@@ -13,9 +13,18 @@ _DISCLAIMER: This project is a private open source project and doesn't have any 
 
 {% endif %}
 
-This integration adds a weather entity for Deutscher Wetterdienst (DWD). It includes current weather information and daily forecasts for the next 9 days.
+This integration adds a weather data from  Deutscher Wetterdienst (DWD) to HA.
 
-Additionally this integration adds hourly forecast data as sensors for these values:
+![Screenshot Weather Card](./Weather-Card.png)
+
+The data is provided via different entities:
+
+- weather
+- sensor
+
+It includes current weather information and forecasts for the next 9 days.
+
+Available datapoints:
 
 - Weather condition
 - Weather report as text
