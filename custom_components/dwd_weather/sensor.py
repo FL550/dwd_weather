@@ -49,7 +49,7 @@ ATTR_SITE_NAME = "site_name"
 # Sensor types are defined as:
 #   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default [5]state_class
 SENSOR_TYPES = {
-    "weather": [
+    "weather_condition": [
         "Weather",
         None,
         None,
@@ -245,23 +245,20 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
         self._type = sensor_type
 
-        name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}"
+        # name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}"
         unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{SENSOR_TYPES[self._type][0]}"
         _LOGGER.debug(
-            "Setting up sensor with id {} and name {}".format(unique_id, name)
+            "Setting up sensor with id {} and name {}".format(
+                unique_id, SENSOR_TYPES[self._type][0]
+            )
         )
-        super().__init__(hass_data, unique_id, name)
-
-    @property
-    def translation_key(self):
-        """Return the current condition."""
-        return "dwd_weather_condition"
+        super().__init__(hass_data, unique_id)
 
     @property
     def state(self):
         """Return the state of the sensor."""
         result = ""
-        if self._type == "weather":
+        if self._type == "weather_condition":
             result = self._connector.get_condition()
         elif self._type == "weather_report":
             result = re.search(

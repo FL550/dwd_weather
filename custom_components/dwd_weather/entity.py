@@ -16,13 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 class DWDWeatherEntity:
     """DWDWeatherEntity entity."""
 
-    def __init__(self, hass_data, unique_id, name):
+    _attr_has_entity_name = True
+
+    def __init__(self, hass_data, unique_id):
         """Class initialization."""
         self._connector = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._device_id = self._connector.dwd_weather.station_id
         self._unique_id = unique_id
-        self._name = name
         self._station_name = self._connector._config[CONF_STATION_NAME]
 
     @property
@@ -49,11 +50,6 @@ class DWDWeatherEntity:
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return the unique of the sensor."""
         return self._unique_id
@@ -62,6 +58,11 @@ class DWDWeatherEntity:
     def device_id(self):
         """Return the unique of the sensor."""
         return self._device_id
+
+    @property
+    def translation_key(self):
+        """Return the current condition."""
+        return self._type
 
     @property
     def should_poll(self):

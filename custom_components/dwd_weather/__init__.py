@@ -2,15 +2,23 @@
 
 import asyncio
 import logging
+from custom_components.dwd_weather.sensor import SENSOR_TYPES
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_registry import async_migrate_entries
+from homeassistant.core import callback
+from simple_dwd_weatherforecast import dwdforecast
 
 from .connector import DWDWeatherData
 from .const import (
+    CONF_DATA_TYPE,
+    CONF_DATA_TYPE_FORECAST,
+    CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
+    CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WIND_DIRECTION_TYPE,
@@ -86,10 +94,32 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         config_entry.version = 3
 
     if config_entry.version == 3:
-        new = {**config_entry.data}
-        # TODO altes Format in neues uebersetzen
-        config_entry.data = {**new}
+        new = {}
+        new[CONF_DATA_TYPE] = CONF_DATA_TYPE_FORECAST
+        new[CONF_STATION_ID] = dwdforecast.get_nearest_station_id(
+            config_entry.data["latitude"], config_entry.data["longitude"]
+        )
+        new[CONF_STATION_NAME] = config_entry.data["name"]
+        new[CONF_WIND_DIRECTION_TYPE] = config_entry.data[CONF_WIND_DIRECTION_TYPE]
+        new[CONF_HOURLY_UPDATE] = False
+        _LOGGER.debug("Old Config entry {}".format(config_entry.data))
+
+        @callback
+        def update_unique_id(entity_entry):
+            """Update unique ID of entity entry."""
+            new_id = f"{new[CONF_STATION_ID]}_{entity_entry.unique_id.split('_')[0]}"
+            _LOGGER.debug(
+                "updating entity_id {} from {} to {}".format(
+                    entity_entry.entity_id, entity_entry.unique_id, new_id
+                )
+            )
+            return {"new_unique_id": new_id}
+
+        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
         config_entry.version = 4
+        hass.config_entries.async_update_entry(config_entry, data=new)
+        _LOGGER.debug("New Config entry {}".format(config_entry.data))
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

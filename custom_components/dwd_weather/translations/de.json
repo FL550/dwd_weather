@@ -1,5 +1,73 @@
 {
   "title": "Deutscher Wetterdienst",
+  "entity": {
+    "sensor": {
+      "weather_condition": {
+        "name": "Wetterzustand",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "hail": "[%key:component::weather::entity_component::_::state::hail%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]",
+          "lightning-rainy": "[%key:component::weather::entity_component::_::state::lightning-rainy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]",
+          "windy": "[%key:component::weather::entity_component::_::state::windy%]",
+          "windy-variant": "[%key:component::weather::entity_component::_::state::windy-variant%]"
+        }
+      },
+      "weather_report": {
+        "name": "Wetterbericht"
+      },
+      "dewpoint": {
+        "name": "Taupunkt"
+      },
+      "wind_speed": {
+        "name": "Windgeschwindigkeit"
+      },
+      "wind_direction": {
+        "name": "Windrichtung"
+      },
+      "wind_gusts": {
+        "name": "Windböen"
+      },
+      "precipitation": {
+        "name": "Niederschlag"
+      },
+      "precipitation_probability": {
+        "name": "Niederschlagswahrscheinlichkeit"
+      },
+      "precipitation_duration": {
+        "name": "Niederschlagsdauer"
+      },
+      "cloud_coverage": {
+        "name": "Bewölkungsgrad"
+      },
+      "visibility": {
+        "name": "Sichtweite"
+      },
+      "sun_duration": {
+        "name": "Sonnenscheindauer"
+      },
+      "sun_irradiance": {
+        "name": "Sonneneinstrahlung"
+      },
+      "fog_probability": {
+        "name": "Nebelwahrscheinlichkeit"
+      },
+      "measured_values_time": {
+        "name": "Zeit: Messwerte"
+      },
+      "forecast_values_time": {
+        "name": "Zeit: Vorhersagewerte"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
