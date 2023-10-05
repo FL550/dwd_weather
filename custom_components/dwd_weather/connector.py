@@ -26,6 +26,9 @@ from .const import (
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
     CONF_DATA_TYPE,
+    CONF_DATA_TYPE_FORECAST,
+    CONF_DATA_TYPE_MIXED,
+    CONF_DATA_TYPE_REPORT,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
@@ -56,12 +59,13 @@ class DWDWeatherData:
         """Get the latest data from DWD."""
         timestamp = datetime.now(timezone.utc)
         if timestamp.minute % 10 == 0 or self.latest_update is None:
+            _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
             self.dwd_weather.update(
                 force_hourly=self._config[CONF_HOURLY_UPDATE],
                 with_forecast=True,
                 with_measurements=True
-                if self._config[CONF_DATA_TYPE] == "report_data"
-                or self._config[CONF_DATA_TYPE] == "mixed_data"
+                if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
+                or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
                 else False,
                 with_report=True,
             )
@@ -89,12 +93,12 @@ class DWDWeatherData:
                     last=False,
                 )
                 # Hacky workaround end
-            _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
+
             self.infos[ATTR_LATEST_UPDATE] = timestamp
             self.latest_update = timestamp
             if (
-                self._config[CONF_DATA_TYPE] == "report_data"
-                or self._config[CONF_DATA_TYPE] == "mixed_data"
+                self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
+                or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
             ) and self.dwd_weather.report_data is not None:
                 report_date_array = self.dwd_weather.report_data["date"].split(".")
                 date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]} {self.dwd_weather.report_data['time']}"
@@ -104,6 +108,7 @@ class DWDWeatherData:
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
+            _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
 
     def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
         if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
@@ -209,15 +214,15 @@ class DWDWeatherData:
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
         if (
-            self._config[CONF_DATA_TYPE] == "report_data"
-            or self._config[CONF_DATA_TYPE] == "mixed_data"
+            self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
+            or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
         ):
             value = self.dwd_weather.get_reported_weather(
                 data_type,
                 shouldUpdate=False,
             )
-        if self._config[CONF_DATA_TYPE] == "forecast_data" or (
-            self._config[CONF_DATA_TYPE] == "mixed_data" and value is None
+        if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_FORECAST or (
+            self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED and value is None
         ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,

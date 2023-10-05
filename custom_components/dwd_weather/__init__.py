@@ -41,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DWD Weather as config entry."""
     _LOGGER.debug("Setup with data {}".format(entry.data))
 
-    # TODO only if station was configured
     dwd_weather_data = DWDWeatherData(hass, entry)
 
     # Coordinator checks for new updates
