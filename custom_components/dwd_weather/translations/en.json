@@ -107,7 +107,7 @@
         "data_description": {
           "station_name": "This is the displayed name of the station.",
           "wind_direction_type": "This affects the sensor value for the wind direction.",
-          "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB per update). Keep in mind, that this obviously also slows down the update of new values."
+          "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). This will also result in an increase in RAM usage of about 700MB. Keep in mind, that this obviously also slows down the update of new values."
         }
       }
     },
