@@ -15,12 +15,17 @@ This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/si
 
 # Installation
 
-1. Install integration via HACS.
+1. Install integration via HACS or use the button below.
+
 [![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FL550repository=dwd_weather&category=integration)
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst" or "DWD".
+
+2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst" or "DWD" or use the button below.
+_You can repeat this for as many stations as you like._
+
 [![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=dwd)
-   _You can repeat this for as many stations as you like._
-1. Follow the setup instructions.
+
+
+3. Follow the setup instructions.
 
 # Configuration
 

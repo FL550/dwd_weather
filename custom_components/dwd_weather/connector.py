@@ -253,7 +253,7 @@ class DWDWeatherData:
             elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
                 value = round(value, 0)
             elif data_type == WeatherDataType.PRECIPITATION_DURATION:
-                value = round(value, 1)
+                value = round(value, 0)
             elif data_type == WeatherDataType.CLOUD_COVERAGE:
                 value = round(value, 0)
             elif data_type == WeatherDataType.VISIBILITY:
