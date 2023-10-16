@@ -246,7 +246,7 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         self._type = sensor_type
 
         # name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}"
-        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{SENSOR_TYPES[self._type][0]}"
+        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{dwd_data._config[CONF_STATION_NAME]}_{SENSOR_TYPES[self._type][0]}"
         _LOGGER.debug(
             "Setting up sensor with id {} and name {}".format(
                 unique_id, SENSOR_TYPES[self._type][0]

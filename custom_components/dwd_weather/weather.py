@@ -47,7 +47,7 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
 
         self._name = f"{dwd_data._config[CONF_STATION_NAME]}"
-        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_Weather"
+        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{dwd_data._config[CONF_STATION_NAME]}_Weather"
         _LOGGER.debug(
             "Setting up weather with id {} and name {}".format(unique_id, self._name)
         )
