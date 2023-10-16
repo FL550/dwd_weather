@@ -33,6 +33,7 @@ from .const import (
     ATTRIBUTION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
+    CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
@@ -47,7 +48,7 @@ ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
 # Sensor types are defined as:
-#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default [5]state_class
+#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default, [5]state_class, [6]enabled_in_hourly_update
 SENSOR_TYPES = {
     "weather_condition": [
         "Weather",
@@ -56,6 +57,7 @@ SENSOR_TYPES = {
         "mdi:weather-partly-cloudy",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "weather_report": [
         "Weather Report",
@@ -64,6 +66,7 @@ SENSOR_TYPES = {
         "mdi:weather-partly-cloudy",
         False,
         None,
+        True,
     ],
     "temperature": [
         "Temperature",
@@ -72,6 +75,7 @@ SENSOR_TYPES = {
         "mdi:temperature-celsius",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "dewpoint": [
         "Dewpoint",
@@ -80,6 +84,7 @@ SENSOR_TYPES = {
         "mdi:temperature-celsius",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "pressure": [
         "Pressure",
@@ -88,6 +93,7 @@ SENSOR_TYPES = {
         None,
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "wind_speed": [
         "Wind Speed",
@@ -96,6 +102,7 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "wind_direction": [
         "Wind Direction",
@@ -104,6 +111,7 @@ SENSOR_TYPES = {
         "mdi:compass-outline",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "wind_gusts": [
         "Wind Gusts",
@@ -112,6 +120,7 @@ SENSOR_TYPES = {
         "mdi:weather-windy",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "precipitation": [
         "Precipitation",
@@ -120,6 +129,7 @@ SENSOR_TYPES = {
         "mdi:weather-rainy",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "precipitation_probability": [
         "Precipitation Probability",
@@ -128,6 +138,7 @@ SENSOR_TYPES = {
         "mdi:weather-rainy",
         False,
         STATE_CLASS_MEASUREMENT,
+        False,
     ],
     "precipitation_duration": [
         "Precipitation Duration",
@@ -136,6 +147,7 @@ SENSOR_TYPES = {
         "mdi:weather-rainy",
         False,
         STATE_CLASS_MEASUREMENT,
+        False,
     ],
     "cloud_coverage": [
         "Cloud Coverage",
@@ -144,6 +156,7 @@ SENSOR_TYPES = {
         "mdi:cloud",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "visibility": [
         "Visibility",
@@ -152,6 +165,7 @@ SENSOR_TYPES = {
         "mdi:eye",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "sun_duration": [
         "Sun Duration",
@@ -160,6 +174,7 @@ SENSOR_TYPES = {
         "mdi:weather-sunset",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "sun_irradiance": [
         "Sun Irradiance",
@@ -168,6 +183,7 @@ SENSOR_TYPES = {
         "mdi:weather-sunny-alert",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "fog_probability": [
         "Fog Probability",
@@ -176,6 +192,7 @@ SENSOR_TYPES = {
         "mdi:weather-fog",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "humidity": [
         "Humidity",
@@ -184,6 +201,7 @@ SENSOR_TYPES = {
         "mdi:water-percent",
         False,
         STATE_CLASS_MEASUREMENT,
+        True,
     ],
     "measured_values_time": [
         "Report Time (UTC)",
@@ -192,6 +210,7 @@ SENSOR_TYPES = {
         "mdi:clock-time-four-outline",
         True,
         None,
+        True,
     ],
     "forecast_values_time": [
         "Forecast Time (UTC)",
@@ -200,6 +219,7 @@ SENSOR_TYPES = {
         "mdi:clock-time-four-outline",
         True,
         None,
+        True,
     ],
 }
 
@@ -214,7 +234,13 @@ async def async_setup_entry(
         _LOGGER.debug("Sensor async_setup_entry")
         # Only add the report sensor if a report is available
         sensor_list = {
-            k: v for k, v in SENSOR_TYPES.items() if k != "measured_values_time"
+            k: v
+            for k, v in SENSOR_TYPES.items()
+            if k != "measured_values_time"
+            # and contains_weather_data(k, hass_data[DWDWEATHER_DATA])
+            and not (
+                hass_data[DWDWEATHER_DATA]._config[CONF_HOURLY_UPDATE] and v[6] == False
+            )
         }
         async_add_entities(
             [
