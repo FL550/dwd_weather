@@ -22,9 +22,9 @@ class DWDWeatherEntity:
         """Class initialization."""
         self._connector = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
-        self._device_id = self._connector.dwd_weather.station_id
-        self._unique_id = unique_id
         self._station_name = self._connector._config[CONF_STATION_NAME]
+        self._device_id = f"{self._connector.dwd_weather.station_id}: {self._station_name}"
+        self._unique_id = unique_id
 
     @property
     def device_info(self) -> DeviceInfo | None:
