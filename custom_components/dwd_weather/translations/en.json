@@ -81,10 +81,12 @@
         "description": "Some stations offer actual measured values (with a slight delay of about one hour), which could provide more accurate data. The are marked with '[X]' in the list. However, the forecasts are still very accurate and are sufficent for most cases.",
         "title": "Station selection",
         "data": {
-          "station_id": "Station"
+          "station_id": "Station",
+          "custom_location": "Use custom location from the map"
         },
         "data_description": {
-          "station_id": "You can either select a station from the list which is ordered by distance from your home, or you can search directly within the box and select a matching one."
+          "station_id": "You can either select a station from the list which is ordered by distance from your home, or you can search directly within the box and select a matching one.",
+          "custom_location": "If you want to select the nearest station to a specific location, toggle this button and drag the marker on the map below."
         }
       },
       "station_configure_report": {

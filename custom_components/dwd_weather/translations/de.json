@@ -81,10 +81,12 @@
         "description": "Manche Stationen bieten aktuelle Messwerte an (mit einer leichten Verzögerung von ungefähr einer Stunde), die möglicherweise eine höhere Genauigkeit bieten. Sie sind in der Liste durch '[X]' markiert. Die Vorhersagen sind aber auch sehr genau und sind für die meisten Fälle ausreichend.",
         "title": "Stationsauswahl",
         "data": {
-          "station_id": "Station"
+          "station_id": "Station",
+          "custom_location": "Wähle eigenen Ort von der Karte aus"
         },
         "data_description": {
-          "station_id": "Es kann entweder eine Station aus der Liste ausgewählt werden, oder man kann direkt in der Box nach einer passenden Station suchen und sie dann auswählen."
+          "station_id": "Es kann entweder eine Station aus der Liste ausgewählt werden, oder man kann direkt in der Box nach einer passenden Station suchen und sie dann auswählen.",
+          "custom_location": "Wenn automatisch die nächste Station zu einem gewählten Ort ausgewählt werden soll, muss dieser Schalter aktiviert werden und der Marker auf der Karte unten verschoben werden."
         }
       },
       "station_configure_report": {

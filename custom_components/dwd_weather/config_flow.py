@@ -7,6 +7,7 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectSelector,
     TextSelector,
+    LocationSelector,
 )
 from simple_dwd_weatherforecast import dwdforecast
 
@@ -18,6 +19,8 @@ from .const import (
     CONF_ENTITY_TYPE,
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
+    CONF_LOCATION_COORDINATES,
+    CONF_CUSTOM_LOCATION,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
@@ -77,7 +80,17 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug("Station:user_input: {}".format(user_input))
         if user_input is not None:
-            station = dwdforecast.load_station_id(user_input[CONF_STATION_ID])
+            if user_input[CONF_CUSTOM_LOCATION]:
+                _LOGGER.debug("Station:custom:")
+                user_input[CONF_STATION_ID] = dwdforecast.get_nearest_station_id(
+                    lat=user_input[CONF_LOCATION_COORDINATES]["latitude"],
+                    lon=user_input[CONF_LOCATION_COORDINATES]["longitude"],
+                )
+
+            station = user_input[CONF_STATION_ID]
+
+            _LOGGER.debug("Station:station id {}".format(station))
+            station = dwdforecast.load_station_id(station)
             _LOGGER.debug("Station:validation: {}".format(station))
             if station is not None:
                 if station["report_available"] == 1:
@@ -115,6 +128,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "mode": "dropdown",
                     }
                 ),
+                vol.Required(
+                    CONF_CUSTOM_LOCATION,
+                    default=False,
+                ): BooleanSelector({}),
+                vol.Optional(CONF_LOCATION_COORDINATES): LocationSelector({}),
             }
         )
 
