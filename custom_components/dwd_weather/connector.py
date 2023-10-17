@@ -213,14 +213,14 @@ class DWDWeatherData:
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
-        data_type = self._config[CONF_DATA_TYPE]
-        if data_type == CONF_DATA_TYPE_REPORT or data_type == CONF_DATA_TYPE_MIXED:
+        conf_data_type = self._config[CONF_DATA_TYPE]
+        if conf_data_type == CONF_DATA_TYPE_REPORT or conf_data_type == CONF_DATA_TYPE_MIXED:
             value = self.dwd_weather.get_reported_weather(
                 data_type,
                 shouldUpdate=False,
             )
-        if data_type == CONF_DATA_TYPE_FORECAST or (
-            data_type == CONF_DATA_TYPE_MIXED and value is None
+        if conf_data_type == CONF_DATA_TYPE_FORECAST or (
+            conf_data_type == CONF_DATA_TYPE_MIXED and value is None
         ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,
