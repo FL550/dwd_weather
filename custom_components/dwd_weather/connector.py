@@ -170,34 +170,34 @@ class DWDWeatherData:
                 if precipitation_prop is not None:
                     precipitation_prop = int(precipitation_prop)
                 data_item = {
-                        ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
-                        ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        ATTR_FORECAST_NATIVE_TEMP: temp_max,
-                        ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
-                            WeatherDataType.PRECIPITATION,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        ATTR_FORECAST_WIND_BEARING: wind_dir,
-                        ATTR_FORECAST_NATIVE_WIND_SPEED: self.dwd_weather.get_timeframe_max(
-                            WeatherDataType.WIND_SPEED,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        "wind_gusts": self.dwd_weather.get_timeframe_max(
-                            WeatherDataType.WIND_GUSTS,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        "precipitation_probability": precipitation_prop,
-                    }
+                    ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
+                    ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
+                        timestep,
+                        weather_interval,
+                        False,
+                    ),
+                    ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
+                        WeatherDataType.PRECIPITATION,
+                        timestep,
+                        weather_interval,
+                        False,
+                    ),
+                    ATTR_FORECAST_WIND_BEARING: wind_dir,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.dwd_weather.get_timeframe_max(
+                        WeatherDataType.WIND_SPEED,
+                        timestep,
+                        weather_interval,
+                        False,
+                    ),
+                    "wind_gusts": self.dwd_weather.get_timeframe_max(
+                        WeatherDataType.WIND_GUSTS,
+                        timestep,
+                        weather_interval,
+                        False,
+                    ),
+                    "precipitation_probability": precipitation_prop,
+                }
                 if weather_interval == 24:
                     data_item[ATTR_FORECAST_NATIVE_TEMP_LOW] = temp_min
                 forecast_data.append(data_item)
@@ -210,7 +210,8 @@ class DWDWeatherData:
         )
 
     def get_weather_report(self):
-        return markdownify(self.dwd_weather.get_weather_report(), strip=["br"])
+        report = self.dwd_weather.get_weather_report(shouldUpdate=False)
+        return markdownify(report, strip=["br"]) if report is not None else None
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
