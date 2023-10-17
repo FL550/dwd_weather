@@ -213,59 +213,47 @@ class DWDWeatherData:
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
-        if (
-            self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
-            or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
-        ):
+        data_type = self._config[CONF_DATA_TYPE]
+        if data_type == CONF_DATA_TYPE_REPORT or data_type == CONF_DATA_TYPE_MIXED:
             value = self.dwd_weather.get_reported_weather(
                 data_type,
                 shouldUpdate=False,
             )
-        if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_FORECAST or (
-            self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED and value is None
+        if data_type == CONF_DATA_TYPE_FORECAST or (
+            data_type == CONF_DATA_TYPE_MIXED and value is None
         ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,
                 datetime.now(timezone.utc),
                 shouldUpdate=False,
             )
+        # Create a dictionary to map each WeatherDataType to its corresponding calculation
+        data_type_mapping = {
+            WeatherDataType.TEMPERATURE: lambda x: round(x - 273.1, 1),
+            WeatherDataType.DEWPOINT: lambda x: round(x - 273.1, 1),
+            WeatherDataType.PRESSURE: lambda x: round(x / 100, 1),
+            WeatherDataType.WIND_SPEED: lambda x: round(x * 3.6, 1),
+            WeatherDataType.WIND_DIRECTION: lambda x: round(x, 0)
+            if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
+            else self.get_wind_direction_symbol(round(x, 0)),
+            WeatherDataType.WIND_GUSTS: lambda x: round(x * 3.6, 1),
+            WeatherDataType.PRECIPITATION: lambda x: round(x, 1),
+            WeatherDataType.PRECIPITATION_PROBABILITY: lambda x: round(x, 0),
+            WeatherDataType.PRECIPITATION_DURATION: lambda x: round(x, 0),
+            WeatherDataType.CLOUD_COVERAGE: lambda x: round(x, 0),
+            WeatherDataType.VISIBILITY: lambda x: round(x / 1000, 1),
+            WeatherDataType.SUN_DURATION: lambda x: round(x, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda x: round(x / 3.6, 0),
+            WeatherDataType.FOG_PROBABILITY: lambda x: round(x, 0),
+            WeatherDataType.HUMIDITY: lambda x: round(x, 1),
+        }
+
+        # Check if value is not None
         if value is not None:
-            if data_type == WeatherDataType.TEMPERATURE:
-                value = round(value - 273.1, 1)
-            elif data_type == WeatherDataType.DEWPOINT:
-                value = round(value - 273.1, 1)
-            elif data_type == WeatherDataType.PRESSURE:
-                value = round(value / 100, 1)
-            elif data_type == WeatherDataType.WIND_SPEED:
-                value = round(value * 3.6, 1)
-            elif data_type == WeatherDataType.WIND_DIRECTION:
-                if (
-                    self._config[CONF_WIND_DIRECTION_TYPE]
-                    == DEFAULT_WIND_DIRECTION_TYPE
-                ):
-                    value = round(value, 0)
-                else:
-                    value = self.get_wind_direction_symbol(round(value, 0))
-            elif data_type == WeatherDataType.WIND_GUSTS:
-                value = round(value * 3.6, 1)
-            elif data_type == WeatherDataType.PRECIPITATION:
-                value = round(value, 1)
-            elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
-                value = round(value, 0)
-            elif data_type == WeatherDataType.PRECIPITATION_DURATION:
-                value = round(value, 0)
-            elif data_type == WeatherDataType.CLOUD_COVERAGE:
-                value = round(value, 0)
-            elif data_type == WeatherDataType.VISIBILITY:
-                value = round(value / 1000, 1)
-            elif data_type == WeatherDataType.SUN_DURATION:
-                value = round(value, 0)
-            elif data_type == WeatherDataType.SUN_IRRADIANCE:
-                value = round(value / 3.6, 0)
-            elif data_type == WeatherDataType.FOG_PROBABILITY:
-                value = round(value, 0)
-            elif data_type == WeatherDataType.HUMIDITY:
-                value = round(value, 1)
+            # Check if the data_type is in the dictionary
+            if data_type in data_type_mapping:
+                # Use the corresponding calculation from the dictionary
+                value = data_type_mapping[data_type](value)
 
         return value
 
@@ -319,10 +307,7 @@ class DWDWeatherData:
         forecast_data = self.dwd_weather.forecast_data
         for key in forecast_data:
             item = forecast_data[key][WeatherDataType.CONDITION.value[0]]
-            if item != "-":
-                value = self.dwd_weather.weather_codes[item][0]
-            else:
-                value = None
+            value = self.dwd_weather.weather_codes[item][0] if item != "-" else None
             data.append({ATTR_FORECAST_TIME: key, "value": value})
         return data
 
@@ -337,12 +322,31 @@ class DWDWeatherData:
             tzinfo=timezone.utc,
         )
         forecast_data = self.dwd_weather.forecast_data
+
+        conversion_table = {
+            WeatherDataType.TEMPERATURE: lambda value: round(value - 273.1, 1),
+            WeatherDataType.DEWPOINT: lambda value: round(value - 273.1, 1),
+            WeatherDataType.PRESSURE: lambda value: round(value / 100, 1),
+            WeatherDataType.WIND_SPEED: lambda value: round(value * 3.6, 1),
+            WeatherDataType.WIND_DIRECTION: lambda value: round(value, 0)
+            if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
+            else self.get_wind_direction_symbol(round(value, 0)),
+            WeatherDataType.WIND_GUSTS: lambda value: round(value * 3.6, 1),
+            WeatherDataType.PRECIPITATION: lambda value: round(value, 1),
+            WeatherDataType.PRECIPITATION_PROBABILITY: lambda value: round(value, 0),
+            WeatherDataType.PRECIPITATION_DURATION: lambda value: round(value, 1),
+            WeatherDataType.CLOUD_COVERAGE: lambda value: round(value, 0),
+            WeatherDataType.VISIBILITY: lambda value: round(value / 1000, 1),
+            WeatherDataType.SUN_DURATION: lambda value: round(value, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda value: round(value / 3.6, 0),
+            WeatherDataType.FOG_PROBABILITY: lambda value: round(value, 0),
+            WeatherDataType.HUMIDITY: lambda value: round(value, 1),
+        }
+
         for key in forecast_data:
             if (
                 datetime(
-                    *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]),
-                    0,
-                    timezone.utc,
+                    *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]), 0, timezone.utc
                 )
                 < timestamp
             ):
@@ -351,48 +355,15 @@ class DWDWeatherData:
             item = forecast_data[key]
             value = item[data_type.value[0]]
             if value is not None:
-                if data_type == WeatherDataType.TEMPERATURE:
-                    value = round(value - 273.1, 1)
-                elif data_type == WeatherDataType.DEWPOINT:
-                    value = round(value - 273.1, 1)
-                elif data_type == WeatherDataType.PRESSURE:
-                    value = round(value / 100, 1)
-                elif data_type == WeatherDataType.WIND_SPEED:
-                    value = round(value * 3.6, 1)
-                elif data_type == WeatherDataType.WIND_DIRECTION:
-                    if (
-                        self._config[CONF_WIND_DIRECTION_TYPE]
-                        == DEFAULT_WIND_DIRECTION_TYPE
-                    ):
-                        value = round(value, 0)
-                    else:
-                        value = self.get_wind_direction_symbol(round(value, 0))
-                elif data_type == WeatherDataType.WIND_GUSTS:
-                    value = round(value * 3.6, 1)
-                elif data_type == WeatherDataType.PRECIPITATION:
-                    value = round(value, 1)
-                elif data_type == WeatherDataType.PRECIPITATION_PROBABILITY:
-                    value = round(value, 0)
-                elif data_type == WeatherDataType.PRECIPITATION_DURATION:
-                    value = round(value, 1)
-                elif data_type == WeatherDataType.CLOUD_COVERAGE:
-                    value = round(value, 0)
-                elif data_type == WeatherDataType.VISIBILITY:
-                    value = round(value / 1000, 1)
-                elif data_type == WeatherDataType.SUN_DURATION:
-                    value = round(value, 0)
-                elif data_type == WeatherDataType.SUN_IRRADIANCE:
-                    value = round(value / 3.6, 0)
-                elif data_type == WeatherDataType.FOG_PROBABILITY:
-                    value = round(value, 0)
-                elif data_type == WeatherDataType.HUMIDITY:
-                    value = round(value, 1)
+                if data_type in conversion_table:
+                    value = conversion_table[data_type](value)
             data.append(
                 {
                     ATTR_FORECAST_TIME: key,
                     "value": value,
                 }
             )
+
         return data
 
     def get_temperature_hourly(self):
