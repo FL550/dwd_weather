@@ -29,6 +29,7 @@ from .const import (
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
+    CONF_INTERPOLATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
@@ -214,7 +215,10 @@ class DWDWeatherData:
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
         conf_data_type = self._config[CONF_DATA_TYPE]
-        if conf_data_type == CONF_DATA_TYPE_REPORT or conf_data_type == CONF_DATA_TYPE_MIXED:
+        if (
+            conf_data_type == CONF_DATA_TYPE_REPORT
+            or conf_data_type == CONF_DATA_TYPE_MIXED
+        ):
             value = self.dwd_weather.get_reported_weather(
                 data_type,
                 shouldUpdate=False,
@@ -227,7 +231,26 @@ class DWDWeatherData:
                 datetime.now(timezone.utc),
                 shouldUpdate=False,
             )
-        # Create a dictionary to map each WeatherDataType to its corresponding calculation
+
+        if self._config[CONF_INTERPOLATE]:
+            now_time_actual = datetime.now(timezone.utc)
+            next_value = self.dwd_weather.get_forecast_data(
+                data_type,
+                now_time_actual + timedelta(hours=1),
+                shouldUpdate=False,
+            )
+            now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
+                tzinfo=timezone.utc
+            )
+            value = round(
+                value
+                + (
+                    (next_value - value)
+                    * ((now_time_actual - now_time_hour).seconds / 3600)
+                ),
+                2,
+            )
+
         data_type_mapping = {
             WeatherDataType.TEMPERATURE: lambda x: round(x - 273.1, 1),
             WeatherDataType.DEWPOINT: lambda x: round(x - 273.1, 1),

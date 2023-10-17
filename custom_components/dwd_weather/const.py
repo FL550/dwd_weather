@@ -12,7 +12,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.WEATHER,
 ]
-INTEGRATION_VERSION = "1.2.28"
+INTEGRATION_VERSION = "2.0.5"
 MIN_REQUIRED_HA_VERSION = "2022.7.1"
 
 ATTR_LATEST_UPDATE = "latest_update_utc"
@@ -23,6 +23,7 @@ ATTR_STATION_NAME = "station_name"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_WIND_DIRECTION_TYPE = "degrees"
+DEFAULT_INTERPOLATION = True
 
 DWDWEATHER_DATA = "dwd_weather_data"
 DWDWEATHER_COORDINATOR = "dwd_weather_coordinator"
@@ -39,4 +40,5 @@ CONF_DATA_TYPE_REPORT = "report_data"
 CONF_DATA_TYPE_FORECAST = "forecast_data"
 CONF_STATION_NAME = "station_name"
 CONF_WIND_DIRECTION_TYPE = "wind_direction_type"
+CONF_INTERPOLATE = "interpolate"
 CONF_HOURLY_UPDATE = "hourly_update"

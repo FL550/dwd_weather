@@ -19,6 +19,7 @@ from .const import (
     CONF_ENTITY_TYPE,
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
+    CONF_INTERPOLATE,
     CONF_LOCATION_COORDINATES,
     CONF_CUSTOM_LOCATION,
     CONF_STATION_ID,
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DWD weather integration."""
 
-    VERSION = 4
+    VERSION = 5
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
@@ -216,6 +217,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "translation_key": CONF_WIND_DIRECTION_TYPE,
                     }
                 ),
+                vol.Required(
+                    CONF_INTERPOLATE,
+                    default=True,
+                ): BooleanSelector({}),
                 vol.Required(
                     CONF_HOURLY_UPDATE,
                     default=False,

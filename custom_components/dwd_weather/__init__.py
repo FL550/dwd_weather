@@ -17,9 +17,11 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_HOURLY_UPDATE,
+    CONF_INTERPOLATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
+    DEFAULT_INTERPOLATION,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WIND_DIRECTION_TYPE,
     DOMAIN,
@@ -85,14 +87,12 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new["weather_interval"] = 24
         config_entry.data = {**new}
         config_entry.version = 2
-
-    if config_entry.version == 2:
+    elif config_entry.version == 2:
         new = {**config_entry.data}
         new[CONF_WIND_DIRECTION_TYPE] = DEFAULT_WIND_DIRECTION_TYPE
         config_entry.data = {**new}
         config_entry.version = 3
-
-    if config_entry.version == 3:
+    elif config_entry.version == 3:
         new = {}
         new[CONF_DATA_TYPE] = CONF_DATA_TYPE_FORECAST
         new[CONF_STATION_ID] = dwdforecast.get_nearest_station_id(
@@ -119,6 +119,11 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         config_entry.version = 4
         hass.config_entries.async_update_entry(config_entry, data=new)
         _LOGGER.debug("New Config entry {}".format(config_entry.data))
+    elif config_entry.version == 4:
+        new = {**config_entry.data}
+        new[CONF_INTERPOLATE] = DEFAULT_INTERPOLATION
+        config_entry.data = {**new}
+        config_entry.version = 5
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
