@@ -130,6 +130,17 @@ class DWDWeatherData:
         timestep -= timedelta(hours=weather_interval)
         for _ in range(0, 9):
             for _ in range(int(24 / weather_interval)):
+                condition = self.dwd_weather.get_timeframe_condition(
+                    timestep,
+                    weather_interval,
+                    False,
+                )
+                if (
+                    condition == "sunny"
+                    and weather_interval < 4
+                    and (timestep.hour < 6 or timestep.hour > 21)
+                ):
+                    condition = "clear-night"
                 temp_max = self.dwd_weather.get_timeframe_max(
                     WeatherDataType.TEMPERATURE,
                     timestep,
@@ -171,11 +182,7 @@ class DWDWeatherData:
                     precipitation_prop = int(precipitation_prop)
                 data_item = {
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
-                    ATTR_FORECAST_CONDITION: self.dwd_weather.get_timeframe_condition(
-                        timestep,
-                        weather_interval,
-                        False,
-                    ),
+                    ATTR_FORECAST_CONDITION: condition,
                     ATTR_FORECAST_NATIVE_TEMP: temp_max,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                         WeatherDataType.PRECIPITATION,
@@ -205,9 +212,11 @@ class DWDWeatherData:
         return forecast_data
 
     def get_condition(self):
-        return self.dwd_weather.get_forecast_condition(
-            datetime.now(timezone.utc), False
-        )
+        now = datetime.now(timezone.utc)
+        condition = self.dwd_weather.get_forecast_condition(now, False)
+        if condition == "sunny" and (now.hour < 6 or now.hour > 21):
+            condition = "clear-night"
+        return condition
 
     def get_weather_report(self):
         report = self.dwd_weather.get_weather_report(shouldUpdate=False)
