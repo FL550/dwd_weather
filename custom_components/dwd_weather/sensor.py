@@ -292,10 +292,14 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         if self._type == "weather_condition":
             result = self._connector.get_condition()
         elif self._type == "weather_report":
-            result = re.search(
-                "\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
-                self._connector.get_weather_report(),
-            ).group()
+            result = (
+                re.search(
+                    "\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                    self._connector.get_weather_report(),
+                ).group()
+                if self._connector.get_weather_report() is not None
+                else None
+            )
         elif self._type == "temperature":
             result = self._connector.get_temperature()
         elif self._type == "dewpoint":
