@@ -46,11 +46,8 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
 
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
 
-        self._name = f"{dwd_data._config[CONF_STATION_NAME]}"
         unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{dwd_data._config[CONF_STATION_NAME]}_Weather"
-        _LOGGER.debug(
-            "Setting up weather with id {} and name {}".format(unique_id, self._name)
-        )
+        _LOGGER.debug("Setting up weather with id {}".format(unique_id))
         super().__init__(hass_data, unique_id)
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
@@ -60,11 +57,6 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._connector.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def condition(self):

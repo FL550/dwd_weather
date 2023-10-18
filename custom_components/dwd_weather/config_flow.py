@@ -112,7 +112,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             station_data = dwdforecast.load_station_id(station[0])
             stations.append(
                 {
-                    "label": f"[{'X' if station_data['report_available'] == 1 else '_'}] {station[1]} km: {dwdforecast.load_station_id(station[0])['name']} ({station_data['elev']}m)",
+                    "label": f"[{'X' if station_data['report_available'] == 1 else '_'}] {station[1]} km: {dwdforecast.load_station_id(station[0])['name']} (H:{station_data['elev']}m)",
                     "value": station[0],
                 }
             )
