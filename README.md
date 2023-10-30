@@ -78,11 +78,11 @@ If you want to get the regional weather report as text, you have to enable the _
 
 To find the correct name for the configured station, have a look at the developer tools within Home Assistant.
 
-## Additional sensor values
+## Additional sensor entities
 
-### These are only needed when you want hourly data or the weather report. Daily values are included in the weather entity!
+### These are only needed when you want hourly forecast data or a weather report. Daily values are included in the weather entity!
 
-This integration allows you to add a hourly forecast for the next 10 days of the following values:
+This integration allows you to add sensor entities with hourly forecasts for 10 days:
 
 - Weather condition
 - Weather report as text
@@ -102,11 +102,14 @@ This integration allows you to add a hourly forecast for the next 10 days of the
 - Fog Probability
 - Humidity
 
-The sensors are disabled per default, as they contain a lot of data.
+The sensors entities are disabled per default, as they contain a lot of data.
 
 You can enable the ones you like in HA UI under "Configuration" -> "Entities" -> click on the filter icon on the right -> Check "Show diabled entities" -> Check the ones you like to enable -> Click "ENABLE SELECTED" at the top -> Confirm the next dialog
 
-The sensor values will be set when the next update of dwd_weather is scheduled by Home Assistant. This is done every 15 minutes. You can skip the waiting time by restarting HA.
+The sensor values will be set when the next update of dwd_weather is scheduled by Home Assistant. This is done every 15 minutes. You can skip the waiting time by reloading the component/integration or restarting HA.
+
+Note: 
+If you activate the option for hourly updates during setup of a weather station, DWD does not provide data for precipitation duration and probability. If this or other data is not available for a certain weather station, this component does not create sensors for it. As a workaround you can create setup the same station without activating the hourly updates option and use the slightly less acurate sensor data that is refreshed twice daily.
 
 ## Help and Contribution
 
