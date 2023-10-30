@@ -104,7 +104,7 @@
         "data": {
           "station_name": "Station name",
           "wind_direction_type": "Wind direction value type",
-          "interpolate": "Intepolate values",
+          "interpolate": "Interpolate values",
           "hourly_update": "Force hourly data update (see warning below)"
         },
         "data_description": {
