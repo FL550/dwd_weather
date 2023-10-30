@@ -59,6 +59,11 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         return self._connector.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
     @property
+    def name(self):
+        """Return the name of the sensor."""
+        return None
+
+    @property
     def condition(self):
         """Return the current condition."""
         return self._connector.get_condition()
