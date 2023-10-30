@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import time
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
+from suntimes import SunTimes
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -51,6 +52,11 @@ class DWDWeatherData:
 
         # Holds the current data from DWD
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
+        self.sun = SunTimes(
+            self.dwd_weather.station["lat"],
+            self.dwd_weather.station["lon"],
+            self.dwd_weather.station["elev"],
+        )
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -138,7 +144,10 @@ class DWDWeatherData:
                 if (
                     condition == "sunny"
                     and weather_interval < 4
-                    and (timestep.hour < 6 or timestep.hour > 21)
+                    and (
+                        timestep.hour < self.sun.riseutc(timestep.day).hour
+                        or timestep.hour > self.sun.setutc(timestep.day).hour
+                    )
                 ):
                     condition = "clear-night"
                 temp_max = self.dwd_weather.get_timeframe_max(
@@ -214,7 +223,10 @@ class DWDWeatherData:
     def get_condition(self):
         now = datetime.now(timezone.utc)
         condition = self.dwd_weather.get_forecast_condition(now, False)
-        if condition == "sunny" and (now.hour < 6 or now.hour > 21):
+        if condition == "sunny" and (
+            now.hour < self.sun.riseutc(now.day).hour
+            or now.hour > self.sun.setutc(now.day).hour
+        ):
             condition = "clear-night"
         return condition
 
