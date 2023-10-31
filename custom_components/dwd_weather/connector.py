@@ -55,7 +55,7 @@ class DWDWeatherData:
         self.sun = SunTimes(
             self.dwd_weather.station["lat"],
             self.dwd_weather.station["lon"],
-            self.dwd_weather.station["elev"],
+            int(self.dwd_weather.station["elev"]),
         )
 
     async def async_update(self):
