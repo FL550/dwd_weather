@@ -224,8 +224,8 @@ class DWDWeatherData:
         now = datetime.now(timezone.utc)
         condition = self.dwd_weather.get_forecast_condition(now, False)
         if condition == "sunny" and (
-            now.hour < self.sun.riseutc(now.day).hour
-            or now.hour > self.sun.setutc(now.day).hour
+            now.hour < self.sun.riseutc(now).hour
+            or now.hour > self.sun.setutc(now).hour
         ):
             condition = "clear-night"
         return condition
@@ -254,24 +254,25 @@ class DWDWeatherData:
                 shouldUpdate=False,
             )
 
-        if self._config[CONF_INTERPOLATE]:
+        if self._config[CONF_INTERPOLATE] and value is not None:
             now_time_actual = datetime.now(timezone.utc)
             next_value = self.dwd_weather.get_forecast_data(
                 data_type,
                 now_time_actual + timedelta(hours=1),
                 shouldUpdate=False,
             )
-            now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
-                tzinfo=timezone.utc
-            )
-            value = round(
-                value
-                + (
-                    (next_value - value)
-                    * ((now_time_actual - now_time_hour).seconds / 3600)
-                ),
-                2,
-            )
+            if next_value is not None:
+                now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
+                    tzinfo=timezone.utc
+                )
+                value = round(
+                    value
+                    + (
+                        (next_value - value)
+                        * ((now_time_actual - now_time_hour).seconds / 3600)
+                    ),
+                    2,
+                )
 
         data_type_mapping = {
             WeatherDataType.TEMPERATURE: lambda x: round(x - 273.1, 1),
