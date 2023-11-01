@@ -145,8 +145,8 @@ class DWDWeatherData:
                     condition == "sunny"
                     and weather_interval < 4
                     and (
-                        timestep.hour < self.sun.riseutc(timestep.day).hour
-                        or timestep.hour > self.sun.setutc(timestep.day).hour
+                        timestep.hour < self.sun.riseutc(timestep).hour
+                        or timestep.hour > self.sun.setutc(timestep).hour
                     )
                 ):
                     condition = "clear-night"
