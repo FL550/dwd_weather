@@ -53,8 +53,8 @@ class DWDWeatherData:
         # Holds the current data from DWD
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
         self.sun = SunTimes(
-            self.dwd_weather.station["lat"],
             self.dwd_weather.station["lon"],
+            self.dwd_weather.station["lat"],
             int(self.dwd_weather.station["elev"]),
         )
 
