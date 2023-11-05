@@ -14,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     WeatherEntityFeature,
     Forecast,
 )
@@ -206,7 +207,7 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     ),
-                    "wind_gusts": self.dwd_weather.get_timeframe_max(
+                    ATTR_WEATHER_WIND_GUST_SPEED: self.dwd_weather.get_timeframe_max(
                         WeatherDataType.WIND_GUSTS,
                         timestep,
                         weather_interval,
