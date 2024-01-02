@@ -466,7 +466,9 @@ class DWDWeatherData:
         return self.get_hourly(WeatherDataType.HUMIDITY)
 
     def get_wind_direction_symbol(self, value):
-        if value < 22.5:
+        if value is None:
+            return ""
+        elif value < 22.5:
             return "N"
         elif value < 67.5:
             return "NO"
