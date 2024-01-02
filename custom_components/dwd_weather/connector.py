@@ -193,6 +193,18 @@ class DWDWeatherData:
                     precipitation_prop = int(precipitation_prop)
 
                 uv_index = self.dwd_weather.get_uv_index(timestep.day - now.day)
+                wind_speed = self.dwd_weather.get_timeframe_max(
+                    WeatherDataType.WIND_SPEED,
+                    timestep,
+                    weather_interval,
+                    False,
+                )
+                wind_gusts = self.dwd_weather.get_timeframe_max(
+                    WeatherDataType.WIND_GUSTS,
+                    timestep,
+                    weather_interval,
+                    False,
+                )
                 data_item = {
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                     ATTR_FORECAST_CONDITION: condition,
@@ -204,18 +216,12 @@ class DWDWeatherData:
                         False,
                     ),
                     ATTR_FORECAST_WIND_BEARING: wind_dir,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: self.dwd_weather.get_timeframe_max(
-                        WeatherDataType.WIND_SPEED,
-                        timestep,
-                        weather_interval,
-                        False,
-                    ),
-                    ATTR_WEATHER_WIND_GUST_SPEED: self.dwd_weather.get_timeframe_max(
-                        WeatherDataType.WIND_GUSTS,
-                        timestep,
-                        weather_interval,
-                        False,
-                    ),
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: round(wind_speed * 3.6, 1)
+                    if wind_speed is not None
+                    else None,
+                    ATTR_WEATHER_WIND_GUST_SPEED: round(wind_gusts * 3.6, 1)
+                    if wind_gusts is not None
+                    else None,
                     "uv_index": uv_index,
                     "precipitation_probability": precipitation_prop,
                 }
