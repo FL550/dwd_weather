@@ -1,6 +1,6 @@
 {
   "domain": "dwd_weather",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "name": "Deutscher Wetterdienst (DWD)",
   "documentation": "https://github.com/FL550/dwd_weather",
   "issue_tracker": "https://github.com/FL550/dwd_weather/issues",
@@ -9,6 +9,6 @@
   "codeowners": [
     "@FL550"
   ],
-  "requirements": ["simple_dwd_weatherforecast==2.0.24","markdownify==0.6.5","suntimes==1.1.2"],
+  "requirements": ["simple_dwd_weatherforecast==2.0.26","markdownify==0.6.5","suntimes==1.1.2"],
   "iot_class": "cloud_polling"
 }
