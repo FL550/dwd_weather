@@ -123,6 +123,7 @@ class DWDWeatherData:
             weather_interval = 1
         elif WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_DAILY:
             weather_interval = 24
+        now = datetime.now(timezone.utc)
         timestep = datetime(
             self.latest_update.year,
             self.latest_update.month,
@@ -190,6 +191,8 @@ class DWDWeatherData:
                 )
                 if precipitation_prop is not None:
                     precipitation_prop = int(precipitation_prop)
+
+                uv_index = self.dwd_weather.get_uv_index(timestep.day - now.day)
                 data_item = {
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                     ATTR_FORECAST_CONDITION: condition,
@@ -213,6 +216,7 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     ),
+                    "uv_index": uv_index,
                     "precipitation_probability": precipitation_prop,
                 }
                 if weather_interval == 24:
@@ -348,6 +352,9 @@ class DWDWeatherData:
 
     def get_humidity(self):
         return self.get_weather_value(WeatherDataType.HUMIDITY)
+
+    def get_uv_index(self):
+        return self.dwd_weather.get_uv_index(0)
 
     def get_condition_hourly(self):
         data = []

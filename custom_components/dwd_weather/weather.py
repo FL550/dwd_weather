@@ -131,6 +131,12 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         return LENGTH_MILLIMETERS
 
     @property
+    def uv_index(self):
+        """Return the uv index."""
+        return self._connector.get_uv_index()
+
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
