@@ -121,6 +121,26 @@
       "unknown": "Unbekannter Fehler"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Anpassen der Station",
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "station_name": "Stationsname",
+          "wind_direction_type": "Art der Windrichtungsangabe",
+          "interpolate": "Interpolierung der Werte",
+          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)"
+        },
+        "data_description": {
+          "station_name": "Der angezeigte Stationsname",
+          "wind_direction_type": "Betrifft den Sensorwert für die Windrichtung",
+          "interpolate": "Da die Daten nur stündlich verfügbar sind, kann es sein, dass 'Sprünge' in den angezeigten Werten auftreten. Mit dieser Option werden die Daten linear interpoliert.",
+          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind."
+        }
+      }
+    }
+  },
   "selector": {
     "entity_type": {
       "options": {

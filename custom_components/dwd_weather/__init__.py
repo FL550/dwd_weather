@@ -39,9 +39,15 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
+async def update_listener(hass, entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DWD Weather as config entry."""
     _LOGGER.debug("Setup with data {}".format(entry.data))
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     dwd_weather_data = DWDWeatherData(hass, entry)
 

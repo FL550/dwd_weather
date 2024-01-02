@@ -3,6 +3,8 @@
 import logging
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectSelector,
@@ -230,4 +232,83 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="station_configure", data_schema=data_schema, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+# 'data_type': 'mixed_data', 'station_name': 'Mittelnkirchen-Hohen', 'wind_direction_type': 'degrees', 'interpolate': True, 'hourly_update': False
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        _LOGGER.debug(
+            "OptionsFlowHandler: init for {} with data {}".format(
+                self.config_entry.title, self.config_entry.data
+            )
+        )
+
+    async def async_step_init(self, user_input: dict[str] | None = None) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            _LOGGER.debug("OptionsFlowHandler: user_input {}".format(user_input))
+
+            user_input["station_id"] = self.config_entry.data["station_id"]
+            user_input["station_name"] = self.config_entry.data["station_name"]
+            user_input["custom_location"] = self.config_entry.data["custom_location"]
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=user_input, options=self.config_entry.options
+            )
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DATA_TYPE,
+                        default=self.config_entry.data["data_type"],
+                    ): SelectSelector(
+                        {
+                            "options": list(
+                                [
+                                    CONF_DATA_TYPE_MIXED,
+                                    CONF_DATA_TYPE_REPORT,
+                                    CONF_DATA_TYPE_FORECAST,
+                                ]
+                            ),
+                            "custom_value": False,
+                            "mode": "list",
+                            "translation_key": CONF_DATA_TYPE,
+                        }
+                    ),
+                    vol.Required(
+                        CONF_WIND_DIRECTION_TYPE,
+                        default=self.config_entry.data["wind_direction_type"],
+                    ): SelectSelector(
+                        {
+                            "options": list(["degrees", "direction"]),
+                            "custom_value": False,
+                            "mode": "list",
+                            "translation_key": CONF_WIND_DIRECTION_TYPE,
+                        }
+                    ),
+                    vol.Required(
+                        CONF_INTERPOLATE,
+                        default=self.config_entry.data["interpolate"],
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_HOURLY_UPDATE,
+                        default=self.config_entry.data["hourly_update"],
+                    ): BooleanSelector({}),
+                }
+            ),
         )
