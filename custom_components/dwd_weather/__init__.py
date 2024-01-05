@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from custom_components.dwd_weather.sensor import SENSOR_TYPES
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
@@ -12,16 +11,20 @@ from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.core import callback
 from simple_dwd_weatherforecast import dwdforecast
 
-from .connector import DWDWeatherData
+from .connector import DWDMapData, DWDWeatherData
 from .const import (
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
+    CONF_ENTITY_TYPE,
+    CONF_ENTITY_TYPE_MAP,
+    CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
     CONF_INTERPOLATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
     DEFAULT_INTERPOLATION,
+    DEFAULT_MAP_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WIND_DIRECTION_TYPE,
     DOMAIN,
@@ -49,36 +52,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Setup with data {}".format(entry.data))
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    dwd_weather_data = DWDWeatherData(hass, entry)
+    if entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
+        dwd_weather_data = DWDWeatherData(hass, entry)
 
-    # Coordinator checks for new updates
-    dwdweather_coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"DWD Weather Coordinator for {entry.data[CONF_STATION_ID]}",
-        update_method=dwd_weather_data.async_update,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+        # Coordinator checks for new updates
+        dwdweather_coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"DWD Weather Coordinator for {entry.data[CONF_STATION_ID]}",
+            update_method=dwd_weather_data.async_update,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+        )
 
-    # Fetch initial data so we have data when entities subscribe
-    if dwd_weather_data.dwd_weather.forecast_data is None:
+        # Fetch initial data so we have data when entities subscribe
+        if dwd_weather_data.dwd_weather.forecast_data is None:
+            await dwdweather_coordinator.async_refresh()
+        _LOGGER.debug("issue_time: {}".format(dwd_weather_data.dwd_weather.issue_time))
+        if dwd_weather_data.dwd_weather.forecast_data is None:
+            _LOGGER.debug("ConfigEntryNotReady")
+            raise ConfigEntryNotReady()
+
+        # Save the data
+        dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
+        dwdweather_hass_data[entry.entry_id] = {
+            DWDWEATHER_DATA: dwd_weather_data,
+            DWDWEATHER_COORDINATOR: dwdweather_coordinator,
+        }
+
+        # Setup weather and sensor platforms
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
+    elif entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
+        dwd_weather_data = DWDMapData(hass, entry)
+
+        # Coordinator checks for new updates
+        dwdweather_coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"DWD Map Coordinator for ",
+            update_method=dwd_weather_data.async_update,
+            update_interval=DEFAULT_MAP_INTERVAL,
+        )
         await dwdweather_coordinator.async_refresh()
-    _LOGGER.debug("issue_time: {}".format(dwd_weather_data.dwd_weather.issue_time))
-    if dwd_weather_data.dwd_weather.forecast_data is None:
-        _LOGGER.debug("ConfigEntryNotReady")
-        raise ConfigEntryNotReady()
+        # Save the data
+        dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
+        dwdweather_hass_data[entry.entry_id] = {
+            DWDWEATHER_DATA: dwd_weather_data,
+            DWDWEATHER_COORDINATOR: dwdweather_coordinator,
+        }
 
-    # Save the data
-    dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
-    dwdweather_hass_data[entry.entry_id] = {
-        DWDWEATHER_DATA: dwd_weather_data,
-        DWDWEATHER_COORDINATOR: dwdweather_coordinator,
-    }
-
-    # Setup weather and sensor platforms
-    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, "camera")
         )
 
     return True
@@ -130,6 +156,11 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new[CONF_INTERPOLATE] = DEFAULT_INTERPOLATION
         config_entry.data = {**new}
         config_entry.version = 5
+    elif config_entry.version == 5:
+        new = {**config_entry.data}
+        new[CONF_ENTITY_TYPE] = CONF_ENTITY_TYPE_STATION
+        config_entry.data = {**new}
+        config_entry.version = 6
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

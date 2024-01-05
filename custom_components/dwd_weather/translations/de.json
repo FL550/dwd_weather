@@ -144,7 +144,8 @@
   "selector": {
     "entity_type": {
       "options": {
-        "weather_station": "Wetterstation"
+        "weather_station": "Wetterstation",
+        "weather_map": "Wetterkarte"
       }
     },
     "data_type": {

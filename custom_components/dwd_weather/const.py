@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 # Base component constants
 NAME = "DWD Weather"
 DOMAIN = "dwd_weather"
+CONF_VERSION = 6
 ATTRIBUTION = "Data provided by Deutscher Wetterdienst (DWD)"
 # Platforms
 PLATFORMS = [
@@ -22,6 +23,7 @@ ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_MAP_INTERVAL = timedelta(minutes=1)
 DEFAULT_WIND_DIRECTION_TYPE = "degrees"
 DEFAULT_INTERPOLATION = True
 
@@ -31,7 +33,9 @@ DWDWEATHER_MONITORED_CONDITIONS = "dwd_weather_monitored_conditions"
 
 CONF_ENTITY_TYPE = "entity_type"
 CONF_ENTITY_TYPE_STATION = "weather_station"
+CONF_ENTITY_TYPE_MAP = "weather_map"
 CONF_STATION_ID = "station_id"
+CONF_MAP_ID = "map_id"
 CONF_CUSTOM_LOCATION = "custom_location"
 CONF_LOCATION_COORDINATES = "location_type"
 CONF_DATA_TYPE = "data_type"

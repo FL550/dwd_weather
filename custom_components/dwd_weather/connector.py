@@ -5,6 +5,7 @@ import time
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from suntimes import SunTimes
+from io import BytesIO
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -18,7 +19,7 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
     Forecast,
 )
-from simple_dwd_weatherforecast import dwdforecast
+from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
 from .const import (
@@ -492,3 +493,28 @@ class DWDWeatherData:
             return "NW"
         else:
             return "N"
+
+
+class DWDMapData:
+    def __init__(self, hass, config_entry: ConfigEntry):
+        """Initialize the data object."""
+        self._config = config_entry.data
+        self._hass = hass
+        self._image = None
+
+    async def async_update(self):
+        """Async wrapper for update method."""
+        _LOGGER.debug("map async_update")
+        return await self._hass.async_add_executor_job(self._update)
+
+    def _update(self):
+        _LOGGER.debug("map _update")
+        image = dwdmap.get_germany(
+            map_type=dwdmap.WeatherMapType.UVINDEX, image_width=520, image_height=580
+        )
+        buf = BytesIO()
+        image.save(buf, format="PNG")
+        self._image = buf.getvalue()
+
+    def get_image(self):
+        return self._image
