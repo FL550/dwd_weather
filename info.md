@@ -47,7 +47,15 @@ Available datapoints:
 - Fog Probability
 - Humidity
 
-
+For the weather charts the following data layers are available:
+- Precipitation radar
+- Maximum feels like Temperature
+- UV-Index
+- Pollen
+- Satellite RGB
+- Satellite IR
+- Warnungen Gemeinden
+- Warnungen Kreise
 
 The sensors are disabled per default, as they contain a lot of data.
 

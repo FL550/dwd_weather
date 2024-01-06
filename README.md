@@ -117,6 +117,15 @@ If you activate the option for hourly updates during setup of a weather station,
 
 This integration provides also some weather charts as camera entities. They can be configured the same as a weather station.
 
+Available data layers:
+- Precipitation radar
+- Maximum feels like Temperature
+- UV-Index
+- Pollen
+- Satellite RGB
+- Satellite IR
+- Warnungen Gemeinden
+- Warnungen Kreise
 
 ### Precipitation Chart
 ![Screenshot Precipitation Chart](./Precipitation.png)
