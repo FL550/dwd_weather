@@ -82,11 +82,11 @@
         "title": "Station selection",
         "data": {
           "station_id": "Station",
-          "custom_location": "Use custom location from the map"
+          "custom_location": "Use custom location from the chart"
         },
         "data_description": {
           "station_id": "You can either select a station from the list which is ordered by distance from your home, or you can search directly within the box and select a matching one.",
-          "custom_location": "If you want to select the nearest station to a specific location, toggle this button and drag the marker on the map below."
+          "custom_location": "If you want to select the nearest station to a specific location, toggle this button and drag the marker on the chart below."
         }
       },
       "station_configure_report": {
@@ -117,11 +117,11 @@
       "select_map_type": {
         "title": "Deutscher Wetterdienst",
         "data": {
-          "map_type": "Which map window do you like to use?"
+          "map_type": "Which chart window do you like to use?"
         }
       },
       "select_map_window": {
-        "description": "Drag the marker to the center of your desired map window and adjust the radius accordingly. You have to move the marker at least once to proceed.",
+        "description": "Drag the marker to the center of your desired chart window and adjust the radius accordingly. You have to move the marker at least once to proceed.",
         "title": "Deutscher Wetterdienst"
       },
       "select_map_content": {
@@ -155,7 +155,7 @@
           "wind_direction_type": "This affects the sensor value for the wind direction.",
           "interpolate": "As the values are only provided on an hourly basis, there might be jumps in the displayed values. With this option, the data will be smoothed.",
           "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). Keep in mind, that this obviously also slows down the update of new values.",
-          "map_options_message": "At the moment it is not possible to configure a map. Please remove this element and re-add it with your desired settings."
+          "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings."
         }
       }
     }
