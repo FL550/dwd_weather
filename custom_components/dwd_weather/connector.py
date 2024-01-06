@@ -33,11 +33,25 @@ from .const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
     CONF_INTERPOLATE,
+    CONF_MAP_TYPE_GERMANY,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
     CONF_HOURLY_UPDATE,
     DEFAULT_WIND_DIRECTION_TYPE,
+    CONF_MAP_FOREGROUND_PRECIPITATION,
+    CONF_MAP_FOREGROUND_MAXTEMP,
+    CONF_MAP_FOREGROUND_UVINDEX,
+    CONF_MAP_FOREGROUND_POLLENFLUG,
+    CONF_MAP_FOREGROUND_SATELLITE_RGB,
+    CONF_MAP_FOREGROUND_SATELLITE_IR,
+    CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN,
+    CONF_MAP_FOREGROUND_WARNUNGEN_KREISE,
+    CONF_MAP_BACKGROUND_LAENDER,
+    CONF_MAP_BACKGROUND_BUNDESLAENDER,
+    CONF_MAP_BACKGROUND_KREISE,
+    CONF_MAP_BACKGROUND_GEMEINDEN,
+    CONF_MAP_BACKGROUND_SATELLIT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -502,19 +516,111 @@ class DWDMapData:
         self._hass = hass
         self._image = None
 
+        self._map_type = None
+        self._longitude = None
+        self._latitude = None
+        self._radius_km = None
+        self._foreground_type = None
+        self._background_type = None
+        self._width = None
+        self._height = None
+
     async def async_update(self):
         """Async wrapper for update method."""
         _LOGGER.debug("map async_update")
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
-        _LOGGER.debug("map _update")
-        image = dwdmap.get_germany(
-            map_type=dwdmap.WeatherMapType.UVINDEX, image_width=520, image_height=580
-        )
+        # prevent distortion of map
+        width = round(self._height / 1.115)
+        if self._map_type == CONF_MAP_TYPE_GERMANY:
+            _LOGGER.debug(
+                "map async_update get_germany map_type:{} background_type:{} width:{} height:{}".format(
+                    self._map_type, self._background_type, width, self._height
+                )
+            )
+            image = dwdmap.get_germany(
+                map_type=self._foreground_type,
+                background_type=self._background_type,
+                image_width=width,
+                image_height=self._height,
+            )
+        else:
+            _LOGGER.debug(
+                "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
+                    self._longitude,
+                    self._latitude,
+                    self._radius_km,
+                    self._map_type,
+                    self._background_type,
+                    width,
+                    self._height,
+                )
+            )
+            image = dwdmap.get_from_location(
+                longitude=self._longitude,
+                latitude=self._latitude,
+                radius_km=self._radius_km,
+                map_type=self._foreground_type,
+                background_type=self._background_type,
+                image_width=self._width,
+                image_height=self._height,
+            )
         buf = BytesIO()
         image.save(buf, format="PNG")
         self._image = buf.getvalue()
 
     def get_image(self):
         return self._image
+
+    def set_type(self, map_type):
+        self._map_type = map_type
+
+    def set_location(self, longitude, latitude, radius_km):
+        self._longitude = longitude
+        self._latitude = latitude
+        self._radius_km = radius_km
+
+    def set_map_style(
+        self,
+        foreground_type,
+        background_type,
+    ):
+        if foreground_type == CONF_MAP_FOREGROUND_PRECIPITATION:
+            self._foreground_type = dwdmap.WeatherMapType.NIEDERSCHLAGSRADAR
+        elif foreground_type == CONF_MAP_FOREGROUND_MAXTEMP:
+            self._foreground_type = dwdmap.WeatherMapType.MAXTEMP
+        elif foreground_type == CONF_MAP_FOREGROUND_UVINDEX:
+            self._foreground_type = dwdmap.WeatherMapType.UVINDEX
+        elif foreground_type == CONF_MAP_FOREGROUND_POLLENFLUG:
+            self._foreground_type = dwdmap.WeatherMapType.POLLENFLUG
+        elif foreground_type == CONF_MAP_FOREGROUND_SATELLITE_RGB:
+            self._foreground_type = dwdmap.WeatherMapType.SATELLITE_RGB
+        elif foreground_type == CONF_MAP_FOREGROUND_SATELLITE_IR:
+            self._foreground_type = dwdmap.WeatherMapType.SATELLITE_IR
+        elif foreground_type == CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN:
+            self._foreground_type = dwdmap.WeatherMapType.WARNUNGEN_GEMEINDEN
+        elif foreground_type == CONF_MAP_FOREGROUND_WARNUNGEN_KREISE:
+            self._foreground_type = dwdmap.WeatherMapType.WARNUNGEN_KREISE
+        if background_type == CONF_MAP_BACKGROUND_LAENDER:
+            self._background_type = dwdmap.WeatherBackgroundMapType.LAENDER
+        elif background_type == CONF_MAP_BACKGROUND_BUNDESLAENDER:
+            self._background_type = dwdmap.WeatherBackgroundMapType.BUNDESLAENDER
+        elif background_type == CONF_MAP_BACKGROUND_KREISE:
+            self._background_type = dwdmap.WeatherBackgroundMapType.KREISE
+        elif background_type == CONF_MAP_BACKGROUND_GEMEINDEN:
+            self._background_type = dwdmap.WeatherBackgroundMapType.GEMEINDEN
+        elif background_type == CONF_MAP_BACKGROUND_SATELLIT:
+            self._background_type = dwdmap.WeatherBackgroundMapType.SATELLIT
+
+    def set_size(
+        self,
+        image_width,
+        image_height,
+    ):
+        if image_width > 1200:
+            image_width = 1200
+        if image_height > 1400:
+            image_height = 1400
+        self._width = image_width
+        self._height = image_height

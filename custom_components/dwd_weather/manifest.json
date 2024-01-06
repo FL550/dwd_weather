@@ -9,6 +9,6 @@
   "codeowners": [
     "@FL550"
   ],
-  "requirements": ["simple_dwd_weatherforecast==2.0.27","markdownify==0.6.5","suntimes==1.1.2"],
+  "requirements": ["simple_dwd_weatherforecast==2.0.29","markdownify==0.6.5","suntimes==1.1.2"],
   "iot_class": "cloud_polling"
 }

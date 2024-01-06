@@ -95,7 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             update_method=dwd_weather_data.async_update,
             update_interval=DEFAULT_MAP_INTERVAL,
         )
-        await dwdweather_coordinator.async_refresh()
         # Save the data
         dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
         dwdweather_hass_data[entry.entry_id] = {
@@ -173,14 +172,21 @@ async def async_update(self):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
+    if entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
+        unload_ok = all(
+            await asyncio.gather(
+                *[
+                    hass.config_entries.async_forward_entry_unload(entry, component)
+                    for component in PLATFORMS
+                ]
+            )
         )
-    )
+    elif entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
+        unload_ok = all(
+            await asyncio.gather(
+                hass.config_entries.async_forward_entry_unload(entry, "camera")
+            )
+        )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:

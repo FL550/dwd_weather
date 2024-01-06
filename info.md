@@ -17,12 +17,15 @@ This integration adds a weather data from  Deutscher Wetterdienst (DWD) to HA.
 
 ![Screenshot Weather Card](./Weather-Card.png)
 
+![Screenshot Precipitation Chart](./Precipitation.png)
+
 The data is provided via different entities:
 
 - weather
 - sensor
+- camera
 
-It includes current weather information and forecasts for the next 9 days.
+It includes current weather information and forecasts for the next 9 days and some weather maps.
 
 Available datapoints:
 
@@ -43,6 +46,8 @@ Available datapoints:
 - Sun Irradiance
 - Fog Probability
 - Humidity
+
+
 
 The sensors are disabled per default, as they contain a lot of data.
 
@@ -65,10 +70,9 @@ For more information please read the [README](github).
 
 ## Configuration is done in the UI
 
-If you insert a station_id, this will override the coordinates and use the specific station instead. station_ids can be found [here](https://github.com/FL550/simple_dwd_weatherforecast/blob/master/simple_dwd_weatherforecast/stations.py) if needed. For further infos about the usage and reporting issues please visit [GitHub](github).
+For further infos about the usage and reporting issues please visit [GitHub](github).
 
 ## If you want forecasts for multiple locations, just add a new integration as you did during first install.
-
 
 
 ***

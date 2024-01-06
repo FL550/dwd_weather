@@ -46,3 +46,36 @@ CONF_STATION_NAME = "station_name"
 CONF_WIND_DIRECTION_TYPE = "wind_direction_type"
 CONF_INTERPOLATE = "interpolate"
 CONF_HOURLY_UPDATE = "hourly_update"
+
+CONF_MAP_TYPE = "map_type"
+CONF_MAP_TYPE_GERMANY = "map_germany"
+CONF_MAP_TYPE_CUSTOM = "map_custom"
+CONF_MAP_WINDOW = "map_window"
+CONF_MAP_FOREGROUND_TYPE = "map_foreground_type"
+CONF_MAP_FOREGROUND_PRECIPITATION = "map_foreground_precipitation"
+CONF_MAP_FOREGROUND_MAXTEMP = "map_foreground_maxtemp"
+CONF_MAP_FOREGROUND_UVINDEX = "map_foreground_uvindex"
+CONF_MAP_FOREGROUND_POLLENFLUG = "map_foreground_pollenflug"
+CONF_MAP_FOREGROUND_SATELLITE_RGB = "map_foreground_satellite_rgb"
+CONF_MAP_FOREGROUND_SATELLITE_IR = "map_foreground_satellite_ir"
+CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN = "map_foreground_warnungen_gem"
+CONF_MAP_FOREGROUND_WARNUNGEN_KREISE = "map_foreground_warnungen_kreise"
+CONF_MAP_BACKGROUND_TYPE = "map_background_type"
+CONF_MAP_BACKGROUND_LAENDER = "map_background_laender"
+CONF_MAP_BACKGROUND_BUNDESLAENDER = "map_background_bundeslaender"
+CONF_MAP_BACKGROUND_KREISE = "map_background_kreise"
+CONF_MAP_BACKGROUND_GEMEINDEN = "map_background_gemeinden"
+CONF_MAP_BACKGROUND_SATELLIT = "map_background_satellit"
+
+conversion_table_map_foreground = {
+    CONF_MAP_FOREGROUND_PRECIPITATION: "Precipitation",
+    CONF_MAP_FOREGROUND_MAXTEMP: "Temperature",
+    CONF_MAP_FOREGROUND_UVINDEX: "UV-Index",
+    CONF_MAP_FOREGROUND_POLLENFLUG: "Pollen",
+    CONF_MAP_FOREGROUND_SATELLITE_RGB: "Satellite RGB",
+    CONF_MAP_FOREGROUND_SATELLITE_IR: "Satellite IR",
+    CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN: "Warnungen Gemeinden",
+    CONF_MAP_FOREGROUND_WARNUNGEN_KREISE: "Warnungen Kreise",
+}
+
+CONF_OPTION_MAP_MESSAGE = "map_options_message"

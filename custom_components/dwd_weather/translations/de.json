@@ -105,13 +105,32 @@
           "station_name": "Stationsname",
           "wind_direction_type": "Art der Windrichtungsangabe",
           "interpolate": "Interpolierung der Werte",
-          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)"
+          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
+          "map_options_message": "Einstellung nicht möglich"
         },
         "data_description": {
           "station_name": "Der angezeigte Stationsname",
           "wind_direction_type": "Betrifft den Sensorwert für die Windrichtung",
           "interpolate": "Da die Daten nur stündlich verfügbar sind, kann es sein, dass 'Sprünge' in den angezeigten Werten auftreten. Mit dieser Option werden die Daten linear interpoliert.",
-          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind."
+          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
+          "map_options_message": "Aktuell ist es nicht möglich, eine Karte zu konfigurieren. Bitte lösche stattdessen die Karte und füge sie mit den gewünschten Einstellungen erneut hinzu."
+        }
+      },
+      "select_map_type": {
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "map_type": "Welcher Kartenausschnitt soll konfiguriert werden?"
+        }
+      },
+      "select_map_window": {
+        "description": "Verschiebe den Marker in die Mitte des gewünschten Ausschnitts und verschiebe den Radius entsprechend. Der Marker muss mindestens einmal verschoben werden, um fortzufahren.",
+        "title": "Deutscher Wetterdienst"
+      },
+      "select_map_content": {
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "map_foreground_type": "Welche Daten sollen angezeigt werden?",
+          "map_background_type": "Was soll im Hintergrund angezeigt werden?"
         }
       }
     },
@@ -159,6 +178,33 @@
       "options": {
         "degrees": "Grad",
         "direction": "Richtung (N, NE, E, ...)"
+      }
+    },
+    "map_type": {
+      "options": {
+        "map_germany": "Deutschland",
+        "map_custom": "Eigener Kartenausschnitt"
+      }
+    },
+    "map_foreground_type": {
+      "options": {
+        "map_foreground_precipitation": "Niederschlagsradar",
+        "map_foreground_maxtemp": "Maximale gefühlte Temperatur",
+        "map_foreground_uvindex": "UV-Index",
+        "map_foreground_pollenflug": "Pollenvorhersage",
+        "map_foreground_satellite_rgb": "Satellitenbild RGB",
+        "map_foreground_satellite_ir": "Satellitenbild IR",
+        "map_foreground_warnungen_gem": "Wetterwarnungen auf Gemeindeebene",
+        "map_foreground_warnungen_kreise": "Wetterwarnungen auf Kreisebene"
+      }
+    },
+    "map_background_type": {
+      "options": {
+        "map_background_laender": "Länder",
+        "map_background_bundeslaender": "Bundesländer",
+        "map_background_kreise": "Kreise",
+        "map_background_gemeinden": "Gemeinden",
+        "map_background_satellit": "Satellitenbild"
       }
     }
   }

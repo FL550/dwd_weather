@@ -13,6 +13,8 @@ This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/si
 
 ![Screenshot Weather Details](./Weather-Details.png)
 
+![Screenshot Precipitation Chart](./Precipitation.png)
+
 # Installation
 
 1. Install integration via HACS or use the button below.
@@ -108,8 +110,27 @@ You can enable the ones you like in HA UI under "Configuration" -> "Entities" ->
 
 The sensor values will be set when the next update of dwd_weather is scheduled by Home Assistant. This is done every 15 minutes. You can skip the waiting time by reloading the component/integration or restarting HA.
 
-Note: 
+Note:
 If you activate the option for hourly updates during setup of a weather station, DWD does not provide data for precipitation duration and probability. If this or other data is not available for a certain weather station, this component does not create sensors for it. As a workaround you can create setup the same station without activating the hourly updates option and use the slightly less acurate sensor data that is refreshed twice daily.
+
+## Weather charts
+
+This integration provides also some weather charts as camera entities. They can be configured the same as a weather station.
+
+
+### Precipitation Chart
+![Screenshot Precipitation Chart](./Precipitation.png)
+
+### Pollen Chart
+![Screenshot Pollen Chart](./pollen.png)
+
+### Alerts Chart
+![Screenshot Alerts Chart](./warnungen.png)
+
+### Custom Chart
+The chart can be adjusted to every region you like, however as most data is only provided for Germany, it is best used within these region.
+
+![Screenshot Alerts Chart](./warnungen_custom.png)
 
 ## Help and Contribution
 

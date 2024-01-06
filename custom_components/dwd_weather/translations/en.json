@@ -113,6 +113,23 @@
           "interpolate": "As the values are only provided on an hourly basis, there might be jumps in the displayed values. With this option, the data will be smoothed.",
           "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). Keep in mind, that this obviously also slows down the update of new values."
         }
+      },
+      "select_map_type": {
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "map_type": "Which map window do you like to use?"
+        }
+      },
+      "select_map_window": {
+        "description": "Drag the marker to the center of your desired map window and adjust the radius accordingly. You have to move the marker at least once to proceed.",
+        "title": "Deutscher Wetterdienst"
+      },
+      "select_map_content": {
+        "title": "Deutscher Wetterdienst",
+        "data": {
+          "map_foreground_type": "Which data would you like to see?",
+          "map_background_type": "What should be in the background?"
+        }
       }
     },
     "error": {
@@ -130,13 +147,15 @@
           "station_name": "Station name",
           "wind_direction_type": "Wind direction value type",
           "interpolate": "Interpolate values",
-          "hourly_update": "Force hourly data update (see warning below)"
+          "hourly_update": "Force hourly data update (see warning below)",
+          "map_options_message": "Unavailable setting"
         },
         "data_description": {
           "station_name": "This is the displayed name of the station.",
           "wind_direction_type": "This affects the sensor value for the wind direction.",
           "interpolate": "As the values are only provided on an hourly basis, there might be jumps in the displayed values. With this option, the data will be smoothed.",
-          "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). Keep in mind, that this obviously also slows down the update of new values."
+          "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well, this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). Keep in mind, that this obviously also slows down the update of new values.",
+          "map_options_message": "At the moment it is not possible to configure a map. Please remove this element and re-add it with your desired settings."
         }
       }
     }
@@ -145,7 +164,7 @@
     "entity_type": {
       "options": {
         "weather_station": "Weather station",
-        "weather_map": "Weather map"
+        "weather_map": "Weather charts"
       }
     },
     "data_type": {
@@ -159,6 +178,33 @@
       "options": {
         "degrees": "Degrees",
         "direction": "Direction (N, NE, E, ...)"
+      }
+    },
+    "map_type": {
+      "options": {
+        "map_germany": "Germany",
+        "map_custom": "Custom chart window"
+      }
+    },
+    "map_foreground_type": {
+      "options": {
+        "map_foreground_precipitation": "Precipitation radar",
+        "map_foreground_maxtemp": "Maximum feels like temperature",
+        "map_foreground_uvindex": "UV-Index",
+        "map_foreground_pollenflug": "Pollen dispersal",
+        "map_foreground_satellite_rgb": "Satellite Image RGB",
+        "map_foreground_satellite_ir": "Satellite Image IR",
+        "map_foreground_warnungen_gem": "Weather warnings per municipality",
+        "map_foreground_warnungen_kreise": "Weather warnings per district"
+      }
+    },
+    "map_background_type": {
+      "options": {
+        "map_background_laender": "Countries",
+        "map_background_bundeslaender": "German Federal states",
+        "map_background_kreise": "German Districts",
+        "map_background_gemeinden": "German Municipalities",
+        "map_background_satellit": "Satellite image"
       }
     }
   }
