@@ -38,6 +38,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
+    DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
 )
 
@@ -270,6 +271,7 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
     def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._type = sensor_type
 
         # name = f"{dwd_data._config[CONF_STATION_NAME]}: {SENSOR_TYPES[self._type][0]}"
@@ -422,3 +424,13 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
     def available(self):
         """Return if state is available."""
         return self._connector.latest_update is not None
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data and updates the states."""
+        await self._coordinator.async_request_refresh()

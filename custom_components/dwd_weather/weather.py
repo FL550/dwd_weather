@@ -22,6 +22,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
+    DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
 )
 
@@ -44,6 +45,7 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         """Initialise the platform with a data instance and site."""
 
         dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
         unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{dwd_data._config[CONF_STATION_NAME]}_Weather"
         _LOGGER.debug("Setting up weather with id {}".format(unique_id))
@@ -143,3 +145,13 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
     def extra_state_attributes(self):
         """Return data validity infos."""
         return self._connector.infos
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data and updates the states."""
+        await self._coordinator.async_request_refresh()
