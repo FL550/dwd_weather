@@ -9,10 +9,14 @@ from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEGREE,
+    PERCENTAGE,
+    UnitOfIrradiance,
+    UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -122,7 +126,7 @@ SENSOR_TYPES = {
     "precipitation": [
         "Precipitation",
         None,
-        "mm/m^2",
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         "mdi:weather-rainy",
         False,
         SensorStateClass.MEASUREMENT,
@@ -131,7 +135,7 @@ SENSOR_TYPES = {
     "precipitation_probability": [
         "Precipitation Probability",
         None,
-        "%",
+        PERCENTAGE,
         "mdi:weather-rainy",
         False,
         SensorStateClass.MEASUREMENT,
@@ -149,7 +153,7 @@ SENSOR_TYPES = {
     "cloud_coverage": [
         "Cloud Coverage",
         None,
-        "%",
+        PERCENTAGE,
         "mdi:cloud",
         False,
         SensorStateClass.MEASUREMENT,
@@ -158,7 +162,7 @@ SENSOR_TYPES = {
     "visibility": [
         "Visibility",
         None,
-        UnitOfPressure.HPA,
+        UnitOfLength.KILOMETERS,
         "mdi:eye",
         False,
         SensorStateClass.MEASUREMENT,
@@ -176,7 +180,7 @@ SENSOR_TYPES = {
     "sun_irradiance": [
         "Sun Irradiance",
         None,
-        "W/m^2",
+        UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         "mdi:weather-sunny-alert",
         False,
         SensorStateClass.MEASUREMENT,
@@ -185,7 +189,7 @@ SENSOR_TYPES = {
     "fog_probability": [
         "Fog Probability",
         None,
-        "%",
+        PERCENTAGE,
         "mdi:weather-fog",
         False,
         SensorStateClass.MEASUREMENT,
@@ -194,7 +198,7 @@ SENSOR_TYPES = {
     "humidity": [
         "Humidity",
         SensorDeviceClass.HUMIDITY,
-        "%",
+        PERCENTAGE,
         "mdi:water-percent",
         False,
         SensorStateClass.MEASUREMENT,
