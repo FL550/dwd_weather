@@ -1,4 +1,5 @@
 """Support for DWD weather service."""
+
 import logging
 from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.entity import DWDWeatherEntity

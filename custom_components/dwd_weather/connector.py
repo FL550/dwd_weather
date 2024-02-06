@@ -1,4 +1,5 @@
 """Connector class to retrieve data, which is use by the weather and sensor enities."""
+
 import logging
 from datetime import datetime, timedelta, timezone
 import time
@@ -92,10 +93,12 @@ class DWDWeatherData:
             self.dwd_weather.update(
                 force_hourly=self._config[CONF_HOURLY_UPDATE],
                 with_forecast=True,
-                with_measurements=True
-                if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
-                or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
-                else False,
+                with_measurements=(
+                    True
+                    if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
+                    or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
+                    else False
+                ),
                 with_report=True,
             )
             if self._config[CONF_HOURLY_UPDATE]:
@@ -240,12 +243,12 @@ class DWDWeatherData:
                         False,
                     ),
                     ATTR_FORECAST_WIND_BEARING: wind_dir,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: round(wind_speed * 3.6, 1)
-                    if wind_speed is not None
-                    else None,
-                    ATTR_WEATHER_WIND_GUST_SPEED: round(wind_gusts * 3.6, 1)
-                    if wind_gusts is not None
-                    else None,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: (
+                        round(wind_speed * 3.6, 1) if wind_speed is not None else None
+                    ),
+                    ATTR_WEATHER_WIND_GUST_SPEED: (
+                        round(wind_gusts * 3.6, 1) if wind_gusts is not None else None
+                    ),
                     "uv_index": uv_index,
                     "precipitation_probability": precipitation_prop,
                 }
@@ -314,9 +317,11 @@ class DWDWeatherData:
             WeatherDataType.DEWPOINT: lambda x: round(x - 273.1, 1),
             WeatherDataType.PRESSURE: lambda x: round(x / 100, 1),
             WeatherDataType.WIND_SPEED: lambda x: round(x * 3.6, 1),
-            WeatherDataType.WIND_DIRECTION: lambda x: round(x, 0)
-            if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
-            else self.get_wind_direction_symbol(round(x, 0)),
+            WeatherDataType.WIND_DIRECTION: lambda x: (
+                round(x, 0)
+                if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
+                else self.get_wind_direction_symbol(round(x, 0))
+            ),
             WeatherDataType.WIND_GUSTS: lambda x: round(x * 3.6, 1),
             WeatherDataType.PRECIPITATION: lambda x: round(x, 1),
             WeatherDataType.PRECIPITATION_PROBABILITY: lambda x: round(x, 0),
@@ -412,9 +417,11 @@ class DWDWeatherData:
             WeatherDataType.DEWPOINT: lambda value: round(value - 273.1, 1),
             WeatherDataType.PRESSURE: lambda value: round(value / 100, 1),
             WeatherDataType.WIND_SPEED: lambda value: round(value * 3.6, 1),
-            WeatherDataType.WIND_DIRECTION: lambda value: round(value, 0)
-            if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
-            else self.get_wind_direction_symbol(round(value, 0)),
+            WeatherDataType.WIND_DIRECTION: lambda value: (
+                round(value, 0)
+                if self._config[CONF_WIND_DIRECTION_TYPE] == DEFAULT_WIND_DIRECTION_TYPE
+                else self.get_wind_direction_symbol(round(value, 0))
+            ),
             WeatherDataType.WIND_GUSTS: lambda value: round(value * 3.6, 1),
             WeatherDataType.PRECIPITATION: lambda value: round(value, 1),
             WeatherDataType.PRECIPITATION_PROBABILITY: lambda value: round(value, 0),
