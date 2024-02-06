@@ -65,6 +65,7 @@ class DWDWeatherData:
         self.forecast = None
         self.latest_update = None
         self.infos = {}
+        self.entities = []
 
         # Holds the current data from DWD
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
@@ -74,9 +75,14 @@ class DWDWeatherData:
             int(self.dwd_weather.station["elev"]),
         )
 
+    def register_entity(self, entity):
+        self.entities.append(entity)
+
     async def async_update(self):
         """Async wrapper for update method."""
-        return await self._hass.async_add_executor_job(self._update)
+        if await self._hass.async_add_executor_job(self._update):
+            for entity in self.entities:
+                await entity.async_update_listeners(("daily", "hourly"))
 
     def _update(self):
         """Get the latest data from DWD."""
@@ -132,6 +138,9 @@ class DWDWeatherData:
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
             _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
+            return True
+        else:
+            return False
 
     def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
         if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:

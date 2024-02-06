@@ -44,10 +44,11 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
     def __init__(self, entry_data, hass_data):
         """Initialise the platform with a data instance and site."""
 
-        dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        self._dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
+        self._dwd_data.register_entity(self)
 
-        unique_id = f"{dwd_data._config[CONF_STATION_ID]}_{dwd_data._config[CONF_STATION_NAME]}_Weather"
+        unique_id = f"{self._dwd_data._config[CONF_STATION_ID]}_{self._dwd_data._config[CONF_STATION_NAME]}_Weather"
         _LOGGER.debug("Setting up weather with id {}".format(unique_id))
         super().__init__(hass_data, unique_id)
 
@@ -151,7 +152,3 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
-
-    async def async_update(self) -> None:
-        """Get the latest data and updates the states."""
-        await self._coordinator.async_request_refresh()
