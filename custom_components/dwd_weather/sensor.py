@@ -297,7 +297,7 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         elif self._type == "weather_report":
             result = (
                 re.search(
-                    "\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                    r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
                     self._connector.get_weather_report(),
                 ).group()
                 if self._connector.get_weather_report() is not None
