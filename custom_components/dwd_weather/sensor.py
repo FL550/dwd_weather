@@ -22,8 +22,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_REPORT_ISSUE_TIME,
@@ -227,7 +228,7 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+    hass: HomeAssistant, entry: ConfigType, async_add_entities
 ) -> None:
     """Set up the DWD weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
