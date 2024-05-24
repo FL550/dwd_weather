@@ -389,7 +389,7 @@ class DWDWeatherData:
         return self.get_weather_value(WeatherDataType.HUMIDITY)
 
     def get_uv_index(self):
-        return self.dwd_weather.get_uv_index(0)
+        return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
 
     def get_condition_hourly(self):
         data = []
