@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         }
 
-        await hass.config_entries.async_forward_entry_setups(entry, "camera")
+        await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
 
     return True
 
