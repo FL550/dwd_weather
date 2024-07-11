@@ -81,9 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         # Setup weather and sensor platforms
         for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
+            await hass.config_entries.async_forward_entry_setups(entry, [component])
+
     elif entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
         dwd_weather_data = DWDMapData(hass, entry)
 
@@ -102,9 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         }
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "camera")
-        )
+        await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
 
     return True
 
