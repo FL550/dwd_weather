@@ -147,9 +147,12 @@ class DWDWeatherData:
 
     def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
         if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
-            weather_interval = 1
+            return self.get_forecast_hourly()
         elif WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_DAILY:
-            weather_interval = 24
+            return self.get_forecast_daily()
+
+    def get_forecast_hourly(self) -> list[Forecast] | None:
+        weather_interval = 1
         now = datetime.now(timezone.utc)
         timestep = datetime(
             self.latest_update.year,
@@ -256,6 +259,101 @@ class DWDWeatherData:
                     data_item[ATTR_FORECAST_NATIVE_TEMP_LOW] = temp_min
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)
+        return forecast_data
+
+    def get_forecast_daily(self) -> list[Forecast] | None:
+        weather_interval = 24
+        now = datetime.now(timezone.utc)
+        timestep = datetime(
+            self.latest_update.year,
+            self.latest_update.month,
+            self.latest_update.day,
+            tzinfo=timezone.utc,
+        )
+        forecast_data = []
+        # Find the next timewindow from actual time
+        while timestep < self.latest_update:
+            timestep += timedelta(hours=weather_interval)
+            # Reduce by one to include the current timewindow
+        timestep -= timedelta(hours=weather_interval)
+        for _ in range(0, 9):
+            _LOGGER.debug("Timestep {}".format(timestep))
+            condition = self.dwd_weather.get_daily_condition(
+                timestep,
+                False,
+            )
+            if condition == "sunny" and (
+                timestep.hour < self.sun.riseutc(timestep).hour
+                or timestep.hour > self.sun.setutc(timestep).hour
+            ):
+                condition = "clear-night"
+            temp_max = self.dwd_weather.get_daily_max(
+                WeatherDataType.TEMPERATURE,
+                timestep,
+                False,
+            )
+            if temp_max is not None:
+                temp_max = int(round(temp_max - 273.1, 0))
+
+            temp_min = self.dwd_weather.get_daily_min(
+                WeatherDataType.TEMPERATURE,
+                timestep,
+                False,
+            )
+            if temp_min is not None:
+                temp_min = int(round(temp_min - 273.1, 0))
+
+            wind_dir = self.dwd_weather.get_daily_avg(
+                WeatherDataType.WIND_DIRECTION,
+                timestep,
+                False,
+            )
+
+            if self._config[CONF_WIND_DIRECTION_TYPE] != DEFAULT_WIND_DIRECTION_TYPE:
+                wind_dir = self.get_wind_direction_symbol(wind_dir)
+
+            precipitation_prop = self.dwd_weather.get_daily_max(
+                WeatherDataType.PRECIPITATION_PROBABILITY,
+                timestep,
+                False,
+            )
+            if precipitation_prop is not None:
+                precipitation_prop = int(precipitation_prop)
+
+            uv_index = self.dwd_weather.get_uv_index(timestep.day - now.day)
+            wind_speed = self.dwd_weather.get_daily_max(
+                WeatherDataType.WIND_SPEED,
+                timestep,
+                False,
+            )
+            wind_gusts = self.dwd_weather.get_daily_max(
+                WeatherDataType.WIND_GUSTS,
+                timestep,
+                False,
+            )
+            data_item = {
+                ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
+                ATTR_FORECAST_CONDITION: condition,
+                ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_daily_sum(
+                    WeatherDataType.PRECIPITATION,
+                    timestep,
+                    False,
+                ),
+                ATTR_FORECAST_WIND_BEARING: wind_dir,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: (
+                    round(wind_speed * 3.6, 1) if wind_speed is not None else None
+                ),
+                ATTR_WEATHER_WIND_GUST_SPEED: (
+                    round(wind_gusts * 3.6, 1) if wind_gusts is not None else None
+                ),
+                "uv_index": uv_index,
+                "precipitation_probability": precipitation_prop,
+            }
+            data_item[ATTR_FORECAST_NATIVE_TEMP_LOW] = temp_min
+            forecast_data.append(data_item)
+            timestep += timedelta(hours=weather_interval)
+        _LOGGER.debug("Daily Forecast data {}".format(forecast_data))
         return forecast_data
 
     def get_condition(self):
