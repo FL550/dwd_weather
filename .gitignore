@@ -1,4 +1,6 @@
 __pycache__
-.vscode
-homeassistant
-simple_dwd_weatherforecast
+.pytest*
+
+# Home Assistant configuration
+config/*
+!config/configuration.yaml
