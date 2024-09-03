@@ -296,11 +296,6 @@ class DWDWeatherData:
                     timestep,
                     False,
                 )
-                if condition == "sunny" and (
-                    timestep.hour < self.sun.riseutc(timestep).hour  # type: ignore
-                    or timestep.hour > self.sun.setutc(timestep).hour  # type: ignore
-                ):
-                    condition = "clear-night"
                 temp_max = self.dwd_weather.get_daily_max(
                     WeatherDataType.TEMPERATURE,
                     timestep,
