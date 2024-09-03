@@ -4,6 +4,8 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+cat custom_components/dwd_weather/manifest.json | jq -r '.requirements | .[]'  | python3 -m pip install -r /dev/stdin
+
 # Create config dir if not present
 if [[ ! -d "${PWD}/config" ]]; then
     mkdir -p "${PWD}/config"
