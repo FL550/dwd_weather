@@ -19,9 +19,13 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
 )
+
+from homeassistant.components.sensor.const import (
+    SensorDeviceClass,
+)
+
 from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers.typing import ConfigType
@@ -231,9 +235,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigType, async_add_entities
 ) -> None:
     """Set up the DWD weather sensor platform."""
-    hass_data = hass.data[DOMAIN][entry.entry_id]
-    _LOGGER.debug("Sensor async_setup_entry {}".format(entry.data))
-    if CONF_STATION_ID in entry.data:
+    hass_data = hass.data[DOMAIN][entry.entry_id]  # type: ignore
+    _LOGGER.debug("Sensor async_setup_entry {}".format(entry.data))  # type: ignore
+    if CONF_STATION_ID in entry.data:  # type: ignore
         _LOGGER.debug("Sensor async_setup_entry")
         # Only add the report sensor if a report is available
         sensor_list = {
@@ -242,12 +246,12 @@ async def async_setup_entry(
             if k != "measured_values_time"
             # and contains_weather_data(k, hass_data[DWDWEATHER_DATA])
             and not (
-                hass_data[DWDWEATHER_DATA]._config[CONF_HOURLY_UPDATE] and v[6] == False
+                hass_data[DWDWEATHER_DATA]._config[CONF_HOURLY_UPDATE] and not v[6]
             )
         }
         async_add_entities(
             [
-                DWDWeatherForecastSensor(entry.data, hass_data, sensor_type)
+                DWDWeatherForecastSensor(entry.data, hass_data, sensor_type)  # type: ignore
                 for sensor_type in sensor_list
             ],
             False,
@@ -259,7 +263,9 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     DWDWeatherForecastSensor(
-                        entry.data, hass_data, "measured_values_time"
+                        entry.data,  # type: ignore
+                        hass_data,
+                        "measured_values_time",  # type: ignore
                     )
                 ],
                 False,
@@ -300,7 +306,7 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
                 re.search(
                     r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
                     self._connector.get_weather_report(),
-                ).group()
+                ).group()  # type: ignore
                 if self._connector.get_weather_report() is not None
                 else None
             )

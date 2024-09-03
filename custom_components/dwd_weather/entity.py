@@ -1,8 +1,7 @@
 """DWDWeatherEntity class."""
 
 import logging
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from .const import (
     CONF_STATION_NAME,
     DOMAIN,
@@ -48,8 +47,8 @@ class DWDWeatherEntity:
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
-        self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
+        self.async_on_remove(  # type: ignore
+            self._coordinator.async_add_listener(self.async_write_ha_state)  # type: ignore
         )
 
     @property

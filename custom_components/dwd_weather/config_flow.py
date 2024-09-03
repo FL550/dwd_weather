@@ -68,13 +68,16 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         self.config_data = {}
+        data_schema = vol.Schema({})
         _LOGGER.debug("User:user_input: {}".format(user_input))
         if user_input is not None:
             # Error in user input
             if len(errors) > 0:
                 _LOGGER.debug("error: {}".format(errors))
                 return self.async_show_form(
-                    step_id="user", data_schema=data_schema, errors={errors}
+                    step_id="user",
+                    data_schema=data_schema,
+                    errors={errors},  # type: ignore
                 )
             self.config_data.update(user_input)
             # Check selected option
@@ -90,7 +93,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_ENTITY_TYPE,
-                    default=CONF_ENTITY_TYPE_STATION,
+                    default=CONF_ENTITY_TYPE_STATION,  # type: ignore
                 ): SelectSelector(
                     {
                         "options": list(
@@ -141,12 +144,13 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         for station in stations_list:
             station_data = dwdforecast.load_station_id(station[0])
-            stations.append(
-                {
-                    "label": f"[{'X' if station_data['report_available'] == 1 else '_'}] {station[1]} km: {dwdforecast.load_station_id(station[0])['name']} (H:{station_data['elev']}m)",
-                    "value": station[0],
-                }
-            )
+            if station_data:
+                stations.append(
+                    {
+                        "label": f"[{'X' if station_data['report_available'] == 1 else '_'}] {station[1]} km: {station_data['name']} (H:{station_data['elev']}m)",
+                        "value": station[0],
+                    }
+                )
 
         data_schema = vol.Schema(
             {
@@ -162,7 +166,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Required(
                     CONF_CUSTOM_LOCATION,
-                    default=False,
+                    default=False,  # type: ignore
                 ): BooleanSelector({}),
                 vol.Optional(CONF_LOCATION_COORDINATES): LocationSelector({}),
             }
@@ -184,7 +188,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_DATA_TYPE,
-                    default=CONF_DATA_TYPE_MIXED,
+                    default=CONF_DATA_TYPE_MIXED,  # type: ignore
                 ): SelectSelector(
                     {
                         "options": list(
@@ -229,35 +233,35 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 dwdforecast.load_station_id(self.config_data[CONF_STATION_ID])
             )
         )
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_STATION_NAME,
-                    default=dwdforecast.load_station_id(
-                        self.config_data[CONF_STATION_ID]
-                    )["name"],
-                ): TextSelector({}),
-                vol.Required(
-                    CONF_WIND_DIRECTION_TYPE,
-                    default="degrees",
-                ): SelectSelector(
-                    {
-                        "options": list(["degrees", "direction"]),
-                        "custom_value": False,
-                        "mode": "list",
-                        "translation_key": CONF_WIND_DIRECTION_TYPE,
-                    }
-                ),
-                vol.Required(
-                    CONF_INTERPOLATE,
-                    default=True,
-                ): BooleanSelector({}),
-                vol.Required(
-                    CONF_HOURLY_UPDATE,
-                    default=False,
-                ): BooleanSelector({}),
-            }
-        )
+        station = dwdforecast.load_station_id(self.config_data[CONF_STATION_ID])
+        if station:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_STATION_NAME,
+                        default=station["name"],
+                    ): TextSelector({}),
+                    vol.Required(
+                        CONF_WIND_DIRECTION_TYPE,
+                        default="degrees",  # type: ignore
+                    ): SelectSelector(
+                        {
+                            "options": list(["degrees", "direction"]),
+                            "custom_value": False,
+                            "mode": "list",
+                            "translation_key": CONF_WIND_DIRECTION_TYPE,
+                        }
+                    ),
+                    vol.Required(
+                        CONF_INTERPOLATE,
+                        default=True,  # type: ignore
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_HOURLY_UPDATE,
+                        default=False,  # type: ignore
+                    ): BooleanSelector({}),
+                }
+            )
 
         return self.async_show_form(
             step_id="station_configure", data_schema=data_schema, errors=errors
@@ -277,7 +281,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_MAP_TYPE,
-                    default=CONF_MAP_TYPE_GERMANY,
+                    default=CONF_MAP_TYPE_GERMANY,  # type: ignore
                 ): SelectSelector(
                     {
                         "options": list(
@@ -340,7 +344,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_MAP_FOREGROUND_TYPE,
-                    default=CONF_MAP_FOREGROUND_PRECIPITATION,
+                    default=CONF_MAP_FOREGROUND_PRECIPITATION,  # type: ignore
                 ): SelectSelector(
                     {
                         "options": list(
@@ -362,7 +366,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Required(
                     CONF_MAP_BACKGROUND_TYPE,
-                    default=CONF_MAP_BACKGROUND_BUNDESLAENDER,
+                    default=CONF_MAP_BACKGROUND_BUNDESLAENDER,  # type: ignore
                 ): SelectSelector(
                     {
                         "options": list(
@@ -405,7 +409,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
         )
 
-    async def async_step_init(self, user_input: dict[str] | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str] | None = None) -> FlowResult:  # type: ignore
         """Manage the options."""
         if self.config_entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
             if user_input is not None:

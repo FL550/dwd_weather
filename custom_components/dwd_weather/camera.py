@@ -3,7 +3,7 @@ from custom_components.dwd_weather.connector import DWDMapData
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import (
@@ -27,7 +27,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigType, async_add_entities
 ) -> None:
     """Set up the DWD weather camera platform."""
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = hass.data[DOMAIN][entry.entry_id]  # type: ignore
     # if CONF_STATION_ID in entry.data:
     _LOGGER.debug("Camera async_setup_entry")
 

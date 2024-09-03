@@ -113,12 +113,12 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     if config_entry.version == 1:
         new = {**config_entry.data}
         new["weather_interval"] = 24
-        config_entry.data = {**new}
+        config_entry.data = {**new}  # type: ignore
         config_entry.version = 2
     elif config_entry.version == 2:
         new = {**config_entry.data}
         new[CONF_WIND_DIRECTION_TYPE] = DEFAULT_WIND_DIRECTION_TYPE
-        config_entry.data = {**new}
+        config_entry.data = {**new}  # type: ignore
         config_entry.version = 3
     elif config_entry.version == 3:
         new = {}
@@ -150,12 +150,12 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     elif config_entry.version == 4:
         new = {**config_entry.data}
         new[CONF_INTERPOLATE] = DEFAULT_INTERPOLATION
-        config_entry.data = {**new}
+        config_entry.data = {**new}  # type: ignore
         config_entry.version = 5
     elif config_entry.version == 5:
         new = {**config_entry.data}
         new[CONF_ENTITY_TYPE] = CONF_ENTITY_TYPE_STATION
-        config_entry.data = {**new}
+        config_entry.data = {**new}  # type: ignore
         config_entry.version = 6
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

@@ -6,9 +6,13 @@ from custom_components.dwd_weather.entity import DWDWeatherEntity
 
 from homeassistant.components.weather import (
     WeatherEntity,
-    WeatherEntityFeature,
     Forecast,
 )
+
+from homeassistant.components.weather.const import (
+    WeatherEntityFeature,
+)
+
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -34,9 +38,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigType, async_add_entities
 ) -> None:
     """Add a weather entity from a config_entry."""
-    hass_data = hass.data[DOMAIN][entry.entry_id]
-    if CONF_STATION_ID in entry.data:
-        async_add_entities([DWDWeather(entry.data, hass_data)], False)
+    hass_data = hass.data[DOMAIN][entry.entry_id]  # type: ignore
+    if CONF_STATION_ID in entry.data:  # type: ignore
+        async_add_entities([DWDWeather(entry.data, hass_data)], False)  # type: ignore
 
 
 class DWDWeather(DWDWeatherEntity, WeatherEntity):
