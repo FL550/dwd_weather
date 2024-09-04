@@ -20,6 +20,10 @@ from .const import (
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
     CONF_INTERPOLATE,
+    CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_SPEED,
+    CONF_MAP_MARKER,
+    CONF_MAP_TIMESTAMP,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
@@ -90,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         dwdweather_coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=f"DWD Map Coordinator for ",
+            name="DWD Map Coordinator",
             update_method=dwd_weather_data.async_update,
             update_interval=DEFAULT_MAP_INTERVAL,
         )
@@ -157,6 +161,14 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new[CONF_ENTITY_TYPE] = CONF_ENTITY_TYPE_STATION
         config_entry.data = {**new}  # type: ignore
         config_entry.version = 6
+    elif config_entry.version == 6:
+        new = {**config_entry.data}
+        new[CONF_MAP_MARKER] = True
+        new[CONF_MAP_TIMESTAMP] = True
+        new[CONF_MAP_LOOP_COUNT] = 6
+        new[CONF_MAP_LOOP_SPEED] = 0.5
+        config_entry.data = {**new}  # type: ignore
+        config_entry.version = 7
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

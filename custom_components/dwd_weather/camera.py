@@ -9,6 +9,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from .const import (
     CONF_MAP_BACKGROUND_TYPE,
     CONF_MAP_ID,
+    CONF_MAP_LOOP_SPEED,
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_CUSTOM,
     CONF_MAP_WINDOW,
@@ -52,6 +53,8 @@ class MyCamera(Camera):
 
         self._dwd_data.set_type(self._dwd_data._config[CONF_MAP_TYPE])
 
+        self._frame_interval = self._dwd_data._config[CONF_MAP_LOOP_SPEED]
+
         if self._dwd_data._config[CONF_MAP_TYPE] == CONF_MAP_TYPE_CUSTOM:
             self._dwd_data.set_location(
                 self._dwd_data._config[CONF_MAP_WINDOW]["latitude"],
@@ -69,7 +72,6 @@ class MyCamera(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        _LOGGER.debug("getting image")
         self._dwd_data.set_size(width if width else 520, height if height else 580)
         await self._coordinator.async_request_refresh()
         image = self._dwd_data.get_image()
@@ -95,6 +97,11 @@ class MyCamera(Camera):
             name="DWD weather maps",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+    @property
+    def frame_interval(self):
+        """Return the unique of the sensor."""
+        return self._frame_interval
 
     @property
     def translation_key(self):

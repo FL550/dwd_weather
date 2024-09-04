@@ -2,9 +2,11 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
+import math
 import time
 import PIL
 import PIL.ImageDraw
+import PIL.ImageFont
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from suntimes import SunTimes
@@ -40,7 +42,9 @@ from .const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
     CONF_INTERPOLATE,
+    CONF_MAP_LOOP_COUNT,
     CONF_MAP_MARKER,
+    CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE_GERMANY,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -656,6 +660,10 @@ class DWDMapData:
         self._background_type = None
         self._width = None
         self._height = None
+        self._maploop = None
+        self._cachedheight = 0
+        self._cachedwidth = 0
+        self._image_nr = 0
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -663,50 +671,108 @@ class DWDMapData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
-        # prevent distortion of map
+        _LOGGER.debug(
+            "_update: {} w1 {} w2 {}, h1 {} h2 {}".format(
+                self._maploop,
+                self._width,
+                self._cachedwidth,
+                self._height,
+                self._cachedheight,
+            )
+        )
         if (
-            self._height
-            and self._width
-            and self._foreground_type
-            and self._background_type
+            self._maploop
+            and self._width == self._cachedwidth
+            and self._height == self._cachedheight
         ):
-            width = round(self._height / 1.115)
-            if self._map_type == CONF_MAP_TYPE_GERMANY:
-                _LOGGER.debug(
-                    "map async_update get_germany map_type:{} background_type:{} width:{} height:{}".format(
-                        self._map_type, self._background_type, width, self._height
+            _LOGGER.debug("Map _update: Map update with cache possible")
+            self._maploop.update()
+        else:
+            _LOGGER.debug(" Map _update: No direct map update possible. Reconfiguring")
+            # prevent distortion of map
+            if (
+                self._height
+                and self._width
+                and self._foreground_type
+                and self._background_type
+            ):
+                width = round(self._height / 1.115)
+                if self._map_type == CONF_MAP_TYPE_GERMANY:
+                    _LOGGER.debug(
+                        "map async_update get_germany map_type:{} background_type:{} width:{} height:{} steps:{}".format(
+                            self._map_type,
+                            self._background_type,
+                            width,
+                            self._height,
+                            self._config[CONF_MAP_LOOP_COUNT],
+                        )
                     )
-                )
-                image = dwdmap.get_germany(
-                    map_type=self._foreground_type,
-                    background_type=self._background_type,
-                    image_width=width,
-                    image_height=self._height,
-                )
-            else:
-                _LOGGER.debug(
-                    "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
-                        self._longitude,
-                        self._latitude,
-                        self._radius_km,
-                        self._map_type,
-                        self._background_type,
-                        width,
-                        self._height,
+                    maploop = dwdmap.ImageLoop(
+                        dwdmap.germany_boundaries.minx,
+                        dwdmap.germany_boundaries.miny,
+                        dwdmap.germany_boundaries.maxx,
+                        dwdmap.germany_boundaries.maxy,
+                        map_type=self._foreground_type,
+                        background_type=self._background_type,
+                        steps=self._config[CONF_MAP_LOOP_COUNT],
+                        image_width=width,
+                        image_height=self._height,
                     )
-                )
-                image = dwdmap.get_from_location(
-                    longitude=self._longitude,
-                    latitude=self._latitude,
-                    radius_km=self._radius_km,
-                    map_type=self._foreground_type,
-                    background_type=self._background_type,
-                    image_width=self._width,
-                    image_height=self._height,
-                )
+                else:
+                    _LOGGER.debug(
+                        "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
+                            self._longitude,
+                            self._latitude,
+                            self._radius_km,
+                            self._map_type,
+                            self._background_type,
+                            width,
+                            self._height,
+                        )
+                    )
 
-            if image and self._config[CONF_MAP_MARKER]:
-                draw = PIL.ImageDraw.ImageDraw(image)
+                    radius = math.fabs(
+                        self._radius_km / (111.3 * math.cos(self._latitude))  # type: ignore
+                    )
+
+                    maploop = dwdmap.ImageLoop(
+                        self._latitude - radius,  # type: ignore
+                        self._longitude - radius,  # type: ignore
+                        self._latitude + radius,  # type: ignore
+                        self._longitude + radius,  # type: ignore
+                        map_type=self._foreground_type,
+                        background_type=self._background_type,
+                        steps=self._config[CONF_MAP_LOOP_COUNT],
+                        image_width=width,
+                        image_height=self._height,
+                    )
+                    _LOGGER.debug(
+                        "map async_update maploop: {}".format(maploop.get_images())
+                    )
+                self._maploop = maploop
+                self._cachedheight = self._height
+                self._cachedwidth = self._width
+
+            self._images = maploop.get_images()
+
+    def get_image(self):
+        buf = BytesIO()
+        _LOGGER.debug(
+            " Map get_image: map_loop_count {}".format(
+                self._config[CONF_MAP_LOOP_COUNT]
+            )
+        )
+
+        if self._image_nr == self._config[CONF_MAP_LOOP_COUNT] - 1:
+            self._image_nr = 0
+        else:
+            self._image_nr += 1
+        _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
+        image = self._images[self._image_nr]  # type: ignore
+
+        if image:
+            draw = PIL.ImageDraw.ImageDraw(image)
+            if self._config[CONF_MAP_MARKER]:
                 center = (image.size[0] / 2, image.size[1] / 2)
                 length = 7.0
                 draw.line(
@@ -717,12 +783,20 @@ class DWDMapData:
                     [center[0], center[1] - length, center[0], center[1] + length],
                     fill=(255, 0, 0),
                 )
-            buf = BytesIO()
-            image.save(buf, format="PNG")  # type: ignore
-            self._image = buf.getvalue()
+            if self._config[CONF_MAP_TIMESTAMP] and self._maploop:
+                timestamp = self._maploop._last_update - timedelta(minutes=5) * (
+                    self._config[CONF_MAP_LOOP_COUNT] - self._image_nr
+                )
+                draw.rectangle((8, 13, 175, 32), fill=(0, 0, 0))
+                draw.text(
+                    (10, 10),
+                    timestamp.strftime("%d.%m.%Y %H:%M"),
+                    fill=(255, 255, 255),
+                    font_size=20,
+                )
 
-    def get_image(self):
-        return self._image
+        image.save(buf, format="PNG")  # type: ignore()
+        return buf.getvalue()
 
     def set_type(self, map_type):
         self._map_type = map_type
