@@ -3,6 +3,8 @@
 import logging
 from datetime import datetime, timedelta, timezone
 import time
+import PIL
+import PIL.ImageDraw
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from suntimes import SunTimes
@@ -38,6 +40,7 @@ from .const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
     CONF_INTERPOLATE,
+    CONF_MAP_MARKER,
     CONF_MAP_TYPE_GERMANY,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -700,6 +703,19 @@ class DWDMapData:
                     background_type=self._background_type,
                     image_width=self._width,
                     image_height=self._height,
+                )
+
+            if image and self._config[CONF_MAP_MARKER]:
+                draw = PIL.ImageDraw.ImageDraw(image)
+                center = (image.size[0] / 2, image.size[1] / 2)
+                length = 7.0
+                draw.line(
+                    [center[0] - length, center[1], center[0] + length, center[1]],
+                    fill=(255, 0, 0),
+                )
+                draw.line(
+                    [center[0], center[1] - length, center[0], center[1] + length],
+                    fill=(255, 0, 0),
                 )
             buf = BytesIO()
             image.save(buf, format="PNG")  # type: ignore

@@ -130,7 +130,8 @@
         "title": "Deutscher Wetterdienst",
         "data": {
           "map_foreground_type": "Welche Daten sollen angezeigt werden?",
-          "map_background_type": "Was soll im Hintergrund angezeigt werden?"
+          "map_background_type": "Was soll im Hintergrund angezeigt werden?",
+          "map_marker": "Soll die Mitte der Karte markiert werden?"
         }
       }
     },

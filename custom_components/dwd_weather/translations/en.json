@@ -128,7 +128,8 @@
         "title": "Deutscher Wetterdienst",
         "data": {
           "map_foreground_type": "Which data would you like to see?",
-          "map_background_type": "What should be in the background?"
+          "map_background_type": "What should be in the background?",
+          "map_marker": "Should the middle of the map be marked?"
         }
       }
     },

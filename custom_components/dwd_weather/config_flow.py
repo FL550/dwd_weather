@@ -42,6 +42,7 @@ from .const import (
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
     CONF_MAP_ID,
+    CONF_MAP_MARKER,
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_CUSTOM,
     CONF_MAP_TYPE_GERMANY,
@@ -383,6 +384,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "translation_key": CONF_MAP_BACKGROUND_TYPE,
                     }
                 ),
+                vol.Required(
+                    CONF_MAP_MARKER,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
             }
         )
 

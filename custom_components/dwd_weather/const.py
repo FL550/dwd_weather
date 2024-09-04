@@ -67,6 +67,7 @@ CONF_MAP_BACKGROUND_BUNDESLAENDER = "map_background_bundeslaender"
 CONF_MAP_BACKGROUND_KREISE = "map_background_kreise"
 CONF_MAP_BACKGROUND_GEMEINDEN = "map_background_gemeinden"
 CONF_MAP_BACKGROUND_SATELLIT = "map_background_satellit"
+CONF_MAP_MARKER = "map_marker"
 
 conversion_table_map_foreground = {
     CONF_MAP_FOREGROUND_PRECIPITATION: "Precipitation",
