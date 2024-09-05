@@ -847,7 +847,7 @@ class DWDMapData:
                 draw.rectangle((8, 13, 175, 32), fill=(0, 0, 0))
                 draw.text(
                     (10, 10),
-                    timestamp.strftime("%d.%m.%Y %H:%M"),
+                    timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
                     fill=(255, 255, 255),
                     font_size=20,
                 )
