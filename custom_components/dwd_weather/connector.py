@@ -42,6 +42,7 @@ from .const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
     CONF_INTERPOLATE,
+    CONF_MAP_FOREGROUND_TYPE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_MARKER,
     CONF_MAP_TIMESTAMP,
@@ -671,6 +672,12 @@ class DWDMapData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
+        if self._config[CONF_MAP_FOREGROUND_TYPE] == CONF_MAP_FOREGROUND_PRECIPITATION:
+            self._update_loop()
+        else:
+            self._update_single()
+
+    def _update_loop(self):
         _LOGGER.debug(
             "_update: {} w1 {} w2 {}, h1 {} h2 {}".format(
                 self._maploop,
@@ -755,20 +762,66 @@ class DWDMapData:
 
             self._images = maploop.get_images()
 
+    def _update_single(self):
+        # prevent distortion of map
+        if (
+            self._height
+            and self._width
+            and self._foreground_type
+            and self._background_type
+        ):
+            width = round(self._height / 1.115)
+            if self._map_type == CONF_MAP_TYPE_GERMANY:
+                _LOGGER.debug(
+                    "map async_update get_germany map_type:{} background_type:{} width:{} height:{}".format(
+                        self._map_type, self._background_type, width, self._height
+                    )
+                )
+                self._image = dwdmap.get_germany(
+                    map_type=self._foreground_type,
+                    background_type=self._background_type,
+                    image_width=width,
+                    image_height=self._height,
+                )
+            else:
+                _LOGGER.debug(
+                    "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
+                        self._longitude,
+                        self._latitude,
+                        self._radius_km,
+                        self._map_type,
+                        self._background_type,
+                        width,
+                        self._height,
+                    )
+                )
+                self._image = dwdmap.get_from_location(
+                    longitude=self._longitude,
+                    latitude=self._latitude,
+                    radius_km=self._radius_km,
+                    map_type=self._foreground_type,
+                    background_type=self._background_type,
+                    image_width=self._width,
+                    image_height=self._height,
+                )
+
     def get_image(self):
         buf = BytesIO()
-        _LOGGER.debug(
-            " Map get_image: map_loop_count {}".format(
-                self._config[CONF_MAP_LOOP_COUNT]
+        if self._config[CONF_MAP_FOREGROUND_TYPE] == CONF_MAP_FOREGROUND_PRECIPITATION:
+            _LOGGER.debug(
+                " Map get_image: map_loop_count {}".format(
+                    self._config[CONF_MAP_LOOP_COUNT]
+                )
             )
-        )
 
-        if self._image_nr == self._config[CONF_MAP_LOOP_COUNT] - 1:
-            self._image_nr = 0
+            if self._image_nr == self._config[CONF_MAP_LOOP_COUNT] - 1:
+                self._image_nr = 0
+            else:
+                self._image_nr += 1
+            _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
+            image = self._images[self._image_nr]  # type: ignore
         else:
-            self._image_nr += 1
-        _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
-        image = self._images[self._image_nr]  # type: ignore
+            image = self._image
 
         if image:
             draw = PIL.ImageDraw.ImageDraw(image)
@@ -783,9 +836,13 @@ class DWDMapData:
                     [center[0], center[1] - length, center[0], center[1] + length],
                     fill=(255, 0, 0),
                 )
-            if self._config[CONF_MAP_TIMESTAMP] and self._maploop:
+            if (
+                CONF_MAP_TIMESTAMP in self._config
+                and self._config[CONF_MAP_TIMESTAMP]
+                and self._maploop
+            ):
                 timestamp = self._maploop._last_update - timedelta(minutes=5) * (
-                    self._config[CONF_MAP_LOOP_COUNT] - self._image_nr
+                    self._config[CONF_MAP_LOOP_COUNT] - self._image_nr - 1
                 )
                 draw.rectangle((8, 13, 175, 32), fill=(0, 0, 0))
                 draw.text(
@@ -795,7 +852,7 @@ class DWDMapData:
                     font_size=20,
                 )
 
-        image.save(buf, format="PNG")  # type: ignore()
+            image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
 
     def set_type(self, map_type):

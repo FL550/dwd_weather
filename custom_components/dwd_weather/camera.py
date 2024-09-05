@@ -53,7 +53,11 @@ class MyCamera(Camera):
 
         self._dwd_data.set_type(self._dwd_data._config[CONF_MAP_TYPE])
 
-        self._frame_interval = self._dwd_data._config[CONF_MAP_LOOP_SPEED]
+        self._frame_interval = (
+            self._dwd_data._config[CONF_MAP_LOOP_SPEED]
+            if CONF_MAP_LOOP_SPEED in self._dwd_data._config
+            else 5
+        )
 
         if self._dwd_data._config[CONF_MAP_TYPE] == CONF_MAP_TYPE_CUSTOM:
             self._dwd_data.set_location(

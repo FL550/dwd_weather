@@ -117,14 +117,14 @@
         }
       },
       "select_map_type": {
-        "title": "Deutscher Wetterdienst",
+        "title": "Kartenausschnitt",
         "data": {
           "map_type": "Welcher Kartenausschnitt soll konfiguriert werden?"
         }
       },
       "select_map_window": {
-        "description": "Verschiebe den Marker in die Mitte des gewünschten Ausschnitts und verschiebe den Radius entsprechend. Der Marker muss mindestens einmal verschoben werden, um fortzufahren.",
-        "title": "Deutscher Wetterdienst"
+        "title": "Deutscher Wetterdienst",
+        "description": "Verschiebe den Marker in die Mitte des gewünschten Ausschnitts und verschiebe den Radius entsprechend. Der Marker muss mindestens einmal verschoben werden, um fortzufahren."
       },
       "select_map_content": {
         "title": "Deutscher Wetterdienst",
@@ -132,6 +132,18 @@
           "map_foreground_type": "Welche Daten sollen angezeigt werden?",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?"
+        }
+      },
+      "select_map_loop": {
+        "title": "Niederschlagsradar Animation",
+        "data": {
+          "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
+          "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
+          "map_loop_speed": "Wie schnell soll die Animation ablaufen?"
+        },
+        "data_description": {
+          "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
+          "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird."
         }
       }
     },

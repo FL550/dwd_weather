@@ -337,13 +337,18 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug("Map_content:user_input: {}".format(user_input))
         if user_input is not None:
-            user_input[CONF_MAP_LOOP_COUNT] = int(user_input[CONF_MAP_LOOP_COUNT])
             self.config_data.update(user_input)
 
-            return self.async_create_entry(
-                title=f"Weathermap {conversion_table_map_foreground[self.config_data[CONF_MAP_FOREGROUND_TYPE]]}",
-                data=self.config_data,
-            )
+            if (
+                user_input[CONF_MAP_FOREGROUND_TYPE]
+                == CONF_MAP_FOREGROUND_PRECIPITATION
+            ):
+                return await self.async_step_select_map_loop()
+            else:
+                return self.async_create_entry(
+                    title=f"Weathermap {conversion_table_map_foreground[self.config_data[CONF_MAP_FOREGROUND_TYPE]]}",
+                    data=self.config_data,
+                )
 
         data_schema = vol.Schema(
             {
@@ -380,7 +385,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_MAP_BACKGROUND_BUNDESLAENDER,
                                 CONF_MAP_BACKGROUND_KREISE,
                                 CONF_MAP_BACKGROUND_GEMEINDEN,
-                                CONF_MAP_BACKGROUND_SATELLIT,
+                                # CONF_MAP_BACKGROUND_SATELLIT,
                             ]
                         ),
                         "custom_value": False,
@@ -392,19 +397,41 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_MAP_MARKER,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="select_map_content", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_select_map_loop(self, user_input=None):
+        errors = {}
+        _LOGGER.debug("Map_loop:user_input: {}".format(user_input))
+        if user_input is not None:
+            user_input[CONF_MAP_LOOP_COUNT] = int(user_input[CONF_MAP_LOOP_COUNT] / 5)
+            self.config_data.update(user_input)
+
+            return self.async_create_entry(
+                title=f"Weathermap {conversion_table_map_foreground[self.config_data[CONF_MAP_FOREGROUND_TYPE]]}",
+                data=self.config_data,
+            )
+
+        data_schema = vol.Schema(
+            {
                 vol.Required(
                     CONF_MAP_TIMESTAMP,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
                 vol.Required(
                     CONF_MAP_LOOP_COUNT,
-                    default=6,  # type: ignore
+                    default=30,  # type: ignore
                 ): NumberSelector(
                     {
-                        "min": 1,
-                        "max": 12,
-                        "step": "1",
+                        "min": 5,
+                        "max": 60,
+                        "step": "5",
                         "mode": "slider",
+                        "unit_of_measurement": "min",
                     }
                 ),
                 vol.Required(
@@ -416,13 +443,14 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "max": 2,
                         "step": "0.1",
                         "mode": "slider",
+                        "unit_of_measurement": "s",
                     }
                 ),
             }
         )
 
         return self.async_show_form(
-            step_id="select_map_content", data_schema=data_schema, errors=errors
+            step_id="select_map_loop", data_schema=data_schema, errors=errors
         )
 
     @staticmethod
