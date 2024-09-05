@@ -40,6 +40,10 @@ _DISCLAIMER: This project is a private open source project and doesn't have any 
 
 Everything can be configured via the Homeassistant UI. See below for images.
 
+**If you like my work, I would be really happy if you buy me some coffee: [Buy Me A Coffee][buymecoffee]**
+
+---
+
 ![Screenshot Weather Card](./Weather-Card.png)
 
 ![Screenshot Weather Details](./Weather-Details.png)
