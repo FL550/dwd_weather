@@ -162,13 +162,22 @@
           "station_name": "Stationsname",
           "wind_direction_type": "Art der Windrichtungsangabe",
           "interpolate": "Interpolierung der Werte",
-          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)"
+          "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
+          "map_background_type": "Was soll im Hintergrund angezeigt werden?",
+          "map_marker": "Soll die Mitte der Karte markiert werden?",
+          "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
+          "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
+          "map_loop_speed": "Wie schnell soll die Animation ablaufen?"
         },
         "data_description": {
           "station_name": "Der angezeigte Stationsname",
           "wind_direction_type": "Betrifft den Sensorwert für die Windrichtung",
           "interpolate": "Da die Daten nur stündlich verfügbar sind, kann es sein, dass 'Sprünge' in den angezeigten Werten auftreten. Mit dieser Option werden die Daten linear interpoliert.",
-          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind."
+          "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
+          "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
+          "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
+          "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird."
+
         }
       }
     }
