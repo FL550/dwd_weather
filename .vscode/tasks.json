@@ -5,7 +5,11 @@
             "label": "Run Home Assistant on port 8123",
             "type": "shell",
             "command": "scripts/develop",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
