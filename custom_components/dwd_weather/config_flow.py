@@ -546,82 +546,72 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 user_input[CONF_ENTITY_TYPE] = self.config_entry.data[CONF_ENTITY_TYPE]
                 user_input[CONF_MAP_ID] = self.config_entry.data[CONF_MAP_ID]
+                user_input[CONF_MAP_FOREGROUND_TYPE] = self.config_entry.data[
+                    CONF_MAP_FOREGROUND_TYPE
+                ]
                 if CONF_MAP_TYPE in self.config_entry.data:
                     user_input[CONF_MAP_TYPE] = self.config_entry.data[CONF_MAP_TYPE]
                 if CONF_MAP_WINDOW in self.config_entry.data:
                     user_input[CONF_MAP_WINDOW] = self.config_entry.data[
                         CONF_MAP_WINDOW
                     ]
-
-                user_input[CONF_MAP_LOOP_COUNT] = int(user_input[CONF_MAP_LOOP_COUNT])
+                if CONF_MAP_LOOP_COUNT in user_input:
+                    user_input[CONF_MAP_LOOP_COUNT] = int(
+                        user_input[CONF_MAP_LOOP_COUNT] / 5
+                    )
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=user_input,
                     options=self.config_entry.options,
                 )
                 return self.async_create_entry(title="", data={})
-            return self.async_show_form(
-                step_id="init",
-                data_schema=vol.Schema(
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MAP_BACKGROUND_TYPE,
+                        default=self.config_entry.data[CONF_MAP_BACKGROUND_TYPE],  # type: ignore
+                    ): SelectSelector(
+                        {
+                            "options": list(
+                                [
+                                    CONF_MAP_BACKGROUND_LAENDER,
+                                    CONF_MAP_BACKGROUND_BUNDESLAENDER,
+                                    CONF_MAP_BACKGROUND_KREISE,
+                                    CONF_MAP_BACKGROUND_GEMEINDEN,
+                                    # CONF_MAP_BACKGROUND_SATELLIT,
+                                ]
+                            ),
+                            "custom_value": False,
+                            "mode": "dropdown",
+                            "translation_key": CONF_MAP_BACKGROUND_TYPE,
+                        }
+                    ),
+                    vol.Required(
+                        CONF_MAP_MARKER,
+                        default=self.config_entry.data[CONF_MAP_MARKER],  # type: ignore
+                    ): BooleanSelector({}),
+                }
+            )
+            if (
+                self.config_entry.data[CONF_MAP_FOREGROUND_TYPE]
+                == CONF_MAP_FOREGROUND_PRECIPITATION
+            ):
+                data_schema = data_schema.extend(
                     {
-                        vol.Required(
-                            CONF_MAP_FOREGROUND_TYPE,
-                            default=CONF_MAP_FOREGROUND_PRECIPITATION,  # type: ignore
-                        ): SelectSelector(
-                            {
-                                "options": list(
-                                    [
-                                        CONF_MAP_FOREGROUND_PRECIPITATION,
-                                        CONF_MAP_FOREGROUND_MAXTEMP,
-                                        CONF_MAP_FOREGROUND_UVINDEX,
-                                        CONF_MAP_FOREGROUND_POLLENFLUG,
-                                        CONF_MAP_FOREGROUND_SATELLITE_RGB,
-                                        CONF_MAP_FOREGROUND_SATELLITE_IR,
-                                        CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN,
-                                        CONF_MAP_FOREGROUND_WARNUNGEN_KREISE,
-                                    ]
-                                ),
-                                "custom_value": False,
-                                "mode": "dropdown",
-                                "translation_key": CONF_MAP_FOREGROUND_TYPE,
-                            }
-                        ),
-                        vol.Required(
-                            CONF_MAP_BACKGROUND_TYPE,
-                            default=CONF_MAP_BACKGROUND_BUNDESLAENDER,  # type: ignore
-                        ): SelectSelector(
-                            {
-                                "options": list(
-                                    [
-                                        CONF_MAP_BACKGROUND_LAENDER,
-                                        CONF_MAP_BACKGROUND_BUNDESLAENDER,
-                                        CONF_MAP_BACKGROUND_KREISE,
-                                        CONF_MAP_BACKGROUND_GEMEINDEN,
-                                        CONF_MAP_BACKGROUND_SATELLIT,
-                                    ]
-                                ),
-                                "custom_value": False,
-                                "mode": "dropdown",
-                                "translation_key": CONF_MAP_BACKGROUND_TYPE,
-                            }
-                        ),
-                        vol.Required(
-                            CONF_MAP_MARKER,
-                            default=self.config_entry.data[CONF_MAP_MARKER],  # type: ignore
-                        ): BooleanSelector({}),
                         vol.Required(
                             CONF_MAP_TIMESTAMP,
                             default=self.config_entry.data[CONF_MAP_TIMESTAMP],  # type: ignore
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_MAP_LOOP_COUNT,
-                            default=self.config_entry.data[CONF_MAP_LOOP_COUNT],  # type: ignore
+                            default=self.config_entry.data[CONF_MAP_LOOP_COUNT] * 5,  # type: ignore
                         ): NumberSelector(
                             {
-                                "min": 1,
-                                "max": 12,
-                                "step": "1",
+                                "min": 5,
+                                "max": 60,
+                                "step": "5",
                                 "mode": "slider",
+                                "unit_of_measurement": "min",
                             }
                         ),
                         vol.Required(
@@ -633,8 +623,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                 "max": 2,
                                 "step": "0.1",
                                 "mode": "slider",
+                                "unit_of_measurement": "s",
                             }
                         ),
                     }
-                ),
+                )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=data_schema,
             )
