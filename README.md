@@ -7,7 +7,38 @@
 
 _DISCLAIMER: This project is a private open source project and doesn't have any connection with Deutscher Wetterdienst._
 
-This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html).
+# Features
+
+- Forecast
+   - Daily and hourly, fully integrated into HA weather cards with daily min and max
+   - Provides condition, temperature, pressure, humidity, wind speed and visibility
+- Weather reports
+- Weather Charts
+   - Precipitation radar loop
+   - Maximum feels like Temperature
+   - UV-Index
+   - Pollen
+   - Satellite RGB
+   - Satellite IR
+   - Warnungen Gemeinden
+   - Warnungen Kreise
+- Additional hourly sensors
+   - Temperature
+   - Dewpoint
+   - Pressure
+   - Wind speed
+   - Wind direction
+   - Wind gusts
+   - Precipitation
+   - Precipitation probability
+   - Precipitation duration
+   - Cloud coverage
+   - Visibility
+   - Sun duration
+   - Sun irradiance
+   - Fog probability
+
+Everything can be configured via the Homeassistant UI. See below for images.
 
 ![Screenshot Weather Card](./Weather-Card.png)
 
@@ -146,6 +177,8 @@ The chart can be adjusted to every region you like, however as most data is only
 Feel free to open an issue if you find one and I will do my best to help you. If you want to contribute, your help is appreciated! If you want to add a new feature, add a pull request first so we can chat about the details.
 
 ## Licenses
+
+This integration uses ['simple_dwd_weatherforecast'](https://github.com/FL550/simple_dwd_weatherforecast) to fetch weather data from Deutscher Wetterdienst (DWD). This integration is based on [Open Data](https://www.dwd.de/DE/leistungen/opendata/opendata.html) from DWD and based on their [Licence](https://www.dwd.de/EN/service/copyright/copyright_artikel.html).
 
 This package uses public data from [DWD OpenData](https://www.dwd.de/DE/leistungen/opendata/opendata.html). The Copyright can be viewed [here](https://www.dwd.de/DE/service/copyright/copyright_node.html).
 
