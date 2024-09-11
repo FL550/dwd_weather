@@ -385,7 +385,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_MAP_BACKGROUND_BUNDESLAENDER,
                                 CONF_MAP_BACKGROUND_KREISE,
                                 CONF_MAP_BACKGROUND_GEMEINDEN,
-                                # CONF_MAP_BACKGROUND_SATELLIT,
+                                CONF_MAP_BACKGROUND_SATELLIT,
                             ]
                         ),
                         "custom_value": False,
@@ -578,7 +578,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                     CONF_MAP_BACKGROUND_BUNDESLAENDER,
                                     CONF_MAP_BACKGROUND_KREISE,
                                     CONF_MAP_BACKGROUND_GEMEINDEN,
-                                    # CONF_MAP_BACKGROUND_SATELLIT,
+                                    CONF_MAP_BACKGROUND_SATELLIT,
                                 ]
                             ),
                             "custom_value": False,
