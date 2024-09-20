@@ -623,6 +623,19 @@ class DWDWeatherData:
     def get_humidity_hourly(self):
         return self.get_hourly(WeatherDataType.HUMIDITY)
 
+    def get_uv_index_daily(self):
+        return {
+            "today": self.dwd_weather.get_uv_index(
+                days_from_today=0, shouldUpdate=False
+            ),
+            "tomorrow": self.dwd_weather.get_uv_index(
+                days_from_today=1, shouldUpdate=False
+            ),
+            "dayaftertomorrow": self.dwd_weather.get_uv_index(
+                days_from_today=2, shouldUpdate=False
+            ),
+        }
+
     def get_wind_direction_symbol(self, value):
         if value is None:
             return ""

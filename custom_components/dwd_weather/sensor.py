@@ -425,6 +425,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_fog_probability_hourly()
         elif self._type == "humidity":
             attributes["data"] = self._connector.get_humidity_hourly()
+        elif self._type == "uv_index":
+            attributes["data"] = self._connector.get_uv_index_daily()
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]
