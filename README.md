@@ -44,6 +44,12 @@ Everything can be configured via the Homeassistant UI. See below for images.
 
 ---
 
+# FAQ
+
+[FAQ](https://github.com/FL550/dwd_weather/wiki)
+
+---
+
 ![Screenshot Weather Card](./Weather-Card.png)
 
 ![Screenshot Weather Details](./Weather-Details.png)
@@ -59,7 +65,7 @@ Everything can be configured via the Homeassistant UI. See below for images.
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst" or "DWD" or use the button below.
 _You can repeat this for as many stations as you like._
 
-[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=dwd)
+[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=dwd_weather)
 
 
 3. Follow the setup instructions.
