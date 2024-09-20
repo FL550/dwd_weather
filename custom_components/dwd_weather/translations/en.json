@@ -65,6 +65,9 @@
       },
       "forecast_values_time": {
         "name": "Time: forecast values"
+      },
+      "uv_index": {
+        "name": "UV-Index"
       }
     }
   },

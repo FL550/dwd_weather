@@ -228,6 +228,15 @@ SENSOR_TYPES = {
         None,
         True,
     ],
+    "uv_index": [
+        "UV-Index",
+        "",
+        "",
+        "mdi:sun-wireless",
+        False,
+        None,
+        True,
+    ],
 }
 
 
@@ -344,6 +353,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.infos[ATTR_REPORT_ISSUE_TIME]
         elif self._type == "forecast_values_time":
             result = self._connector.infos[ATTR_ISSUE_TIME]
+        elif self._type == "uv_index":
+            result = self._connector.get_uv_index()
         return result
 
     @property
