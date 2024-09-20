@@ -509,6 +509,13 @@ class DWDWeatherData:
     def get_uv_index(self):
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
 
+    def get_evaporation(self):
+        return self.dwd_weather.get_daily_max(
+            WeatherDataType.EVAPORATION,
+            datetime.now() + timedelta(days=1),
+            False,
+        )
+
     def get_condition_hourly(self):
         data = []
         forecast_data = self.dwd_weather.forecast_data
@@ -635,6 +642,30 @@ class DWDWeatherData:
                 days_from_today=2, shouldUpdate=False
             ),
         }
+
+    def get_evaporation_daily(self):
+        data = []
+        for i in range(9):
+            timestamp = datetime(
+                self.dwd_weather.issue_time.year,
+                self.dwd_weather.issue_time.month,
+                self.dwd_weather.issue_time.day + 1 + i,
+                6,
+                tzinfo=timezone.utc,
+            )
+            evaporation = self.dwd_weather.get_daily_max(
+                WeatherDataType.EVAPORATION,
+                timestamp,
+                False,
+            )
+            data.append(
+                {
+                    ATTR_FORECAST_TIME: timestamp - timedelta(days=1),
+                    "value": evaporation,
+                }
+            )
+
+        return data
 
     def get_wind_direction_symbol(self, value):
         if value is None:

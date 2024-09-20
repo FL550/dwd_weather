@@ -237,6 +237,15 @@ SENSOR_TYPES = {
         None,
         True,
     ],
+    "evaporation": [
+        "Evaporation",
+        "",
+        "kg/m2",
+        "mdi:waves-arrow-up",
+        False,
+        None,
+        True,
+    ],
 }
 
 
@@ -355,6 +364,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.infos[ATTR_ISSUE_TIME]
         elif self._type == "uv_index":
             result = self._connector.get_uv_index()
+        elif self._type == "evaporation":
+            result = self._connector.get_evaporation()
         return result
 
     @property
@@ -427,6 +438,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_humidity_hourly()
         elif self._type == "uv_index":
             attributes["data"] = self._connector.get_uv_index_daily()
+        elif self._type == "evaporation":
+            attributes["data"] = self._connector.get_evaporation_daily()
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]

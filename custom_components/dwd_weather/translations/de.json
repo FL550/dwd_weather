@@ -68,6 +68,9 @@
       },
       "uv_index": {
         "name": "UV-Index"
+      },
+      "evaporation": {
+        "name": "Verdunstung in den nächsten 24 Stunden"
       }
     }
   },
