@@ -4,5 +4,5 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-python3 -m pip install --requirement requirements.txt
+python3 -m pip install --requirement requirements.txt --pre
 cat custom_components/dwd_weather/manifest.json | jq -r '.requirements | .[]'  | python3 -m pip install -r /dev/stdin
