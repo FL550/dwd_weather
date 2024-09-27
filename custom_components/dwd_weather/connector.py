@@ -646,13 +646,8 @@ class DWDWeatherData:
     def get_evaporation_daily(self):
         data = []
         for i in range(9):
-            timestamp = datetime(
-                self.dwd_weather.issue_time.year,
-                self.dwd_weather.issue_time.month,
-                self.dwd_weather.issue_time.day + 1 + i,
-                6,
-                tzinfo=timezone.utc,
-            )
+            timestamp = self.dwd_weather.issue_time + timedelta(days=1 + i)  # type: ignore
+            timestamp = timestamp.replace(hour=6)
             evaporation = self.dwd_weather.get_daily_max(
                 WeatherDataType.EVAPORATION,
                 timestamp,
