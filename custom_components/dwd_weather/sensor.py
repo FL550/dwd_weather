@@ -244,7 +244,7 @@ SENSOR_TYPES = {
         "mdi:waves-arrow-up",
         False,
         None,
-        True,
+        False,
     ],
 }
 
