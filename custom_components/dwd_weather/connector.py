@@ -45,6 +45,7 @@ from .const import (
     CONF_MAP_FOREGROUND_TYPE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_CENTERMARKER,
+    CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE_GERMANY,
     CONF_STATION_ID,
@@ -743,6 +744,18 @@ class DWDMapData:
                 and self._background_type
             ):
                 width = round(self._height / 1.115)
+                markers = []
+            # TODO
+            if True:  # self._config[CONF_MAP_HOMEMARKER]:
+                markers.append(
+                    dwdmap.Marker(
+                        latitude=self._hass.config.latitude,
+                        longitude=self._hass.config.longitude,
+                        shape=dwdmap.MarkerShape.CIRCLE,
+                        size=15,
+                        colorRGB=(255, 0, 0),
+                    )
+                )
                 if self._map_type == CONF_MAP_TYPE_GERMANY:
                     _LOGGER.debug(
                         "map async_update get_germany map_type:{} background_type:{} width:{} height:{} steps:{}".format(
@@ -763,6 +776,7 @@ class DWDMapData:
                         steps=self._config[CONF_MAP_LOOP_COUNT],
                         image_width=width,
                         image_height=self._height,
+                        markers=markers,
                     )
                 else:
                     _LOGGER.debug(
@@ -791,6 +805,7 @@ class DWDMapData:
                         steps=self._config[CONF_MAP_LOOP_COUNT],
                         image_width=width,
                         image_height=self._height,
+                        markers=markers,
                     )
                     _LOGGER.debug(
                         "map async_update maploop: {}".format(maploop.get_images())
@@ -810,6 +825,18 @@ class DWDMapData:
             and self._background_type
         ):
             width = round(self._height / 1.115)
+            markers = []
+            # TODO
+            if True:  # self._config[CONF_MAP_HOMEMARKER]:
+                markers.append(
+                    dwdmap.Marker(
+                        latitude=self._hass.config.latitude,
+                        longitude=self._hass.config.longitude,
+                        shape=dwdmap.MarkerShape.CIRCLE,
+                        size=15,
+                        colorRGB=(255, 0, 0),
+                    )
+                )
             if self._map_type == CONF_MAP_TYPE_GERMANY:
                 _LOGGER.debug(
                     "map async_update get_germany map_type:{} background_type:{} width:{} height:{}".format(
@@ -821,6 +848,7 @@ class DWDMapData:
                     background_type=self._background_type,
                     image_width=width,
                     image_height=self._height,
+                    markers=markers,
                 )
             else:
                 _LOGGER.debug(
@@ -842,6 +870,7 @@ class DWDMapData:
                     background_type=self._background_type,
                     image_width=self._width,
                     image_height=self._height,
+                    markers=markers,
                 )
 
     def get_image(self):
