@@ -44,7 +44,7 @@ from .const import (
     CONF_INTERPOLATE,
     CONF_MAP_FOREGROUND_TYPE,
     CONF_MAP_LOOP_COUNT,
-    CONF_MAP_MARKER,
+    CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE_GERMANY,
     CONF_STATION_ID,
@@ -864,7 +864,7 @@ class DWDMapData:
 
         if image:
             draw = PIL.ImageDraw.ImageDraw(image)
-            if self._config[CONF_MAP_MARKER]:
+            if self._config[CONF_MAP_CENTERMARKER]:
                 center = (image.size[0] / 2, image.size[1] / 2)
                 length = 7.0
                 draw.line(

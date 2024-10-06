@@ -45,7 +45,7 @@ from .const import (
     CONF_MAP_ID,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_LOOP_SPEED,
-    CONF_MAP_MARKER,
+    CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_CUSTOM,
@@ -394,7 +394,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 vol.Required(
-                    CONF_MAP_MARKER,
+                    CONF_MAP_CENTERMARKER,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
             }
@@ -587,8 +587,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     vol.Required(
-                        CONF_MAP_MARKER,
-                        default=self.config_entry.data[CONF_MAP_MARKER],  # type: ignore
+                        CONF_MAP_CENTERMARKER,
+                        default=self.config_entry.data[CONF_MAP_CENTERMARKER],  # type: ignore
                     ): BooleanSelector({}),
                 }
             )
