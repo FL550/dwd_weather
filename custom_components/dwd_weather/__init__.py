@@ -23,6 +23,7 @@ from .const import (
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_LOOP_SPEED,
     CONF_MAP_CENTERMARKER,
+    CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -163,6 +164,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         new[CONF_MAP_LOOP_COUNT] = 6
         new[CONF_MAP_LOOP_SPEED] = 0.5
         hass.config_entries.async_update_entry(config_entry, data=new, version=7)
+    elif config_entry.version == 7:
+        new = {**config_entry.data}
+        new[CONF_MAP_HOMEMARKER] = False
+        hass.config_entries.async_update_entry(config_entry, data=new, version=8)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

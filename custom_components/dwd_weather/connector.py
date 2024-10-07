@@ -43,6 +43,9 @@ from .const import (
     CONF_DATA_TYPE_REPORT,
     CONF_INTERPOLATE,
     CONF_MAP_FOREGROUND_TYPE,
+    CONF_MAP_HOMEMARKER_COLOR,
+    CONF_MAP_HOMEMARKER_SHAPE,
+    CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
@@ -745,25 +748,25 @@ class DWDMapData:
             ):
                 width = round(self._height / 1.115)
                 markers = []
-            # TODO
-            if True:  # self._config[CONF_MAP_HOMEMARKER]:
+            if self._config[CONF_MAP_HOMEMARKER]:
                 markers.append(
                     dwdmap.Marker(
                         latitude=self._hass.config.latitude,
                         longitude=self._hass.config.longitude,
-                        shape=dwdmap.MarkerShape.CIRCLE,
-                        size=15,
-                        colorRGB=(255, 0, 0),
+                        shape=self._config[CONF_MAP_HOMEMARKER_SHAPE],
+                        size=self._config[CONF_MAP_HOMEMARKER_SIZE],
+                        colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
                     )
                 )
                 if self._map_type == CONF_MAP_TYPE_GERMANY:
                     _LOGGER.debug(
-                        "map async_update get_germany map_type:{} background_type:{} width:{} height:{} steps:{}".format(
+                        "map async_update get_germany map_type:{} background_type:{} width:{} height:{} steps:{} markers:{}".format(
                             self._map_type,
                             self._background_type,
                             width,
                             self._height,
                             self._config[CONF_MAP_LOOP_COUNT],
+                            len(markers),
                         )
                     )
                     maploop = dwdmap.ImageLoop(
@@ -780,7 +783,7 @@ class DWDMapData:
                     )
                 else:
                     _LOGGER.debug(
-                        "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
+                        "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
                             self._longitude,
                             self._latitude,
                             self._radius_km,
@@ -788,6 +791,7 @@ class DWDMapData:
                             self._background_type,
                             width,
                             self._height,
+                            len(markers),
                         )
                     )
 
@@ -826,21 +830,24 @@ class DWDMapData:
         ):
             width = round(self._height / 1.115)
             markers = []
-            # TODO
-            if True:  # self._config[CONF_MAP_HOMEMARKER]:
+            if self._config[CONF_MAP_HOMEMARKER]:
                 markers.append(
                     dwdmap.Marker(
                         latitude=self._hass.config.latitude,
                         longitude=self._hass.config.longitude,
-                        shape=dwdmap.MarkerShape.CIRCLE,
-                        size=15,
-                        colorRGB=(255, 0, 0),
+                        shape=self._config[CONF_MAP_HOMEMARKER_SHAPE],
+                        size=self._config[CONF_MAP_HOMEMARKER_SIZE],
+                        colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
                     )
                 )
             if self._map_type == CONF_MAP_TYPE_GERMANY:
                 _LOGGER.debug(
-                    "map async_update get_germany map_type:{} background_type:{} width:{} height:{}".format(
-                        self._map_type, self._background_type, width, self._height
+                    "map async_update get_germany map_type:{} background_type:{} width:{} height:{} markers:{}".format(
+                        self._map_type,
+                        self._background_type,
+                        width,
+                        self._height,
+                        len(markers),
                     )
                 )
                 self._image = dwdmap.get_germany(
@@ -852,7 +859,7 @@ class DWDMapData:
                 )
             else:
                 _LOGGER.debug(
-                    "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{}".format(
+                    "map async_update get_from_location lon: {}, lat:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
                         self._longitude,
                         self._latitude,
                         self._radius_km,
@@ -860,6 +867,7 @@ class DWDMapData:
                         self._background_type,
                         width,
                         self._height,
+                        len(markers),
                     )
                 )
                 self._image = dwdmap.get_from_location(

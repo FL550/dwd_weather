@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 # Base component constants
 NAME = "DWD Weather"
 DOMAIN = "dwd_weather"
-CONF_VERSION = 7
+CONF_VERSION = 8
 ATTRIBUTION = "Data provided by Deutscher Wetterdienst (DWD)"
 # Platforms
 PLATFORMS = [
@@ -69,6 +69,9 @@ CONF_MAP_BACKGROUND_GEMEINDEN = "map_background_gemeinden"
 CONF_MAP_BACKGROUND_SATELLIT = "map_background_satellit"
 CONF_MAP_CENTERMARKER = "map_marker"
 CONF_MAP_HOMEMARKER = "map_homemarker"
+CONF_MAP_HOMEMARKER_SHAPE = "map_homemarker_shape"
+CONF_MAP_HOMEMARKER_SIZE = "map_homemarker_size"
+CONF_MAP_HOMEMARKER_COLOR = "map_homemarker_color"
 CONF_MAP_TIMESTAMP = "map_timestamp"
 CONF_MAP_LOOP_COUNT = "map_loop_count"
 CONF_MAP_LOOP_SPEED = "map_loop_speed"
