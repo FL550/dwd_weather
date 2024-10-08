@@ -345,9 +345,6 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         _LOGGER.debug("Map_content:user_input: {}".format(user_input))
         if user_input is not None:
-            user_input[CONF_MAP_HOMEMARKER_COLOR] = tuple(
-                user_input[CONF_MAP_HOMEMARKER_COLOR]
-            )
             self.config_data.update(user_input)
 
             if (
@@ -587,9 +584,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
         elif self.config_entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
             if user_input is not None:
-                user_input[CONF_MAP_HOMEMARKER_COLOR] = tuple(
-                    user_input[CONF_MAP_HOMEMARKER_COLOR]
-                )
                 _LOGGER.debug(
                     "OptionsFlowHandler map: user_input {}".format(user_input)
                 )

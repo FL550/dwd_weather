@@ -752,7 +752,7 @@ class DWDMapData:
                             self._config[CONF_MAP_HOMEMARKER_SHAPE]
                         ],
                         size=self._config[CONF_MAP_HOMEMARKER_SIZE],
-                        colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
+                        colorRGB=tuple(self._config[CONF_MAP_HOMEMARKER_COLOR]),
                     )
                 )
                 if self._map_type == CONF_MAP_TYPE_GERMANY:
@@ -839,7 +839,7 @@ class DWDMapData:
                             self._config[CONF_MAP_HOMEMARKER_SHAPE]
                         ],
                         size=self._config[CONF_MAP_HOMEMARKER_SIZE],
-                        colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
+                        colorRGB=tuple(self._config[CONF_MAP_HOMEMARKER_COLOR]),
                     )
                 )
             if self._map_type == CONF_MAP_TYPE_GERMANY:
