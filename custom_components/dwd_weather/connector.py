@@ -758,8 +758,8 @@ class DWDMapData:
                 if self._map_type == CONF_MAP_TYPE_GERMANY:
                     _LOGGER.debug(
                         "map async_update get_germany map_type:{} background_type:{} width:{} height:{} steps:{} markers:{}".format(
-                            self._map_type,
-                            self._background_type,
+                            self._config[CONF_MAP_FOREGROUND_TYPE],
+                            self._config[CONF_MAP_BACKGROUND_TYPE],
                             width,
                             self._height,
                             self._config[CONF_MAP_LOOP_COUNT],
@@ -788,8 +788,8 @@ class DWDMapData:
                             self._longitude,
                             self._latitude,
                             self._radius_km,
-                            self._map_type,
-                            self._background_type,
+                            self._config[CONF_MAP_FOREGROUND_TYPE],
+                            self._config[CONF_MAP_BACKGROUND_TYPE],
                             width,
                             self._height,
                             len(markers),
@@ -845,8 +845,8 @@ class DWDMapData:
             if self._map_type == CONF_MAP_TYPE_GERMANY:
                 _LOGGER.debug(
                     "map async_update get_germany map_type:{} background_type:{} width:{} height:{} markers:{}".format(
-                        self._map_type,
-                        self._background_type,
+                        self._config[CONF_MAP_FOREGROUND_TYPE],
+                        self._config[CONF_MAP_BACKGROUND_TYPE],
                         width,
                         self._height,
                         len(markers),
@@ -867,8 +867,8 @@ class DWDMapData:
                         self._longitude,
                         self._latitude,
                         self._radius_km,
-                        self._map_type,
-                        self._background_type,
+                        self._config[CONF_MAP_FOREGROUND_TYPE],
+                        self._config[CONF_MAP_BACKGROUND_TYPE],
                         width,
                         self._height,
                         len(markers),
