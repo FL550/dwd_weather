@@ -7,12 +7,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import (
-    CONF_MAP_BACKGROUND_TYPE,
     CONF_MAP_ID,
     CONF_MAP_LOOP_SPEED,
-    CONF_MAP_TYPE,
-    CONF_MAP_TYPE_CUSTOM,
-    CONF_MAP_WINDOW,
     DOMAIN,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
