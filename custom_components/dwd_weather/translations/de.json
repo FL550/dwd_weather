@@ -137,7 +137,11 @@
         "data": {
           "map_foreground_type": "Welche Daten sollen angezeigt werden?",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
-          "map_marker": "Soll die Mitte der Karte markiert werden?"
+          "map_marker": "Soll die Mitte der Karte markiert werden?",
+          "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
+          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
+          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
+          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?"
         }
       },
       "select_map_loop": {
@@ -171,6 +175,10 @@
           "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
+          "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
+          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
+          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
+          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?",
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
           "map_loop_speed": "Wie schnell soll die Animation ablaufen?"
@@ -233,6 +241,13 @@
         "map_background_kreise": "Kreise",
         "map_background_gemeinden": "Gemeinden",
         "map_background_satellit": "Satellitenbild"
+      }
+    },
+    "map_homemarker_shape": {
+      "options": {
+        "map_homemarker_shape_circle": "Kreis",
+        "map_homemarker_shape_square": "Quadrat",
+        "map_homemarker_shape_cross": "Kreuz"
       }
     }
   }

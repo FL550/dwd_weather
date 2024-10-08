@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from homeassistant.const import Platform
+from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
 # Base component constants
 NAME = "DWD Weather"
@@ -85,6 +86,15 @@ conversion_table_map_foreground = {
     CONF_MAP_FOREGROUND_SATELLITE_IR: "Satellite IR",
     CONF_MAP_FOREGROUND_WARNUNGEN_GEMEINDEN: "Warnungen Gemeinden",
     CONF_MAP_FOREGROUND_WARNUNGEN_KREISE: "Warnungen Kreise",
+}
+
+CONF_MAP_HOMEMARKER_SHAPE_CIRCLE = "map_homemarker_shape_circle"
+CONF_MAP_HOMEMARKER_SHAPE_CROSS = "map_homemarker_shape_cross"
+CONF_MAP_HOMEMARKER_SHAPE_SQUARE = "map_homemarker_shape_square"
+conversion_table_map_homemarker_shape = {
+    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE: MarkerShape.CIRCLE,
+    CONF_MAP_HOMEMARKER_SHAPE_CROSS: MarkerShape.CROSS,
+    CONF_MAP_HOMEMARKER_SHAPE_SQUARE: MarkerShape.SQUARE,
 }
 
 CONF_OPTION_MAP_MESSAGE = "map_options_message"

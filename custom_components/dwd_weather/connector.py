@@ -69,6 +69,7 @@ from .const import (
     CONF_MAP_BACKGROUND_KREISE,
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
+    conversion_table_map_homemarker_shape,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -753,7 +754,9 @@ class DWDMapData:
                     dwdmap.Marker(
                         latitude=self._hass.config.latitude,
                         longitude=self._hass.config.longitude,
-                        shape=self._config[CONF_MAP_HOMEMARKER_SHAPE],
+                        shape=conversion_table_map_homemarker_shape[
+                            self._config[CONF_MAP_HOMEMARKER_SHAPE]
+                        ],
                         size=self._config[CONF_MAP_HOMEMARKER_SIZE],
                         colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
                     )
@@ -835,7 +838,9 @@ class DWDMapData:
                     dwdmap.Marker(
                         latitude=self._hass.config.latitude,
                         longitude=self._hass.config.longitude,
-                        shape=self._config[CONF_MAP_HOMEMARKER_SHAPE],
+                        shape=conversion_table_map_homemarker_shape[
+                            self._config[CONF_MAP_HOMEMARKER_SHAPE]
+                        ],
                         size=self._config[CONF_MAP_HOMEMARKER_SIZE],
                         colorRGB=self._config[CONF_MAP_HOMEMARKER_COLOR],
                     )
