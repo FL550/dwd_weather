@@ -66,10 +66,6 @@ class MyCamera(Camera):
                 self._dwd_data._config[CONF_MAP_WINDOW]["radius"],
             )
 
-        self._dwd_data.set_map_style(
-            self._dwd_data._config[CONF_MAP_FOREGROUND_TYPE],
-            self._dwd_data._config[CONF_MAP_BACKGROUND_TYPE],
-        )
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
 
     async def async_camera_image(
