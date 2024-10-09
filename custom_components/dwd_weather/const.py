@@ -8,7 +8,7 @@ from simple_dwd_weatherforecast.dwdmap import MarkerShape
 # Base component constants
 NAME = "DWD Weather"
 DOMAIN = "dwd_weather"
-CONF_VERSION = 8
+CONF_VERSION = 9
 ATTRIBUTION = "Data provided by Deutscher Wetterdienst (DWD)"
 # Platforms
 PLATFORMS = [

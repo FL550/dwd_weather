@@ -20,6 +20,10 @@ from .const import (
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
     CONF_INTERPOLATE,
+    CONF_MAP_HOMEMARKER_COLOR,
+    CONF_MAP_HOMEMARKER_SHAPE,
+    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE,
+    CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_LOOP_SPEED,
     CONF_MAP_CENTERMARKER,
@@ -167,7 +171,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     elif config_entry.version == 7:
         new = {**config_entry.data}
         new[CONF_MAP_HOMEMARKER] = False
-        hass.config_entries.async_update_entry(config_entry, data=new, version=8)
+        new[CONF_MAP_HOMEMARKER_SHAPE] = CONF_MAP_HOMEMARKER_SHAPE_CIRCLE
+        new[CONF_MAP_HOMEMARKER_SIZE] = 15
+        new[CONF_MAP_HOMEMARKER_COLOR] = [255, 0, 0]
+        # Skip version 8 as some already have this config with an error. Version 9 is correct
+        hass.config_entries.async_update_entry(config_entry, data=new, version=9)
+    elif config_entry.version == 8:
+        new = {**config_entry.data}
+        # If someone is on version 8, add the missing config items.
+        new[CONF_MAP_HOMEMARKER_SHAPE] = CONF_MAP_HOMEMARKER_SHAPE_CIRCLE
+        new[CONF_MAP_HOMEMARKER_SIZE] = 15
+        new[CONF_MAP_HOMEMARKER_COLOR] = [255, 0, 0]
+        hass.config_entries.async_update_entry(config_entry, data=new, version=9)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
