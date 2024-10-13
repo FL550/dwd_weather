@@ -42,14 +42,16 @@ class MyCamera(Camera):
         self._dwd_data: DWDMapData = hass_data[DWDWEATHER_DATA]
 
         self._map_type = conversion_table_map_foreground[
-            self._dwd_data._config[CONF_MAP_FOREGROUND_TYPE]
+            self._dwd_data._configdata[CONF_MAP_FOREGROUND_TYPE]
         ]
-        self._unique_id = f"map_{self._map_type}_{self._dwd_data._config[CONF_MAP_ID]}"
+        self._unique_id = (
+            f"map_{self._map_type}_{self._dwd_data._configdata[CONF_MAP_ID]}"
+        )
         self._name = f"{self._map_type}"
 
         self._frame_interval = (
-            self._dwd_data._config[CONF_MAP_LOOP_SPEED]
-            if CONF_MAP_LOOP_SPEED in self._dwd_data._config
+            self._dwd_data._configdata[CONF_MAP_LOOP_SPEED]
+            if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
             else 5
         )
 

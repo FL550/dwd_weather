@@ -507,6 +507,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
+    config_data = {}
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
@@ -537,7 +539,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data=user_input,
                     options=self.config_entry.options,
                 )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(title="", data=user_input)
 
             return self.async_show_form(
                 step_id="init",
@@ -603,12 +605,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input[CONF_MAP_LOOP_COUNT] = int(
                         user_input[CONF_MAP_LOOP_COUNT] / 5
                     )
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=user_input,
-                    options=self.config_entry.options,
-                )
-                return self.async_create_entry(title="", data={})
+                if user_input[CONF_MAP_HOMEMARKER]:
+                    self.config_data.update(user_input)
+                    return await self.async_step_marker()
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data=user_input,
+                        options=self.config_entry.options,
+                    )
+                    return self.async_create_entry(title="", data=user_input)
             data_schema = vol.Schema(
                 {
                     vol.Required(
@@ -678,41 +684,69 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_MAP_HOMEMARKER,
                         default=self.config_entry.data[CONF_MAP_HOMEMARKER],
                     ): BooleanSelector({}),
-                    vol.Required(
-                        CONF_MAP_HOMEMARKER_SHAPE,
-                        default=self.config_entry.data[CONF_MAP_HOMEMARKER_SHAPE],
-                    ): SelectSelector(
-                        {
-                            "options": list(
-                                [
-                                    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE,
-                                    CONF_MAP_HOMEMARKER_SHAPE_CROSS,
-                                    CONF_MAP_HOMEMARKER_SHAPE_SQUARE,
-                                ]
-                            ),
-                            "custom_value": False,
-                            "mode": "dropdown",
-                            "translation_key": CONF_MAP_HOMEMARKER_SHAPE,
-                        }
-                    ),
-                    vol.Required(
-                        CONF_MAP_HOMEMARKER_SIZE,
-                        default=self.config_entry.data[CONF_MAP_HOMEMARKER_SIZE],
-                    ): NumberSelector(
-                        {
-                            "min": 1,
-                            "max": 25,
-                            "step": "1",
-                            "unit_of_measurement": "px",
-                        }
-                    ),
-                    vol.Required(
-                        CONF_MAP_HOMEMARKER_COLOR,
-                        default=self.config_entry.data[CONF_MAP_HOMEMARKER_COLOR],
-                    ): ColorRGBSelector({}),
                 }
             )
             return self.async_show_form(
                 step_id="init",
                 data_schema=data_schema,
             )
+
+    async def async_step_marker(self, user_input=None) -> FlowResult:  # type: ignore
+        """Manage the options for the homemarker."""
+        if user_input is not None:
+            _LOGGER.debug(
+                "OptionsFlowHandler map marker: user_input {}".format(user_input)
+            )
+            self.config_data.update(user_input)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data=self.config_data,
+                options=self.config_entry.options,
+            )
+            return self.async_create_entry(title="", data=self.config_data)
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_MAP_HOMEMARKER_SHAPE,
+                    default=self.config_entry.data[CONF_MAP_HOMEMARKER_SHAPE]
+                    if CONF_MAP_HOMEMARKER_SHAPE in self.config_entry.data
+                    else CONF_MAP_HOMEMARKER_SHAPE_CIRCLE,
+                ): SelectSelector(
+                    {
+                        "options": list(
+                            [
+                                CONF_MAP_HOMEMARKER_SHAPE_CIRCLE,
+                                CONF_MAP_HOMEMARKER_SHAPE_CROSS,
+                                CONF_MAP_HOMEMARKER_SHAPE_SQUARE,
+                            ]
+                        ),
+                        "custom_value": False,
+                        "mode": "dropdown",
+                        "translation_key": CONF_MAP_HOMEMARKER_SHAPE,
+                    }
+                ),
+                vol.Required(
+                    CONF_MAP_HOMEMARKER_SIZE,
+                    default=self.config_entry.data[CONF_MAP_HOMEMARKER_SIZE]
+                    if CONF_MAP_HOMEMARKER_SIZE in self.config_entry.data
+                    else 15,
+                ): NumberSelector(
+                    {
+                        "min": 1,
+                        "max": 25,
+                        "step": "1",
+                        "unit_of_measurement": "px",
+                    }
+                ),
+                vol.Required(
+                    CONF_MAP_HOMEMARKER_COLOR,
+                    default=self.config_entry.data[CONF_MAP_HOMEMARKER_COLOR]
+                    if CONF_MAP_HOMEMARKER_COLOR in self.config_entry.data
+                    else [255, 0, 0],
+                ): ColorRGBSelector({}),
+            }
+        )
+        return self.async_show_form(
+            step_id="marker",
+            data_schema=data_schema,
+        )
