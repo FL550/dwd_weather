@@ -46,6 +46,9 @@ from .const import (
     CONF_MAP_FOREGROUND_TYPE,
     CONF_MAP_HOMEMARKER_COLOR,
     CONF_MAP_HOMEMARKER_SHAPE,
+    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE,
+    CONF_MAP_HOMEMARKER_SHAPE_CROSS,
+    CONF_MAP_HOMEMARKER_SHAPE_SQUARE,
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_CENTERMARKER,
@@ -72,8 +75,13 @@ from .const import (
     CONF_MAP_BACKGROUND_KREISE,
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
-    conversion_table_map_homemarker_shape,
 )
+
+conversion_table_map_homemarker_shape = {
+    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE: dwdmap.MarkerShape.CIRCLE,
+    CONF_MAP_HOMEMARKER_SHAPE_CROSS: dwdmap.MarkerShape.CROSS,
+    CONF_MAP_HOMEMARKER_SHAPE_SQUARE: dwdmap.MarkerShape.SQUARE,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
