@@ -745,11 +745,13 @@ class DWDMapData:
             self._maploop
             and self._width == self._cachedwidth
             and self._height == self._cachedheight
+            and self.last_config_change == self._configentry.modified_at
         ):
             _LOGGER.debug("Map _update: Map update with cache possible")
             self._maploop.update()
         else:
             _LOGGER.debug(" Map _update: No direct map update possible. Reconfiguring")
+            self.last_config_change = self._configentry.modified_at
             # prevent distortion of map
             if self._height and self._width:
                 width = round(self._height / 1.115)
