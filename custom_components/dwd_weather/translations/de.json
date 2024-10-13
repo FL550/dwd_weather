@@ -138,7 +138,7 @@
           "map_foreground_type": "Welche Daten sollen angezeigt werden?",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
-          "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
+          "map_homemarker": "Soll auf der Karte ein Home-Marker dargestellt werden?",
           "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
           "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
           "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?"
