@@ -757,7 +757,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_MAP_HOMEMARKER_SIZE,
                     default=self.config_entry.data[CONF_MAP_HOMEMARKER_SIZE]
                     if CONF_MAP_HOMEMARKER_SIZE in self.config_entry.data
-                    else 15,
+                    else 10,
                 ): NumberSelector(
                     {
                         "min": 1,
