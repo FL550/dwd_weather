@@ -136,10 +136,7 @@
           "map_foreground_type": "Which data would you like to see?",
           "map_background_type": "What should be displayed in the background?",
           "map_marker": "Should the middle of the map be marked?",
-          "map_homemarker": "Should the map contain a home marker?",
-          "map_homemarker_shape": "Which shape should the home marker have?",
-          "map_homemarker_size": "How big should the home marker be?",
-          "map_homemarker_color": "What color should the home marker have?"
+          "map_homemarker": "Should the map contain a home marker?"
         }
       },
       "select_map_loop": {
@@ -152,6 +149,14 @@
         "data_description": {
           "map_loop_count": "A radar image is provided every 5 minutes. So for 30 minutes there will be 6 images shown in the loop. This value refers to the last available image",
           "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one."
+        }
+      },
+      "select_map_homemarker": {
+        "title": "Home marker configuration",
+        "data": {
+          "map_homemarker_shape": "Which shape should the home marker have?",
+          "map_homemarker_size": "How big should the home marker be?",
+          "map_homemarker_color": "What color should the home marker have?"
         }
       }
     },

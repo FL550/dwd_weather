@@ -138,10 +138,7 @@
           "map_foreground_type": "Welche Daten sollen angezeigt werden?",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
-          "map_homemarker": "Soll auf der Karte ein Home-Marker dargestellt werden?",
-          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
-          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
-          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?"
+          "map_homemarker": "Soll auf der Karte ein Home-Marker dargestellt werden?"
         }
       },
       "select_map_loop": {
@@ -154,6 +151,14 @@
         "data_description": {
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird."
+        }
+      },
+      "select_map_homemarker": {
+        "title": "Home-Marker Konfiguration",
+        "data": {
+          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
+          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
+          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?"
         }
       }
     },
