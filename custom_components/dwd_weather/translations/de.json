@@ -176,9 +176,6 @@
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
           "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
-          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
-          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
-          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?",
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
           "map_loop_speed": "Wie schnell soll die Animation ablaufen?"
@@ -191,7 +188,15 @@
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird."
-
+        }
+      },
+      "homemarker": {
+        "description": "",
+        "title": "Home-Marker konfigurieren",
+        "data": {
+          "map_homemarker_shape": "Welche Form soll der Home-Marker haben?",
+          "map_homemarker_size": "Wie groß soll der Home-Marker sein?",
+          "map_homemarker_color": "Welche Farbe soll der Home-Marker haben?"
         }
       }
     }

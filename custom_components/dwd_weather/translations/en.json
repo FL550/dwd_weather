@@ -174,10 +174,7 @@
           "map_options_message": "Unavailable setting",
           "map_background_type": "What should be displayed in the background?",
           "map_marker": "Should the middle of the map be marked?",
-          "map_homemarker": "Should your home position be marked the map?",
-          "map_homemarker_shape": "Which shape should the home marker have?",
-          "map_homemarker_size": "How big should the home marker be?",
-          "map_homemarker_color": "What color should the home marker have?",
+          "map_homemarker": "Should a home-marker be displayed on the map?",
           "map_timestamp": "Should the time of the image be visible on the image?",
           "map_loop_count": "How many radar images from the past you would like to see?",
           "map_loop_speed": "How quick should the animation play?"
@@ -190,6 +187,15 @@
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "A radar image is provided every 5 minutes. So for 30 minutes there will be 6 images shown in the loop. This value refers to the last available image",
           "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one."
+        }
+      },
+      "homemarker": {
+        "description": "",
+        "title": "Configure home marker",
+        "data": {
+          "map_homemarker_shape": "Which shape should the home marker have?",
+          "map_homemarker_size": "How big should the home marker be?",
+          "map_homemarker_color": "What color should the home marker have?"
         }
       }
     }

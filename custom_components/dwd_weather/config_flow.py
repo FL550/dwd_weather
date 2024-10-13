@@ -607,7 +607,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     )
                 if user_input[CONF_MAP_HOMEMARKER]:
                     self.config_data.update(user_input)
-                    return await self.async_step_marker()
+                    return await self.async_step_homemarker()
                 else:
                     self.hass.config_entries.async_update_entry(
                         self.config_entry,
@@ -691,7 +691,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 data_schema=data_schema,
             )
 
-    async def async_step_marker(self, user_input=None) -> FlowResult:  # type: ignore
+    async def async_step_homemarker(self, user_input=None) -> FlowResult:  # type: ignore
         """Manage the options for the homemarker."""
         if user_input is not None:
             _LOGGER.debug(
@@ -747,6 +747,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         return self.async_show_form(
-            step_id="marker",
+            step_id="homemarker",
             data_schema=data_schema,
         )
