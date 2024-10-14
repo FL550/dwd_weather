@@ -30,6 +30,7 @@ from homeassistant.components.weather.const import (
 
 from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
+from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
 from .const import (
     ATTR_ISSUE_TIME,
@@ -78,9 +79,9 @@ from .const import (
 )
 
 conversion_table_map_homemarker_shape = {
-    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE: dwdmap.MarkerShape.CIRCLE,
-    CONF_MAP_HOMEMARKER_SHAPE_CROSS: dwdmap.MarkerShape.CROSS,
-    CONF_MAP_HOMEMARKER_SHAPE_SQUARE: dwdmap.MarkerShape.SQUARE,
+    CONF_MAP_HOMEMARKER_SHAPE_CIRCLE: MarkerShape.CIRCLE,
+    CONF_MAP_HOMEMARKER_SHAPE_CROSS: MarkerShape.CROSS,
+    CONF_MAP_HOMEMARKER_SHAPE_SQUARE: MarkerShape.SQUARE,
 }
 
 _LOGGER = logging.getLogger(__name__)

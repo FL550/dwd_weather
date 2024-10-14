@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.core import callback
-from simple_dwd_weatherforecast import dwdforecast
+from simple_dwd_weatherforecast import dwdforecast, dwdmap
 
 from .connector import DWDMapData, DWDWeatherData
 from .const import (
