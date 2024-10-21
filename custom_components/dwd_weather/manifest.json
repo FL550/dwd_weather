@@ -12,7 +12,14 @@
   "requirements": [
     "simple_dwd_weatherforecast==2.1.10",
     "markdownify==0.6.5",
-    "suntimes==1.1.2"
+    "suntimes==1.1.2",
+    "lxml",
+    "requests",
+    "Pillow",
+    "arrow",
+    "stream-inflate==0.0.14",
+    "stream-unzip",
+    "httpx"
   ],
   "iot_class": "cloud_polling"
 }
