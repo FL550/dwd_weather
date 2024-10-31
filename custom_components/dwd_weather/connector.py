@@ -130,6 +130,7 @@ class DWDWeatherData:
                     else False
                 ),
                 with_report=True,
+                with_uv=True,
             )
             if self._config[CONF_HOURLY_UPDATE]:
                 # Hacky workaround: as the hourly data does not provide a forecast for the actual hour, we have to clone the next hour and pretend we have a forecast
@@ -256,7 +257,13 @@ class DWDWeatherData:
                     if precipitation_prop is not None:
                         precipitation_prop = int(precipitation_prop)
 
-                    uv_index = self.dwd_weather.get_uv_index(timestep.day - now.day)
+                    uv_index = (
+                        self.dwd_weather.get_uv_index(
+                            timestep.day - now.day, shouldUpdate=False
+                        )
+                        if timestep.day >= 0 and timestep.day < 3
+                        else None
+                    )
                     wind_speed = self.dwd_weather.get_timeframe_max(
                         WeatherDataType.WIND_SPEED,
                         timestep,
@@ -357,7 +364,13 @@ class DWDWeatherData:
                 if precipitation_prop is not None:
                     precipitation_prop = int(precipitation_prop)
 
-                uv_index = self.dwd_weather.get_uv_index(timestep.day - now.day)
+                uv_index = (
+                    self.dwd_weather.get_uv_index(
+                        timestep.day - now.day, shouldUpdate=False
+                    )
+                    if timestep.day >= 0 and timestep.day < 3
+                    else None
+                )
                 wind_speed = self.dwd_weather.get_daily_max(
                     WeatherDataType.WIND_SPEED,
                     timestep,
