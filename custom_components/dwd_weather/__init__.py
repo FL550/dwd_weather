@@ -5,10 +5,10 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import Config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.entity_registry import async_migrate_entries
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import callback
 from simple_dwd_weatherforecast import dwdforecast
 
@@ -47,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["weather", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured DWD Weather."""
     return True
 
