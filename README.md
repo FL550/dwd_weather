@@ -44,9 +44,9 @@ Everything can be configured via the Homeassistant UI. See below for images.
 
 ---
 
-# FAQ
+# Frequently asked questions (FAQ)
 
-[FAQ](https://github.com/FL550/dwd_weather/wiki)
+Please see the [Wiki](https://github.com/FL550/dwd_weather/wiki)
 
 ---
 
