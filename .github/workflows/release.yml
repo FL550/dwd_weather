@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: 📥 Checkout the repository
         uses: actions/checkout@v3
+      - name: Update version in manifest.json and const.py from current git tag
+        run: |
+          sed -i "s/0\\.0\\.0\\.dev0/${GITHUB_REF_NAME}/g" custom_components/dwd_weather/manifest.json
+          sed -i "s/0\\.0\\.0\\.dev0/${GITHUB_REF_NAME}/g" custom_components/dwd_weather/const.py
 
       - name: 🔢 Get release version
         id: version
