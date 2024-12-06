@@ -17,6 +17,10 @@ Issues not containing the minimum requirements will be closed, because without t
 <!-- If you upgraded to a new version, please also tell me your version.
 -->
 
+## How are you running home_assistant
+<!-- Do you use HAOS, Docker, Podman, Kubernetes or a custom python installation? If yes please also tell the version. 
+-->
+
 ## Version of the custom_component
 <!-- If you are not using the newest version, download and try that before opening an issue
 If you are unsure about the version check the const.py file.
