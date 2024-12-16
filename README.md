@@ -1,5 +1,6 @@
 [![GitHub Release][releases-shield]][releases]
 [![releases][downloads-shield]][releases]
+[![releases][downloads-all-shield]][releases]
 [![License][license-shield]](LICENSE)
 [![hacs][hacsbadge]](hacs)
 [![Community Forum][forum-shield]][forum]
@@ -204,5 +205,6 @@ This package uses public data from [DWD OpenData](https://www.dwd.de/DE/leistung
 [releases-shield]: https://img.shields.io/github/release/FL550/dwd_weather.svg?style=for-the-badge
 [releases]: https://github.com/FL550/dwd_weather/releases
 [downloads-shield]: https://img.shields.io/github/downloads/FL550/dwd_weather/latest/total.svg?style=for-the-badge
+[downloads-all-shield]: https://img.shields.io/github/downloads/FL550/dwd_weather/total.svg?style=for-the-badge
 [buymecoffee]: https://www.buymeacoffee.com/FL550
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow?style=for-the-badge
