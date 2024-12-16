@@ -234,17 +234,6 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
-                    if temp_max is not None:
-                        temp_max = int(round(temp_max - 273.1, 0))
-
-                    temp_min = self.dwd_weather.get_timeframe_min(
-                        WeatherDataType.TEMPERATURE,
-                        timestep,
-                        weather_interval,
-                        False,
-                    )
-                    if temp_min is not None:
-                        temp_min = int(round(temp_min - 273.1, 0))
 
                     dew_point = self.dwd_weather.get_timeframe_max(
                         WeatherDataType.DEWPOINT,
@@ -252,8 +241,6 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
-                    if dew_point is not None:
-                        dew_point = int(round(dew_point - 273.1, 0))
 
                     wind_dir = self.dwd_weather.get_timeframe_avg(
                         WeatherDataType.WIND_DIRECTION,
@@ -302,8 +289,6 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
-                    if pressure is not None:
-                        pressure = round(pressure / 100, 1)
 
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
@@ -314,7 +299,9 @@ class DWDWeatherData:
                             False,
                         ),
                         ATTR_FORECAST_CONDITION: condition,
-                        ATTR_FORECAST_NATIVE_DEW_POINT: dew_point,
+                        ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
+                        if dew_point is not None
+                        else None,
                         ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
                             WeatherDataType.EVAPORATION,
                             timestep,
@@ -340,8 +327,12 @@ class DWDWeatherData:
                             False,
                         ),
                         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
-                        ATTR_FORECAST_PRESSURE: pressure,
-                        ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                        ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
+                        if pressure is not None
+                        else None,
+                        ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 0))
+                        if temp_max is not None
+                        else None,
                         ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_timeframe_sum(
                             WeatherDataType.SUN_DURATION,
                             timestep,
@@ -404,24 +395,18 @@ class DWDWeatherData:
                     timestep,
                     False,
                 )
-                if temp_max is not None:
-                    temp_max = int(round(temp_max - 273.1, 0))
 
                 temp_min = self.dwd_weather.get_daily_min(
                     WeatherDataType.TEMPERATURE,
                     timestep,
                     False,
                 )
-                if temp_min is not None:
-                    temp_min = int(round(temp_min - 273.1, 0))
 
                 dew_point = self.dwd_weather.get_daily_max(
                     WeatherDataType.DEWPOINT,
                     timestep,
                     False,
                 )
-                if dew_point is not None:
-                    dew_point = int(round(dew_point - 273.1, 0))
 
                 wind_dir = self.dwd_weather.get_daily_avg(
                     WeatherDataType.WIND_DIRECTION,
@@ -465,8 +450,6 @@ class DWDWeatherData:
                     timestep,
                     False,
                 )
-                if pressure is not None:
-                    pressure = round(pressure / 100, 1)
 
                 data_item = {
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
@@ -476,7 +459,9 @@ class DWDWeatherData:
                         False,
                     ),
                     ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_DEW_POINT: dew_point,
+                    ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
+                    if dew_point is not None
+                    else None,
                     ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_daily_max(
                         WeatherDataType.EVAPORATION,
                         timestep,
@@ -498,9 +483,15 @@ class DWDWeatherData:
                         False,
                     ),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
-                    ATTR_FORECAST_PRESSURE: pressure,
-                    ATTR_FORECAST_NATIVE_TEMP: temp_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
+                    ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
+                    if pressure is not None
+                    else None,
+                    ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 0))
+                    if temp_max is not None
+                    else None,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: int(round(temp_min - 273.1, 0))
+                    if temp_min is not None
+                    else None,
                     ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_daily_sum(
                         WeatherDataType.SUN_DURATION,
                         timestep,
