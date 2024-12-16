@@ -385,6 +385,7 @@ class DWDWeatherData:
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                     ATTR_FORECAST_CONDITION: condition,
                     ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_daily_sum(
                         WeatherDataType.PRECIPITATION,
                         timestep,
@@ -400,7 +401,6 @@ class DWDWeatherData:
                     "uv_index": uv_index,
                     "precipitation_probability": precipitation_prop,
                 }
-                data_item[ATTR_FORECAST_NATIVE_TEMP_LOW] = temp_min
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)
         _LOGGER.debug("Daily Forecast data {}".format(forecast_data))
