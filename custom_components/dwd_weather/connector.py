@@ -17,14 +17,17 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     Forecast,
 )
 
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_WIND_GUST_SPEED,
+    ATTR_WEATHER_UV_INDEX,
     WeatherEntityFeature,
 )
 
@@ -33,11 +36,19 @@ from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
 from .const import (
+    ATTR_FORECAST_CLOUD_COVERAGE,
+    ATTR_FORECAST_EVAPORATION,
+    ATTR_FORECAST_FOG_PROBABILITY,
+    ATTR_FORECAST_PRECIPITATION_DURATION,
+    ATTR_FORECAST_PRESSURE,
+    ATTR_FORECAST_SUN_IRRADIANCE,
+    ATTR_FORECAST_VISIBILITY,
     ATTR_ISSUE_TIME,
     ATTR_REPORT_ISSUE_TIME,
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
+    ATTR_FORECAST_SUN_DURATION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -235,6 +246,15 @@ class DWDWeatherData:
                     if temp_min is not None:
                         temp_min = int(round(temp_min - 273.1, 0))
 
+                    dew_point = self.dwd_weather.get_timeframe_max(
+                        WeatherDataType.DEWPOINT,
+                        timestep,
+                        weather_interval,
+                        False,
+                    )
+                    if dew_point is not None:
+                        dew_point = int(round(dew_point - 273.1, 0))
+
                     wind_dir = self.dwd_weather.get_timeframe_avg(
                         WeatherDataType.WIND_DIRECTION,
                         timestep,
@@ -276,17 +296,71 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
+                    pressure = self.dwd_weather.get_timeframe_max(
+                        WeatherDataType.PRESSURE,
+                        timestep,
+                        weather_interval,
+                        False,
+                    )
+                    if pressure is not None:
+                        pressure = round(pressure / 100, 1)
+
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
+                        ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.CLOUD_COVERAGE,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
                         ATTR_FORECAST_CONDITION: condition,
-                        ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                        ATTR_FORECAST_NATIVE_DEW_POINT: dew_point,
+                        ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.EVAPORATION,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
+                        ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.FOG_PROBABILITY,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
                         ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                             WeatherDataType.PRECIPITATION,
                             timestep,
                             weather_interval,
                             False,
                         ),
-                        ATTR_FORECAST_WIND_BEARING: wind_dir,
+                        ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.PRECIPITATION_DURATION,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
+                        ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
+                        ATTR_FORECAST_PRESSURE: pressure,
+                        ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                        ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_timeframe_sum(
+                            WeatherDataType.SUN_DURATION,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
+                        ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_timeframe_sum(
+                            WeatherDataType.SUN_IRRADIANCE,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
+                        ATTR_WEATHER_UV_INDEX: uv_index,
+                        ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_timeframe_min(
+                            WeatherDataType.VISIBILITY,
+                            timestep,
+                            weather_interval,
+                            False,
+                        ),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: (
                             round(wind_speed * 3.6, 1)
                             if wind_speed is not None
@@ -297,11 +371,8 @@ class DWDWeatherData:
                             if wind_gusts is not None
                             else None
                         ),
-                        "uv_index": uv_index,
-                        "precipitation_probability": precipitation_prop,
+                        ATTR_FORECAST_WIND_BEARING: wind_dir,
                     }
-                    if weather_interval == 24:
-                        data_item[ATTR_FORECAST_NATIVE_TEMP_LOW] = temp_min
                     forecast_data.append(data_item)
                     timestep += timedelta(hours=weather_interval)
         return forecast_data
@@ -344,6 +415,14 @@ class DWDWeatherData:
                 if temp_min is not None:
                     temp_min = int(round(temp_min - 273.1, 0))
 
+                dew_point = self.dwd_weather.get_daily_max(
+                    WeatherDataType.DEWPOINT,
+                    timestep,
+                    False,
+                )
+                if dew_point is not None:
+                    dew_point = int(round(dew_point - 273.1, 0))
+
                 wind_dir = self.dwd_weather.get_daily_avg(
                     WeatherDataType.WIND_DIRECTION,
                     timestep,
@@ -381,25 +460,70 @@ class DWDWeatherData:
                     timestep,
                     False,
                 )
+                pressure = self.dwd_weather.get_daily_max(
+                    WeatherDataType.PRESSURE,
+                    timestep,
+                    False,
+                )
+                if pressure is not None:
+                    pressure = round(pressure / 100, 1)
+
                 data_item = {
                     ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
+                    ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_daily_max(
+                        WeatherDataType.CLOUD_COVERAGE,
+                        timestep,
+                        False,
+                    ),
                     ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_TEMP: temp_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
+                    ATTR_FORECAST_NATIVE_DEW_POINT: dew_point,
+                    ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_daily_max(
+                        WeatherDataType.EVAPORATION,
+                        timestep,
+                        False,
+                    ),
+                    ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_daily_max(
+                        WeatherDataType.FOG_PROBABILITY,
+                        timestep,
+                        False,
+                    ),
                     ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_daily_sum(
                         WeatherDataType.PRECIPITATION,
                         timestep,
                         False,
                     ),
-                    ATTR_FORECAST_WIND_BEARING: wind_dir,
+                    ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_daily_sum(
+                        WeatherDataType.PRECIPITATION_DURATION,
+                        timestep,
+                        False,
+                    ),
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
+                    ATTR_FORECAST_PRESSURE: pressure,
+                    ATTR_FORECAST_NATIVE_TEMP: temp_max,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: temp_min,
+                    ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_daily_sum(
+                        WeatherDataType.SUN_DURATION,
+                        timestep,
+                        False,
+                    ),
+                    ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_daily_sum(
+                        WeatherDataType.SUN_IRRADIANCE,
+                        timestep,
+                        False,
+                    ),
+                    ATTR_WEATHER_UV_INDEX: uv_index,
+                    ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_daily_min(
+                        WeatherDataType.VISIBILITY,
+                        timestep,
+                        False,
+                    ),
                     ATTR_FORECAST_NATIVE_WIND_SPEED: (
                         round(wind_speed * 3.6, 1) if wind_speed is not None else None
                     ),
                     ATTR_WEATHER_WIND_GUST_SPEED: (
                         round(wind_gusts * 3.6, 1) if wind_gusts is not None else None
                     ),
-                    "uv_index": uv_index,
-                    "precipitation_probability": precipitation_prop,
+                    ATTR_FORECAST_WIND_BEARING: wind_dir,
                 }
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)

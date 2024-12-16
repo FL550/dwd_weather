@@ -23,6 +23,15 @@ ATTR_ISSUE_TIME = "forecast_time_utc"
 ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
+ATTR_FORECAST_SUN_DURATION = "sun_duration"
+ATTR_FORECAST_PRESSURE = "pressure"
+ATTR_FORECAST_PRECIPITATION_DURATION = "precipitation_duration"
+ATTR_FORECAST_CLOUD_COVERAGE = "cloud_coverage"
+ATTR_FORECAST_VISIBILITY = "visibility"
+ATTR_FORECAST_SUN_IRRADIANCE = "sun_irradiance"
+ATTR_FORECAST_FOG_PROBABILITY = "fog_probability"
+ATTR_FORECAST_EVAPORATION = "evaporation"
+
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_MAP_INTERVAL = timedelta(minutes=1)
 DEFAULT_WIND_DIRECTION_TYPE = "degrees"
