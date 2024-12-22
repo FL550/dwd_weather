@@ -9,8 +9,12 @@ import PIL.ImageDraw
 import PIL.ImageFont
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
-from suntimes import SunTimes
 from io import BytesIO
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=SyntaxWarning)
+    from suntimes import SunTimes
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
