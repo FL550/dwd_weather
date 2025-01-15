@@ -659,6 +659,7 @@ class DWDWeatherData:
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
 
     def get_evaporation(self):
+        # Evaporation is reported as "within the last 24 hours. Therefore we have to add a day in the request"
         return self.dwd_weather.get_daily_max(
             WeatherDataType.EVAPORATION,
             datetime.now() + timedelta(days=1),
