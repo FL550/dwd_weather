@@ -53,6 +53,7 @@ from .const import (
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
     ATTR_FORECAST_SUN_DURATION,
+    CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -306,26 +307,8 @@ class DWDWeatherData:
                         ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
                         if dew_point is not None
                         else None,
-                        ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
-                            WeatherDataType.EVAPORATION,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_timeframe_max(
-                            WeatherDataType.FOG_PROBABILITY,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
                         ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                             WeatherDataType.PRECIPITATION,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_timeframe_max(
-                            WeatherDataType.PRECIPITATION_DURATION,
                             timestep,
                             weather_interval,
                             False,
@@ -337,25 +320,7 @@ class DWDWeatherData:
                         ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 0))
                         if temp_max is not None
                         else None,
-                        ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_timeframe_sum(
-                            WeatherDataType.SUN_DURATION,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
-                        ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_timeframe_sum(
-                            WeatherDataType.SUN_IRRADIANCE,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
                         ATTR_WEATHER_UV_INDEX: uv_index,
-                        ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_timeframe_min(
-                            WeatherDataType.VISIBILITY,
-                            timestep,
-                            weather_interval,
-                            False,
-                        ),
                         ATTR_FORECAST_NATIVE_WIND_SPEED: (
                             round(wind_speed * 3.6, 1)
                             if wind_speed is not None
@@ -368,6 +333,48 @@ class DWDWeatherData:
                         ),
                         ATTR_FORECAST_WIND_BEARING: wind_dir,
                     }
+                    # Additional attributes raises errors when parsed in HA weather template so this has to be optional
+                    if self._config[CONF_ADDITIONAL_FORECAST_ATTRIBUTES]:
+                        data_item.update(
+                            {
+                                ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.EVAPORATION,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.FOG_PROBABILITY,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_timeframe_sum(
+                                    WeatherDataType.SUN_IRRADIANCE,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_timeframe_min(
+                                    WeatherDataType.VISIBILITY,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_timeframe_sum(
+                                    WeatherDataType.SUN_DURATION,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                                ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.PRECIPITATION_DURATION,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
+                            }
+                        )
                     forecast_data.append(data_item)
                     timestep += timedelta(hours=weather_interval)
         return forecast_data
@@ -466,23 +473,8 @@ class DWDWeatherData:
                     ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
                     if dew_point is not None
                     else None,
-                    ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_daily_max(
-                        WeatherDataType.EVAPORATION,
-                        timestep,
-                        False,
-                    ),
-                    ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_daily_max(
-                        WeatherDataType.FOG_PROBABILITY,
-                        timestep,
-                        False,
-                    ),
                     ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_daily_sum(
                         WeatherDataType.PRECIPITATION,
-                        timestep,
-                        False,
-                    ),
-                    ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_daily_sum(
-                        WeatherDataType.PRECIPITATION_DURATION,
                         timestep,
                         False,
                     ),
@@ -496,22 +488,7 @@ class DWDWeatherData:
                     ATTR_FORECAST_NATIVE_TEMP_LOW: int(round(temp_min - 273.1, 0))
                     if temp_min is not None
                     else None,
-                    ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_daily_sum(
-                        WeatherDataType.SUN_DURATION,
-                        timestep,
-                        False,
-                    ),
-                    ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_daily_sum(
-                        WeatherDataType.SUN_IRRADIANCE,
-                        timestep,
-                        False,
-                    ),
                     ATTR_WEATHER_UV_INDEX: uv_index,
-                    ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_daily_min(
-                        WeatherDataType.VISIBILITY,
-                        timestep,
-                        False,
-                    ),
                     ATTR_FORECAST_NATIVE_WIND_SPEED: (
                         round(wind_speed * 3.6, 1) if wind_speed is not None else None
                     ),
@@ -520,6 +497,42 @@ class DWDWeatherData:
                     ),
                     ATTR_FORECAST_WIND_BEARING: wind_dir,
                 }
+                # Additional attributes raises errors when parsed in HA weather template so this has to be optional
+                if self._config[CONF_ADDITIONAL_FORECAST_ATTRIBUTES]:
+                    data_item.update(
+                        {
+                            ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_daily_max(
+                                WeatherDataType.EVAPORATION,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_FOG_PROBABILITY: self.dwd_weather.get_daily_max(
+                                WeatherDataType.FOG_PROBABILITY,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_SUN_IRRADIANCE: self.dwd_weather.get_daily_sum(
+                                WeatherDataType.SUN_IRRADIANCE,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_VISIBILITY: self.dwd_weather.get_daily_min(
+                                WeatherDataType.VISIBILITY,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_SUN_DURATION: self.dwd_weather.get_daily_sum(
+                                WeatherDataType.SUN_DURATION,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_daily_sum(
+                                WeatherDataType.PRECIPITATION_DURATION,
+                                timestep,
+                                False,
+                            ),
+                        }
+                    )
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)
         _LOGGER.debug("Daily Forecast data {}".format(forecast_data))

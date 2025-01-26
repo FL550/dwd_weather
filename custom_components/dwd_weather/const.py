@@ -56,6 +56,7 @@ CONF_STATION_NAME = "station_name"
 CONF_WIND_DIRECTION_TYPE = "wind_direction_type"
 CONF_INTERPOLATE = "interpolate"
 CONF_HOURLY_UPDATE = "hourly_update"
+CONF_ADDITIONAL_FORECAST_ATTRIBUTES = "additional_forecast_attributes"
 
 CONF_MAP_TYPE = "map_type"
 CONF_MAP_TYPE_GERMANY = "map_germany"
