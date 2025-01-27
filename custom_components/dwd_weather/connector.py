@@ -79,6 +79,7 @@ from .const import (
     CONF_WIND_DIRECTION_TYPE,
     CONF_HOURLY_UPDATE,
     DEFAULT_WIND_DIRECTION_TYPE,
+    CONF_MAP_DARK_MODE,
     CONF_MAP_FOREGROUND_PRECIPITATION,
     CONF_MAP_FOREGROUND_MAXTEMP,
     CONF_MAP_FOREGROUND_UVINDEX,
@@ -941,6 +942,7 @@ class DWDMapData:
                         image_width=width,
                         image_height=self._height,
                         markers=markers,
+                        dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                     )
                 else:
                     _LOGGER.debug(
@@ -979,6 +981,7 @@ class DWDMapData:
                         image_width=width,
                         image_height=self._height,
                         markers=markers,
+                        dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                     )
                     _LOGGER.debug(
                         "map async_update maploop: {}".format(maploop.get_images())
@@ -1026,6 +1029,7 @@ class DWDMapData:
                     image_width=width,
                     image_height=self._height,
                     markers=markers,
+                    dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                 )
             else:
                 _LOGGER.debug(
@@ -1097,6 +1101,8 @@ class DWDMapData:
                 timestamp = self._maploop._last_update - timedelta(minutes=5) * (
                     self._configdata[CONF_MAP_LOOP_COUNT] - self._image_nr - 1
                 )
+                # TODO darkmode
+                # Also in config flow and config upgrade
                 draw.rectangle((8, 13, 175, 32), fill=(0, 0, 0))
                 draw.text(
                     (10, 10),
