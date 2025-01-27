@@ -1101,13 +1101,20 @@ class DWDMapData:
                 timestamp = self._maploop._last_update - timedelta(minutes=5) * (
                     self._configdata[CONF_MAP_LOOP_COUNT] - self._image_nr - 1
                 )
-                # TODO darkmode
-                # Also in config flow and config upgrade
-                draw.rectangle((8, 13, 175, 32), fill=(0, 0, 0))
+                boxcolor = (0, 0, 0)
+                textcolor = (255, 255, 255)
+                if (
+                    CONF_MAP_DARK_MODE in self._configdata
+                    and self._configdata[CONF_MAP_DARK_MODE]
+                ):
+                    boxcolor = (255, 255, 255)
+                    textcolor = (0, 0, 0)
+
+                draw.rectangle((8, 13, 175, 32), fill=boxcolor)
                 draw.text(
                     (10, 10),
                     timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
-                    fill=(255, 255, 255),
+                    fill=textcolor,
                     font_size=20,
                 )
 

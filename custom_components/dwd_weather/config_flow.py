@@ -730,7 +730,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): BooleanSelector({}),
                     vol.Required(
                         CONF_MAP_DARK_MODE,
-                        default=False,
+                        default=self.config_entry.data[CONF_MAP_DARK_MODE],
                     ): BooleanSelector({}),
                 }
             )

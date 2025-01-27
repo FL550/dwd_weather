@@ -121,7 +121,7 @@
           "interpolate": "Da die Daten nur stündlich verfügbar sind, kann es sein, dass 'Sprünge' in den angezeigten Werten auftreten. Mit dieser Option werden die Daten linear interpoliert.",
           "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an bei denen ein paar Informationen fehlen (Niederschlagswahrscheinlichkeit, Niederschlagsdauer, Verdunstung), allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
           "map_options_message": "Aktuell ist es nicht möglich, eine Karte zu konfigurieren. Bitte lösche stattdessen die Karte und füge sie mit den gewünschten Einstellungen erneut hinzu.",
-          "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung und Sonnenscheindauer hinzu."
+          "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu."
         }
       },
       "select_map_type": {
@@ -198,7 +198,7 @@
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",
-          "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung und Sonnenscheindauer hinzu."
+          "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu."
         }
       },
       "homemarker": {
