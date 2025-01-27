@@ -585,7 +585,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     {
                         vol.Required(
                             CONF_DATA_TYPE,
-                            default=self.config_entry.data["data_type"],
+                            default=self.config_entry.data[CONF_DATA_TYPE],
                         ): SelectSelector(
                             {
                                 "options": list(
@@ -602,7 +602,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_WIND_DIRECTION_TYPE,
-                            default=self.config_entry.data["wind_direction_type"],
+                            default=self.config_entry.data[CONF_WIND_DIRECTION_TYPE],
                         ): SelectSelector(
                             {
                                 "options": list(["degrees", "direction"]),
@@ -613,16 +613,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_INTERPOLATE,
-                            default=self.config_entry.data["interpolate"],
+                            default=self.config_entry.data[CONF_INTERPOLATE],
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_HOURLY_UPDATE,
-                            default=self.config_entry.data["hourly_update"],
+                            default=self.config_entry.data[CONF_HOURLY_UPDATE],
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
                             default=self.config_entry.data[
-                                "additional_forecast_attributes"
+                                CONF_ADDITIONAL_FORECAST_ATTRIBUTES
                             ],
                         ): BooleanSelector({}),
                     }
