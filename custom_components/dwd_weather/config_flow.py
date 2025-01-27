@@ -17,6 +17,7 @@ from homeassistant.helpers.selector import (
 from simple_dwd_weatherforecast import dwdforecast
 
 from .const import (
+    CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -29,6 +30,7 @@ from .const import (
     CONF_LOCATION_COORDINATES,
     CONF_CUSTOM_LOCATION,
     CONF_MAP_BACKGROUND_TYPE,
+    CONF_MAP_DARK_MODE,
     CONF_MAP_FOREGROUND_MAXTEMP,
     CONF_MAP_FOREGROUND_POLLENFLUG,
     CONF_MAP_FOREGROUND_PRECIPITATION,
@@ -272,6 +274,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOURLY_UPDATE,
                         default=False,  # type: ignore
                     ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+                        default=False,  # type: ignore
+                    ): BooleanSelector({}),
                 }
             )
 
@@ -410,6 +416,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): BooleanSelector({}),
                 vol.Required(
                     CONF_MAP_HOMEMARKER,
+                    default=False,
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_MAP_DARK_MODE,
                     default=False,
                 ): BooleanSelector({}),
             }
@@ -609,6 +619,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_HOURLY_UPDATE,
                             default=self.config_entry.data["hourly_update"],
                         ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+                            default=self.config_entry.data[
+                                "additional_forecast_attributes"
+                            ],
+                        ): BooleanSelector({}),
                     }
                 ),
             )
@@ -711,6 +727,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_MAP_HOMEMARKER,
                         default=self.config_entry.data[CONF_MAP_HOMEMARKER],
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_MAP_DARK_MODE,
+                        default=False,
                     ): BooleanSelector({}),
                 }
             )
