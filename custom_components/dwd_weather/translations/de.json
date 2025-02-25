@@ -112,7 +112,7 @@
           "wind_direction_type": "Art der Windrichtungsangabe",
           "interpolate": "Interpolierung der Werte",
           "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
-          "map_options_message": "Einstellung nicht möglich",
+          "sensor_forecast_steps": "Begrenze verfügbare Vorhersageschritte in Sensorattributen",
           "additional_forecast_attributes": "Aktiviere zusätzliche Vorhersageattribute"
         },
         "data_description": {
@@ -120,7 +120,7 @@
           "wind_direction_type": "Betrifft den Sensorwert für die Windrichtung",
           "interpolate": "Da die Daten nur stündlich verfügbar sind, kann es sein, dass 'Sprünge' in den angezeigten Werten auftreten. Mit dieser Option werden die Daten linear interpoliert.",
           "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an bei denen ein paar Informationen fehlen (Niederschlagswahrscheinlichkeit, Niederschlagsdauer, Verdunstung), allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
-          "map_options_message": "Aktuell ist es nicht möglich, eine Karte zu konfigurieren. Bitte lösche stattdessen die Karte und füge sie mit den gewünschten Einstellungen erneut hinzu.",
+          "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu."
         }
       },
@@ -187,6 +187,7 @@
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
           "map_loop_speed": "Wie schnell soll die Animation ablaufen?",
+          "sensor_forecast_steps": "Begrenze verfügbare Vorhersageschritte in Sensorattributen",
           "additional_forecast_attributes": "Aktiviere zusätzliche Vorhersageattribute",
           "map_dark_mode": "Soll die Karte als Dark Mode angezeigt werden?"
         },
@@ -198,6 +199,7 @@
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",
+          "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu."
         }
       },

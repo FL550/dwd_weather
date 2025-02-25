@@ -74,6 +74,7 @@ from .const import (
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_GERMANY,
     CONF_MAP_WINDOW,
+    CONF_SENSOR_FORECAST_STEPS,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
@@ -724,7 +725,13 @@ class DWDWeatherData:
             WeatherDataType.HUMIDITY: lambda value: round(value, 1),
         }
         if forecast_data:
+            item_counter = 0
             for key in forecast_data:
+                if (
+                    self._config[CONF_SENSOR_FORECAST_STEPS]
+                    and item_counter >= self._config[CONF_SENSOR_FORECAST_STEPS]
+                ):
+                    break
                 if (
                     datetime(
                         *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]),
@@ -734,7 +741,7 @@ class DWDWeatherData:
                     < timestamp
                 ):
                     continue
-
+                item_counter += 1
                 item = forecast_data[key]
                 value = item[data_type.value[0]]
                 if value is not None:

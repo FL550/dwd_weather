@@ -27,6 +27,7 @@ from .const import (
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
     CONF_INTERPOLATE,
+    CONF_SENSOR_FORECAST_STEPS,
     CONF_LOCATION_COORDINATES,
     CONF_CUSTOM_LOCATION,
     CONF_MAP_BACKGROUND_TYPE,
@@ -274,6 +275,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOURLY_UPDATE,
                         default=False,  # type: ignore
                     ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_SENSOR_FORECAST_STEPS,
+                        default=100,  # type: ignore
+                    ): NumberSelector({"min": 1, "max": 100, "step": 1, "mode": "box"}),
                     vol.Required(
                         CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
                         default=False,  # type: ignore
@@ -620,6 +625,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=self.config_entry.data[CONF_HOURLY_UPDATE],
                         ): BooleanSelector({}),
                         vol.Required(
+                            CONF_SENSOR_FORECAST_STEPS,
+                            default=self.config_entry.data[CONF_SENSOR_FORECAST_STEPS],
+                        ): NumberSelector(
+                            {"min": 1, "max": 100, "step": 1, "mode": "box"}
+                        ),
+                        vol.Required(
                             CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
                             default=self.config_entry.data[
                                 CONF_ADDITIONAL_FORECAST_ATTRIBUTES
@@ -627,7 +638,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ): BooleanSelector({}),
                     }
                 ),
-            )
+            )  # type: ignore
         elif self.config_entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
             if user_input is not None:
                 _LOGGER.debug(

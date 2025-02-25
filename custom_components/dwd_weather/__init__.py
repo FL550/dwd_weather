@@ -32,6 +32,7 @@ from .const import (
     CONF_MAP_TIMESTAMP,
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
     CONF_MAP_DARK_MODE,
+    CONF_SENSOR_FORECAST_STEPS,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
@@ -191,6 +192,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         new[CONF_ADDITIONAL_FORECAST_ATTRIBUTES] = False
         new[CONF_MAP_DARK_MODE] = False
         hass.config_entries.async_update_entry(config_entry, data=new, version=10)
+    elif config_entry.version == 10:
+        new = {**config_entry.data}
+        new[CONF_SENSOR_FORECAST_STEPS] = 100
+        hass.config_entries.async_update_entry(config_entry, data=new, version=11)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
