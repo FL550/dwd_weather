@@ -43,6 +43,7 @@ from .const import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_EVAPORATION,
     ATTR_FORECAST_FOG_PROBABILITY,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION_DURATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_SUN_IRRADIANCE,
@@ -375,6 +376,12 @@ class DWDWeatherData:
                                     weather_interval,
                                     False,
                                 ),
+                                ATTR_FORECAST_HUMIDITY: self.dwd_weather.get_timeframe_max(
+                                    WeatherDataType.HUMIDITY,
+                                    timestep,
+                                    weather_interval,
+                                    False,
+                                ),
                             }
                         )
                     forecast_data.append(data_item)
@@ -530,6 +537,11 @@ class DWDWeatherData:
                             ),
                             ATTR_FORECAST_PRECIPITATION_DURATION: self.dwd_weather.get_daily_sum(
                                 WeatherDataType.PRECIPITATION_DURATION,
+                                timestep,
+                                False,
+                            ),
+                            ATTR_FORECAST_HUMIDITY: self.dwd_weather.get_daily_max(
+                                WeatherDataType.HUMIDITY,
                                 timestep,
                                 False,
                             ),
