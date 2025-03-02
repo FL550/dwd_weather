@@ -276,7 +276,7 @@ class DWDWeatherData:
                         self.dwd_weather.get_uv_index(
                             timestep.day - now.day, shouldUpdate=False
                         )
-                        if timestep.day >= 0 and timestep.day < 3
+                        if timestep.day - now.day >= 0 and timestep.day - now.day < 3
                         else None
                     )
                     wind_speed = self.dwd_weather.get_timeframe_max(
@@ -452,7 +452,7 @@ class DWDWeatherData:
                     self.dwd_weather.get_uv_index(
                         timestep.day - now.day, shouldUpdate=False
                     )
-                    if timestep.day >= 0 and timestep.day < 3
+                    if timestep.day - now.day >= 0 and timestep.day - now.day < 3
                     else None
                 )
                 wind_speed = self.dwd_weather.get_daily_max(
