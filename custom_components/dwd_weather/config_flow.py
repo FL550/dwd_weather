@@ -277,8 +277,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): BooleanSelector({}),
                     vol.Required(
                         CONF_SENSOR_FORECAST_STEPS,
-                        default=100,  # type: ignore
-                    ): NumberSelector({"min": 1, "max": 100, "step": 1, "mode": "box"}),
+                        default=250,  # type: ignore
+                    ): NumberSelector({"min": 1, "max": 250, "step": 1, "mode": "box"}),
                     vol.Required(
                         CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
                         default=False,  # type: ignore
@@ -628,7 +628,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_SENSOR_FORECAST_STEPS,
                             default=self.config_entry.data[CONF_SENSOR_FORECAST_STEPS],
                         ): NumberSelector(
-                            {"min": 1, "max": 100, "step": 1, "mode": "box"}
+                            {"min": 1, "max": 250, "step": 1, "mode": "box"}
                         ),
                         vol.Required(
                             CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
