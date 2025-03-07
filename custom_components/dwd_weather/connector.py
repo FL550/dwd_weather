@@ -311,7 +311,7 @@ class DWDWeatherData:
                             False,
                         ),
                         ATTR_FORECAST_CONDITION: condition,
-                        ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
+                        ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 1))
                         if dew_point is not None
                         else None,
                         ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
@@ -324,7 +324,7 @@ class DWDWeatherData:
                         ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
                         if pressure is not None
                         else None,
-                        ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 0))
+                        ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 1))
                         if temp_max is not None
                         else None,
                         ATTR_WEATHER_UV_INDEX: uv_index,
@@ -479,7 +479,7 @@ class DWDWeatherData:
                         False,
                     ),
                     ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 0))
+                    ATTR_FORECAST_NATIVE_DEW_POINT: int(round(dew_point - 273.1, 1))
                     if dew_point is not None
                     else None,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_daily_sum(
@@ -491,10 +491,10 @@ class DWDWeatherData:
                     ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
                     if pressure is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 0))
+                    ATTR_FORECAST_NATIVE_TEMP: int(round(temp_max - 273.1, 1))
                     if temp_max is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: int(round(temp_min - 273.1, 0))
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: int(round(temp_min - 273.1, 1))
                     if temp_min is not None
                     else None,
                     ATTR_WEATHER_UV_INDEX: uv_index,
