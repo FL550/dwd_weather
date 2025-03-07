@@ -213,13 +213,10 @@ class DWDWeatherData:
                 self.latest_update.year,
                 self.latest_update.month,
                 self.latest_update.day,
+                self.latest_update.hour,
                 tzinfo=timezone.utc,
             )
-            # Find the next timewindow from actual time
-            while timestep < self.latest_update:
-                timestep += timedelta(hours=weather_interval)
-                # Reduce by one to include the current timewindow
-            timestep -= timedelta(hours=weather_interval)
+
             for _ in range(0, 9):
                 for _ in range(int(24 / weather_interval)):
                     condition = self.dwd_weather.get_timeframe_condition(
@@ -399,11 +396,7 @@ class DWDWeatherData:
                 self.latest_update.day,
                 tzinfo=timezone.utc,
             )
-            # Find the next timewindow from actual time
-            while timestep < self.latest_update:
-                timestep += timedelta(hours=weather_interval)
-                # Reduce by one to include the current timewindow
-            timestep -= timedelta(hours=weather_interval)
+
             for _ in range(0, 9):
                 _LOGGER.debug("Timestep {}".format(timestep))
                 condition = self.dwd_weather.get_daily_condition(
