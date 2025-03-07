@@ -1,7 +1,9 @@
 """The DWD Weather component."""
 
 import asyncio
+from datetime import timedelta
 import logging
+import random
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -64,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DWD Weather as config entry."""
     _LOGGER.debug("Setup with data {}".format(entry.data))
     entry.async_on_unload(entry.add_update_listener(update_listener))
-
+    random_delay = random.randint(1, 59)
     if entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
         dwd_weather_data = DWDWeatherData(hass, entry)
 
@@ -74,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER,
             name=f"DWD Weather Coordinator for {entry.data[CONF_STATION_ID]}",
             update_method=dwd_weather_data.async_update,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=DEFAULT_SCAN_INTERVAL + timedelta(seconds=random_delay),
         )
 
         # Fetch initial data so we have data when entities subscribe
@@ -105,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER,
             name="DWD Map Coordinator",
             update_method=dwd_weather_data.async_update,
-            update_interval=DEFAULT_MAP_INTERVAL,
+            update_interval=DEFAULT_MAP_INTERVAL + timedelta(seconds=random_delay),
         )
         # Save the data
         dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
