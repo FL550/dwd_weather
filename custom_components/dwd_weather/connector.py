@@ -139,6 +139,13 @@ class DWDWeatherData:
         timestamp = datetime.now(timezone.utc)
         if timestamp.minute % 10 == 0 or self.latest_update is None:
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
+            if self._config[CONF_HOURLY_UPDATE]:
+                if self.dwd_weather.forecast_data and self.dwd_weather.is_in_timerange(
+                    timestamp
+                ):
+                    current_hour_data = self.dwd_weather.forecast_data[  # type: ignore
+                        self.dwd_weather.strip_to_hour_str(timestamp)
+                    ]
             self.dwd_weather.update(
                 force_hourly=self._config[CONF_HOURLY_UPDATE],
                 with_forecast=True,
@@ -151,7 +158,9 @@ class DWDWeatherData:
                 with_report=True,
                 with_uv=True,
             )
-            if self._config[CONF_HOURLY_UPDATE]:
+            if self._config[
+                CONF_HOURLY_UPDATE
+            ] and not self.dwd_weather.is_in_timerange(timestamp):
                 # Hacky workaround: as the hourly data does not provide a forecast for the actual hour, we have to clone the next hour and pretend we have a forecast
                 first_date = datetime(
                     *(
@@ -168,9 +177,7 @@ class DWDWeatherData:
                         (first_date - timedelta(hours=1)).strftime(
                             "%Y-%m-%dT%H:00:00.000Z"
                         )
-                    ] = self.dwd_weather.forecast_data[
-                        first_date.strftime("%Y-%m-%dT%H:00:00.000Z")
-                    ]
+                    ] = current_hour_data
                     self.dwd_weather.forecast_data.move_to_end(
                         (first_date - timedelta(hours=1)).strftime(
                             "%Y-%m-%dT%H:00:00.000Z"
