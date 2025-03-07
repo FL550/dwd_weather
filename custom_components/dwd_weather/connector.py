@@ -215,12 +215,12 @@ class DWDWeatherData:
         weather_interval = 1
         now = datetime.now(timezone.utc)
         forecast_data = []
-        if self.latest_update:
+        if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
-                self.latest_update.year,
-                self.latest_update.month,
-                self.latest_update.day,
-                self.latest_update.hour,
+                now.year,
+                now.month,
+                now.day,
+                now.hour,
                 tzinfo=timezone.utc,
             )
 
@@ -396,11 +396,11 @@ class DWDWeatherData:
         weather_interval = 24
         now = datetime.now(timezone.utc)
         forecast_data = []
-        if self.latest_update:
+        if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
-                self.latest_update.year,
-                self.latest_update.month,
-                self.latest_update.day,
+                now.year,
+                now.month,
+                now.day,
                 tzinfo=timezone.utc,
             )
 
