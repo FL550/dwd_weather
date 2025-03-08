@@ -139,6 +139,7 @@ class DWDWeatherData:
         timestamp = datetime.now(timezone.utc)
         if timestamp.minute % 10 == 0 or self.latest_update is None:
             _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
+            current_hour_data = None
             if self._config[CONF_HOURLY_UPDATE]:
                 if self.dwd_weather.forecast_data and self.dwd_weather.is_in_timerange(
                     timestamp
@@ -173,6 +174,11 @@ class DWDWeatherData:
                     timezone.utc,
                 )
                 if self.dwd_weather.forecast_data:
+                    # If this is the first update, we have to clone the next hour data to be used as current hour data
+                    if current_hour_data is None:
+                        current_hour_data = self.dwd_weather.forecast_data[
+                            first_date.strftime("%Y-%m-%dT%H:00:00.000Z")
+                        ]
                     self.dwd_weather.forecast_data[
                         (first_date - timedelta(hours=1)).strftime(
                             "%Y-%m-%dT%H:00:00.000Z"
