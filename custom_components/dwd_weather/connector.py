@@ -1132,7 +1132,7 @@ class DWDMapData:
                     CONF_MAP_DARK_MODE in self._configdata
                     and self._configdata[CONF_MAP_DARK_MODE]
                 ):
-                    boxcolor = (255, 255, 255)
+                    boxcolor = (225, 225, 225)
                     textcolor = (0, 0, 0)
 
                 draw.rectangle((8, 13, 175, 32), fill=boxcolor)
