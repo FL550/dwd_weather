@@ -497,10 +497,10 @@ class DWDWeatherData:
                     ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
                     if pressure is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP: round(temp_max - 273.1, 1)
+                    ATTR_FORECAST_NATIVE_TEMP: round(temp_max - 273.1, 0)
                     if temp_max is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: round(temp_min - 273.1, 1)
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: round(temp_min - 273.1, 0)
                     if temp_min is not None
                     else None,
                     ATTR_WEATHER_UV_INDEX: uv_index,
