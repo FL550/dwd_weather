@@ -957,12 +957,16 @@ class DWDMapData:
                         dwdmap.germany_boundaries.miny,
                         dwdmap.germany_boundaries.maxx,
                         dwdmap.germany_boundaries.maxy,
-                        map_type=self.map_maptype(
-                            self._configdata[CONF_MAP_FOREGROUND_TYPE]
-                        ),  # type: ignore
-                        background_type=self.map_maptype(
-                            self._configdata[CONF_MAP_BACKGROUND_TYPE]
-                        ),  # type: ignore
+                        map_types=[
+                            self.map_maptype(
+                                self._configdata[CONF_MAP_FOREGROUND_TYPE]  # type: ignore
+                            )
+                        ],
+                        background_types=[
+                            self.map_maptype(
+                                self._configdata[CONF_MAP_BACKGROUND_TYPE]  # type: ignore
+                            )
+                        ],
                         steps=self._configdata[CONF_MAP_LOOP_COUNT],
                         image_width=width,
                         image_height=self._height,
@@ -996,12 +1000,12 @@ class DWDMapData:
                         self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
                         self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
                         self._configdata[CONF_MAP_WINDOW]["latitude"] + radius,  # type: ignore
-                        map_type=self.map_maptype(
-                            self._configdata[CONF_MAP_FOREGROUND_TYPE]
-                        ),  # type: ignore
-                        background_type=self.map_maptype(
-                            self._configdata[CONF_MAP_BACKGROUND_TYPE]
-                        ),  # type: ignore
+                        map_types=[
+                            self.map_maptype(self._configdata[CONF_MAP_FOREGROUND_TYPE])  # type: ignore
+                        ],
+                        background_types=[
+                            self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])  # type: ignore
+                        ],
                         steps=self._configdata[CONF_MAP_LOOP_COUNT],
                         image_width=width,
                         image_height=self._height,
@@ -1045,12 +1049,12 @@ class DWDMapData:
                     )
                 )
                 self._image = dwdmap.get_germany(
-                    map_type=self.map_maptype(
-                        self._configdata[CONF_MAP_FOREGROUND_TYPE]
-                    ),  # type: ignore
-                    background_type=self.map_maptype(
-                        self._configdata[CONF_MAP_BACKGROUND_TYPE]
-                    ),  # type: ignore
+                    map_types=[
+                        self.map_maptype(self._configdata[CONF_MAP_FOREGROUND_TYPE])  # type: ignore
+                    ],
+                    background_types=[
+                        self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])  # type: ignore
+                    ],
                     image_width=width,
                     image_height=self._height,
                     markers=markers,
@@ -1073,12 +1077,12 @@ class DWDMapData:
                     latitude=self._configdata[CONF_MAP_WINDOW]["latitude"],
                     longitude=self._configdata[CONF_MAP_WINDOW]["longitude"],
                     radius_km=self._configdata[CONF_MAP_WINDOW]["radius"],
-                    map_type=self.map_maptype(
-                        self._configdata[CONF_MAP_FOREGROUND_TYPE]
-                    ),  # type: ignore
-                    background_type=self.map_maptype(
-                        self._configdata[CONF_MAP_BACKGROUND_TYPE]
-                    ),  # type: ignore
+                    map_types=[
+                        self.map_maptype(self._configdata[CONF_MAP_FOREGROUND_TYPE])  # type: ignore
+                    ],  # type: ignore
+                    background_types=[
+                        self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])  # type: ignore
+                    ],  # type: ignore
                     image_width=self._width,
                     image_height=self._height,
                     markers=markers,
