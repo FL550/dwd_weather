@@ -61,7 +61,7 @@ Please see the [Wiki](https://github.com/FL550/dwd_weather/wiki)
 
 1. Install integration via HACS or use the button below.
 
-[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FL550repository=dwd_weather&category=integration)
+[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=FL550&repository=dwd_weather&category=integration)
 
 2. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Deutscher Wetterdienst" or "DWD" or use the button below.
 _You can repeat this for as many stations as you like._
