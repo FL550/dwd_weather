@@ -546,20 +546,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     config_data = {}
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        _LOGGER.debug(
-            "OptionsFlowHandler: init for {} with data {}".format(
-                self.config_entry.title, self.config_entry.data
-            )
-        )
 
     async def async_step_init(self, user_input: dict[str] | None = None) -> FlowResult:  # type: ignore
         """Manage the options."""
