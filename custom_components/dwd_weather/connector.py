@@ -44,6 +44,7 @@ from .const import (
     ATTR_FORECAST_EVAPORATION,
     ATTR_FORECAST_FOG_PROBABILITY,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_HUMIDITY_ABSOLUTE,
     ATTR_FORECAST_PRECIPITATION_DURATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_SUN_IRRADIANCE,
@@ -348,6 +349,22 @@ class DWDWeatherData:
                     }
                     # Additional attributes raises errors when parsed in HA weather template so this has to be optional
                     if self._config[CONF_ADDITIONAL_FORECAST_ATTRIBUTES]:
+                        temp_min = self.dwd_weather.get_timeframe_min(
+                            WeatherDataType.TEMPERATURE,
+                            timestep,
+                            weather_interval,
+                            False,
+                        )
+                        humidity = self.dwd_weather.get_timeframe_max(
+                            WeatherDataType.HUMIDITY,
+                            timestep,
+                            weather_interval,
+                            False,
+                        )
+                        if humidity is not None and temp_min is not None:
+                            humidity_absolute = self.calculate_absolute_humidity(
+                                temp_min - 273.15, humidity
+                            )
                         data_item.update(
                             {
                                 ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
@@ -386,12 +403,8 @@ class DWDWeatherData:
                                     weather_interval,
                                     False,
                                 ),
-                                ATTR_FORECAST_HUMIDITY: self.dwd_weather.get_timeframe_max(
-                                    WeatherDataType.HUMIDITY,
-                                    timestep,
-                                    weather_interval,
-                                    False,
-                                ),
+                                ATTR_FORECAST_HUMIDITY: humidity,
+                                ATTR_FORECAST_HUMIDITY_ABSOLUTE: humidity_absolute,
                             }
                         )
                     forecast_data.append(data_item)
@@ -688,6 +701,12 @@ class DWDWeatherData:
     def get_humidity(self):
         return self.get_weather_value(WeatherDataType.HUMIDITY)
 
+    def get_humidity_absolute(self):
+        temperature = self.get_temperature()
+        humidity = self.get_humidity()
+        abs_hum = self.calculate_absolute_humidity(temperature, humidity)
+        return abs_hum
+
     def get_uv_index(self):
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
 
@@ -819,6 +838,21 @@ class DWDWeatherData:
     def get_humidity_hourly(self):
         return self.get_hourly(WeatherDataType.HUMIDITY)
 
+    def get_humidity_absolute_hourly(self):
+        temperature = self.get_hourly(WeatherDataType.TEMPERATURE)
+        humidity = self.get_hourly(WeatherDataType.HUMIDITY)
+        absolute_humidity = []
+        for temp, hum in zip(temperature, humidity):
+            if temp["value"] is not None and hum["value"] is not None:
+                abs_hum = self.calculate_absolute_humidity(temp["value"], hum["value"])
+                absolute_humidity.append(
+                    {
+                        ATTR_FORECAST_TIME: temp[ATTR_FORECAST_TIME],
+                        "value": abs_hum,
+                    }
+                )
+        return absolute_humidity
+
     def get_uv_index_daily(self):
         return {
             "today": self.dwd_weather.get_uv_index(
@@ -872,6 +906,25 @@ class DWDWeatherData:
             return "NW"
         else:
             return "N"
+
+    def calculate_absolute_humidity(self, temperature, humidity) -> float:
+        """Calculate absolute humidity from temperature and relative humidity."""
+        # Constants for the calculation
+        mw = 18.016  # molar mass of water g/mol
+        r = 0.083143  # Universal gas constant
+
+        abs_hum = round(
+            (
+                6.112
+                * math.exp((17.67 * temperature) / (temperature + 243.5))
+                * humidity
+                * mw
+            )
+            / ((273.15 + temperature) * r * 100),
+            1,
+        )
+
+        return abs_hum
 
 
 class DWDMapData:

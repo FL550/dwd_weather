@@ -60,6 +60,12 @@
       "fog_probability": {
         "name": "Nebelwahrscheinlichkeit"
       },
+      "humidity": {
+        "name": "Relative Luftfeuchtigkeit"
+      },
+      "humidity_absolute": {
+        "name": "Absolute Luftfeuchtigkeit"
+      },
       "measured_values_time": {
         "name": "Zeit: Messwerte"
       },

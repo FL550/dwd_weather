@@ -210,6 +210,15 @@ SENSOR_TYPES = {
         SensorStateClass.MEASUREMENT,
         True,
     ],
+    "humidity_absolute": [
+        "Absolute Humidity",
+        None,
+        "g/m3",
+        "mdi:water",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
     "measured_values_time": [
         "Report Time (UTC)",
         "",
@@ -358,6 +367,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_fog_probability()
         elif self._type == "humidity":
             result = self._connector.get_humidity()
+        elif self._type == "humidity_absolute":
+            result = self._connector.get_humidity_absolute()
         elif self._type == "measured_values_time":
             result = self._connector.infos[ATTR_REPORT_ISSUE_TIME]
         elif self._type == "forecast_values_time":
@@ -436,6 +447,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_fog_probability_hourly()
         elif self._type == "humidity":
             attributes["data"] = self._connector.get_humidity_hourly()
+        elif self._type == "humidity_absolute":
+            attributes["data"] = self._connector.get_humidity_absolute_hourly()
         elif self._type == "uv_index":
             attributes["data"] = self._connector.get_uv_index_daily()
         elif self._type == "evaporation":

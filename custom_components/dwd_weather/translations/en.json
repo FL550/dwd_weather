@@ -60,6 +60,12 @@
       "fog_probability": {
         "name": "Fog probability"
       },
+      "humidity": {
+        "name": "Relative Humidity"
+      },
+      "humidity_absolute": {
+        "name": "Absolute Humidity"
+      },
       "measured_values_time": {
         "name": "Time: measured values"
       },

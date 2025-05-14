@@ -32,6 +32,7 @@ ATTR_FORECAST_SUN_IRRADIANCE = "sun_irradiance"
 ATTR_FORECAST_FOG_PROBABILITY = "fog_probability"
 ATTR_FORECAST_EVAPORATION = "evaporation"
 ATTR_FORECAST_HUMIDITY = "humidity"
+ATTR_FORECAST_HUMIDITY_ABSOLUTE = "humidity_absolute"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_MAP_INTERVAL = timedelta(minutes=1)

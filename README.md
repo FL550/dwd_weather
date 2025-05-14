@@ -38,6 +38,7 @@ _DISCLAIMER: This project is a private open source project and doesn't have any 
    - Sun duration
    - Sun irradiance
    - Fog probability
+   - Absolute humidity
 
 Everything can be configured via the Homeassistant UI. See below for images.
 
@@ -145,6 +146,7 @@ This integration allows you to add sensor entities with hourly forecasts for 10 
 - Sun Irradiance
 - Fog Probability
 - Humidity
+- Absolute humidity
 
 The sensors entities are disabled per default, as they contain a lot of data.
 
