@@ -18,6 +18,7 @@ from simple_dwd_weatherforecast import dwdforecast
 
 from .const import (
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+    CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -281,6 +282,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): NumberSelector({"min": 1, "max": 250, "step": 1, "mode": "box"}),
                     vol.Required(
                         CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+                        default=False,  # type: ignore
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_DAILY_TEMP_HIGH_PRECISION,
                         default=False,  # type: ignore
                     ): BooleanSelector({}),
                 }
@@ -626,6 +631,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=self.config_entry.data[
                                 CONF_ADDITIONAL_FORECAST_ATTRIBUTES
                             ],
+                        ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_DAILY_TEMP_HIGH_PRECISION,
+                            default=self.config_entry.data[
+                                CONF_DAILY_TEMP_HIGH_PRECISION
+                            ],  # type: ignore
                         ): BooleanSelector({}),
                     }
                 ),

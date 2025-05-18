@@ -16,6 +16,7 @@ from simple_dwd_weatherforecast import dwdforecast
 
 from .connector import DWDMapData, DWDWeatherData
 from .const import (
+    CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_ENTITY_TYPE,
@@ -198,6 +199,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         new = {**config_entry.data}
         new[CONF_SENSOR_FORECAST_STEPS] = 250
         hass.config_entries.async_update_entry(config_entry, data=new, version=11)
+    elif config_entry.version == 11:
+        new = {**config_entry.data}
+        new[CONF_DAILY_TEMP_HIGH_PRECISION] = False
+        hass.config_entries.async_update_entry(config_entry, data=new, version=12)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

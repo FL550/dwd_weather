@@ -119,7 +119,8 @@
           "interpolate": "Interpolate values",
           "hourly_update": "Force hourly data update (see warning below)",
           "sensor_forecast_steps": "Limit available forecast steps in sensor attributes",
-          "additional_forecast_attributes": "Activate additional forecast attributes"
+          "additional_forecast_attributes": "Activate additional forecast attributes",
+          "daily_temp_high_precision": "Use higher display precision for daily temperatures"
         },
         "data_description": {
           "station_name": "This is the displayed name of the station.",
@@ -127,7 +128,8 @@
           "interpolate": "As the values are only provided on an hourly basis, there might be jumps in the displayed values. With this option, the data will be smoothed.",
           "hourly_update": "Normally the weather is updated every 6 hours. DWD provides an hourly data update as well with some information missing (precipitation probability, precipitiation duration, evaporation), this will however increase data usage significantly as the sensor values are bundled in the hourly update (~37MB vs. ~0.17MB of download per update). Keep in mind, that this obviously also slows down the update of new values.",
           "sensor_forecast_steps": "This can be useful if you only use a limited amount of forecast steps and want to increase the clarity of the sensor attributes.",
-          "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object."
+          "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object.",
+          "daily_temp_high_precision": "This will increase the display precision of the daily maximum and minimum temperature values to a decimal place."
         }
       },
       "select_map_type": {
@@ -196,7 +198,8 @@
           "map_loop_count": "How many radar images from the past you would like to see?",
           "map_loop_speed": "How quick should the animation play?",
           "additional_forecast_attributes": "Activate additional forecast attributes",
-          "map_dark_mode": "Should the map be displayed in dark mode?"
+          "map_dark_mode": "Should the map be displayed in dark mode?",
+          "daily_temp_high_precision": "Use higher display precision for daily temperatures"
         },
         "data_description": {
           "station_name": "This is the displayed name of the station.",
@@ -207,7 +210,8 @@
           "map_loop_count": "A radar image is provided every 5 minutes. So for 30 minutes there will be 6 images shown in the loop. This value refers to the last available image",
           "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one.",
           "sensor_forecast_steps": "This can be useful if you only use a limited amount of forecast steps and want to increase the clarity of the sensor attributes.",
-          "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object."
+          "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object.",
+          "daily_temp_high_precision": "This will increase the display precision of the daily maximum and minimum temperature values to a decimal place."
         }
       },
       "homemarker": {

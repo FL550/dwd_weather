@@ -56,6 +56,7 @@ from .const import (
     ATTR_STATION_NAME,
     ATTR_FORECAST_SUN_DURATION,
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+    CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -510,10 +511,16 @@ class DWDWeatherData:
                     ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
                     if pressure is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP: round(temp_max - 273.1, 0)
+                    ATTR_FORECAST_NATIVE_TEMP: round(
+                        temp_max - 273.1,
+                        1 if self._config[CONF_DAILY_TEMP_HIGH_PRECISION] else 0,
+                    )
                     if temp_max is not None
                     else None,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: round(temp_min - 273.1, 0)
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: round(
+                        temp_min - 273.1,
+                        1 if self._config[CONF_DAILY_TEMP_HIGH_PRECISION] else 0,
+                    )
                     if temp_min is not None
                     else None,
                     ATTR_WEATHER_UV_INDEX: uv_index,
