@@ -213,7 +213,7 @@ SENSOR_TYPES = {
     "humidity_absolute": [
         "Absolute Humidity",
         None,
-        "g/m3",
+        "g/m³",
         "mdi:water",
         False,
         SensorStateClass.MEASUREMENT,
@@ -249,7 +249,7 @@ SENSOR_TYPES = {
     "evaporation": [
         "Evaporation",
         "",
-        "kg/m2",
+        "kg/m²",
         "mdi:waves-arrow-up",
         False,
         None,
