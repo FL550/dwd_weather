@@ -599,10 +599,13 @@ class DWDWeatherData:
             conf_data_type == CONF_DATA_TYPE_REPORT
             or conf_data_type == CONF_DATA_TYPE_MIXED
         ):
-            value = self.dwd_weather.get_reported_weather(
-                data_type,
-                shouldUpdate=False,
-            )
+            try:
+                value = self.dwd_weather.get_reported_weather(
+                    data_type,
+                    shouldUpdate=False,
+                )
+            except Exception as e:
+                _LOGGER.debug(f"Error getting reported weather: {e}")
         if conf_data_type == CONF_DATA_TYPE_FORECAST or (
             conf_data_type == CONF_DATA_TYPE_MIXED and value is None
         ):
@@ -981,7 +984,10 @@ class DWDMapData:
             and self.last_config_change == self._configentry.modified_at
         ):
             _LOGGER.debug("Map _update: Map update with cache possible")
-            self._maploop.update()
+            try:
+                self._maploop.update()
+            except Exception as e:
+                _LOGGER.error("Map update failed: {}.".format(e))
         else:
             _LOGGER.debug(" Map _update: No direct map update possible. Reconfiguring")
             self.last_config_change = self._configentry.modified_at
@@ -1012,27 +1018,30 @@ class DWDMapData:
                             len(markers),
                         )
                     )
-                    maploop = dwdmap.ImageLoop(
-                        dwdmap.germany_boundaries.minx,
-                        dwdmap.germany_boundaries.miny,
-                        dwdmap.germany_boundaries.maxx,
-                        dwdmap.germany_boundaries.maxy,
-                        map_types=[
-                            self.map_maptype(
-                                self._configdata[CONF_MAP_FOREGROUND_TYPE]  # type: ignore
-                            )
-                        ],
-                        background_types=[
-                            self.map_maptype(
-                                self._configdata[CONF_MAP_BACKGROUND_TYPE]  # type: ignore
-                            )
-                        ],
-                        steps=self._configdata[CONF_MAP_LOOP_COUNT],
-                        image_width=width,
-                        image_height=self._height,
-                        markers=markers,
-                        dark_mode=self._configdata[CONF_MAP_DARK_MODE],
-                    )
+                    try:
+                        maploop = dwdmap.ImageLoop(
+                            dwdmap.germany_boundaries.minx,
+                            dwdmap.germany_boundaries.miny,
+                            dwdmap.germany_boundaries.maxx,
+                            dwdmap.germany_boundaries.maxy,
+                            map_types=[
+                                self.map_maptype(
+                                    self._configdata[CONF_MAP_FOREGROUND_TYPE]  # type: ignore
+                                )
+                            ],
+                            background_types=[
+                                self.map_maptype(
+                                    self._configdata[CONF_MAP_BACKGROUND_TYPE]  # type: ignore
+                                )
+                            ],
+                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            image_width=width,
+                            image_height=self._height,
+                            markers=markers,
+                            dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                        )
+                    except Exception as e:
+                        _LOGGER.error("Map update failed: {}.".format(e))
                 else:
                     _LOGGER.debug(
                         "map async_update get_from_location lat: {}, lon:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
@@ -1054,31 +1063,37 @@ class DWDMapData:
                             * math.cos(self._configdata[CONF_MAP_WINDOW]["latitude"])
                         )  # type: ignore
                     )
+                    try:
+                        maploop = dwdmap.ImageLoop(
+                            self._configdata[CONF_MAP_WINDOW]["longitude"] - radius,  # type: ignore
+                            self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
+                            self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
+                            self._configdata[CONF_MAP_WINDOW]["latitude"] + radius,  # type: ignore
+                            map_types=[
+                                self.map_maptype(
+                                    self._configdata[CONF_MAP_FOREGROUND_TYPE]
+                                )  # type: ignore
+                            ],
+                            background_types=[
+                                self.map_maptype(
+                                    self._configdata[CONF_MAP_BACKGROUND_TYPE]
+                                )  # type: ignore
+                            ],
+                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            image_width=width,
+                            image_height=self._height,
+                            markers=markers,
+                            dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                        )
+                    except Exception as e:
+                        _LOGGER.error("Map update failed: {}.".format(e))
 
-                    maploop = dwdmap.ImageLoop(
-                        self._configdata[CONF_MAP_WINDOW]["longitude"] - radius,  # type: ignore
-                        self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
-                        self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
-                        self._configdata[CONF_MAP_WINDOW]["latitude"] + radius,  # type: ignore
-                        map_types=[
-                            self.map_maptype(self._configdata[CONF_MAP_FOREGROUND_TYPE])  # type: ignore
-                        ],
-                        background_types=[
-                            self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])  # type: ignore
-                        ],
-                        steps=self._configdata[CONF_MAP_LOOP_COUNT],
-                        image_width=width,
-                        image_height=self._height,
-                        markers=markers,
-                        dark_mode=self._configdata[CONF_MAP_DARK_MODE],
-                    )
                     _LOGGER.debug(
                         "map async_update maploop: {}".format(maploop.get_images())
                     )
                 self._maploop = maploop
                 self._cachedheight = self._height
                 self._cachedwidth = self._width
-
             self._images = maploop.get_images()
 
     def _update_single(self):
