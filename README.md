@@ -115,7 +115,7 @@ secondary_info_attribute: pressure
 
 ## Weather report
 
-If you want to get the regional weather report as text, you have to enable the _weather_report_ sensor. For instructions on this see below at [Additional sensor entities](Additional-sensor-entities). You can then include the report in a markdown card. For this, you have to add the following template to the content field where you replace the part after _sensor._ with your weather station:
+If you want to get the regional weather report as text, you have to enable the _weather_report_ sensor. For instructions on this see below at [Additional sensor entities](#additional-sensor-entities). You can then include the report in a markdown card. For this, you have to add the following template to the content field where you replace the part after _sensor._ with your weather station:
 
 ```yaml
 {{ state_attr("sensor.weather_report_homburg_bad", "data") }}
