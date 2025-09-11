@@ -9,6 +9,7 @@ import PIL.ImageDraw
 import PIL.ImageFont
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.util import dt
 from io import BytesIO
 import warnings
 
@@ -221,7 +222,7 @@ class DWDWeatherData:
 
     def get_forecast_hourly(self) -> list[Forecast] | None:
         weather_interval = 1
-        now = datetime.now(timezone.utc)
+        now = dt.now()
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
@@ -229,7 +230,7 @@ class DWDWeatherData:
                 now.month,
                 now.day,
                 now.hour,
-                tzinfo=timezone.utc,
+                tzinfo=now.tzinfo,
             )
 
             for _ in range(0, 9):
@@ -414,14 +415,16 @@ class DWDWeatherData:
 
     def get_forecast_daily(self) -> list[Forecast] | None:
         weather_interval = 24
-        now = datetime.now(timezone.utc)
+        from datetime import datetime, timedelta
+
+        now = dt.now()
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
                 now.year,
                 now.month,
                 now.day,
-                tzinfo=timezone.utc,
+                tzinfo=now.tzinfo,
             )
 
             for _ in range(0, 9):
@@ -579,7 +582,7 @@ class DWDWeatherData:
         return forecast_data
 
     def get_condition(self):
-        now = datetime.now(timezone.utc)
+        now = dt.now()
         condition = self.dwd_weather.get_forecast_condition(now, False)
         if condition == "sunny" and (
             now.hour < self.sun.riseutc(now).hour  # type: ignore
@@ -611,12 +614,12 @@ class DWDWeatherData:
         ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,
-                datetime.now(timezone.utc),
+                dt.now(),
                 shouldUpdate=False,
             )
 
         if self._config[CONF_INTERPOLATE] and value is not None:
-            now_time_actual = datetime.now(timezone.utc)
+            now_time_actual = dt.now()
             next_value = self.dwd_weather.get_forecast_data(
                 data_type,
                 now_time_actual + timedelta(hours=1),
@@ -624,7 +627,7 @@ class DWDWeatherData:
             )
             if next_value is not None:
                 now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
-                    tzinfo=timezone.utc
+                    tzinfo=dt.now().tzinfo
                 )
                 value = round(
                     value
@@ -740,13 +743,13 @@ class DWDWeatherData:
 
     def get_hourly(self, data_type: WeatherDataType):
         data = []
-        timestamp = datetime.now(timezone.utc)
+        timestamp = dt.now()
         timestamp = datetime(
             timestamp.year,
             timestamp.month,
             timestamp.day,
             timestamp.hour,
-            tzinfo=timezone.utc,
+            tzinfo=dt.now().tzinfo,
         )
         forecast_data = self.dwd_weather.forecast_data
 
