@@ -629,7 +629,7 @@ class DWDWeatherData:
                 now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
                     tzinfo=dt.now().tzinfo
                 )
-                value = round(
+                new_value = round(
                     value
                     + (
                         (next_value - value)
@@ -637,6 +637,12 @@ class DWDWeatherData:
                     ),
                     2,
                 )
+                if data_type == WeatherDataType.TEMPERATURE:
+                    _LOGGER.debug(f"Interpolate: {now_time_actual} - {now_time_hour}")
+                    _LOGGER.debug(
+                        f"Value: {value}, next value: {next_value}, Interpolated value: {new_value}"
+                    )
+                value = new_value
 
         data_type_mapping = {
             WeatherDataType.TEMPERATURE: lambda x: round(x - 273.1, 1),
