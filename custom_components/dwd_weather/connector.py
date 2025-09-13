@@ -619,6 +619,10 @@ class DWDWeatherData:
             )
 
         if self._config[CONF_INTERPOLATE] and value is not None:
+            if not hasattr(self, "_interpolate_value"):
+                self._interpolate_value = {}
+            if data_type not in self._interpolate_value:
+                self._interpolate_value[data_type] = value
             now_time_actual = dt.now()
             next_value = self.dwd_weather.get_forecast_data(
                 data_type,
@@ -630,13 +634,14 @@ class DWDWeatherData:
                     tzinfo=dt.now().tzinfo
                 )
                 new_value = round(
-                    value
+                    self._interpolate_value[data_type]
                     + (
-                        (next_value - value)
+                        (next_value - self._interpolate_value[data_type])
                         * ((now_time_actual - now_time_hour).seconds / 3600)
                     ),
                     2,
                 )
+                self._interpolate_value[data_type] = new_value
                 if data_type == WeatherDataType.TEMPERATURE:
                     _LOGGER.debug(f"Interpolate: {now_time_actual} - {now_time_hour}")
                     _LOGGER.debug(
