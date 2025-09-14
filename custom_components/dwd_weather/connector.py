@@ -621,32 +621,44 @@ class DWDWeatherData:
         if self._config[CONF_INTERPOLATE] and value is not None:
             if not hasattr(self, "_interpolate_value"):
                 self._interpolate_value = {}
-            if data_type not in self._interpolate_value:
-                self._interpolate_value[data_type] = value
             now_time_actual = dt.now()
+            if data_type not in self._interpolate_value:
+                self._interpolate_value[data_type] = (value, now_time_actual)
             next_value = self.dwd_weather.get_forecast_data(
                 data_type,
                 now_time_actual + timedelta(hours=1),
                 shouldUpdate=False,
             )
             if next_value is not None:
-                now_time_hour = self.dwd_weather.strip_to_hour(now_time_actual).replace(
-                    tzinfo=dt.now().tzinfo
+                next_hour_time = self.dwd_weather.strip_to_hour(
+                    now_time_actual
+                ).replace(tzinfo=dt.now().tzinfo) + timedelta(hours=1)
+                value_diff = round(
+                    next_value - self._interpolate_value[data_type][0], 2
                 )
+                total_time_diff = (
+                    next_hour_time - self._interpolate_value[data_type][1]
+                ).seconds
+                elapsed_time_diff = (
+                    now_time_actual - self._interpolate_value[data_type][1]
+                ).seconds
+
                 new_value = round(
-                    self._interpolate_value[data_type]
-                    + (
-                        (next_value - self._interpolate_value[data_type])
-                        * ((now_time_actual - now_time_hour).seconds / 3600)
-                    ),
+                    self._interpolate_value[data_type][0]
+                    + (value_diff * (elapsed_time_diff / total_time_diff)),
                     2,
                 )
-                self._interpolate_value[data_type] = new_value
+
                 if data_type == WeatherDataType.TEMPERATURE:
-                    _LOGGER.debug(f"Interpolate: {now_time_actual} - {now_time_hour}")
+                    _LOGGER.debug(f"Interpolate: {now_time_actual} {self._config}")
                     _LOGGER.debug(
-                        f"Value: {value}, next value: {next_value}, Interpolated value: {new_value}"
+                        f"Interpolate: last value {self._interpolate_value[data_type][0]} at {self._interpolate_value[data_type][1]} to next value {next_value} at {next_hour_time}"
                     )
+                    _LOGGER.debug(
+                        f"Interpolate: value diff {value_diff} new_value {new_value} total time diff {total_time_diff} elapsed time diff {elapsed_time_diff}"
+                    )
+
+                self._interpolate_value[data_type] = (new_value, now_time_actual)
                 value = new_value
 
         data_type_mapping = {
