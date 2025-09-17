@@ -649,15 +649,6 @@ class DWDWeatherData:
                     2,
                 )
 
-                if data_type == WeatherDataType.TEMPERATURE:
-                    _LOGGER.debug(f"Interpolate: {now_time_actual} {self._config}")
-                    _LOGGER.debug(
-                        f"Interpolate: last value {self._interpolate_value[data_type][0]} at {self._interpolate_value[data_type][1]} to next value {next_value} at {next_hour_time}"
-                    )
-                    _LOGGER.debug(
-                        f"Interpolate: value diff {value_diff} new_value {new_value} total time diff {total_time_diff} elapsed time diff {elapsed_time_diff}"
-                    )
-
                 self._interpolate_value[data_type] = (new_value, now_time_actual)
                 value = new_value
 
