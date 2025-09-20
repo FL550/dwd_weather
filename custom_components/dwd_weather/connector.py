@@ -222,7 +222,8 @@ class DWDWeatherData:
 
     def get_forecast_hourly(self) -> list[Forecast] | None:
         weather_interval = 1
-        now = dt.now()
+        # now = dt.now()
+        now = datetime.now(timezone.utc)
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
@@ -230,7 +231,7 @@ class DWDWeatherData:
                 now.month,
                 now.day,
                 now.hour,
-                tzinfo=now.tzinfo,
+                tzinfo=timezone.utc,
             )
 
             for _ in range(0, 9):
@@ -582,7 +583,7 @@ class DWDWeatherData:
         return forecast_data
 
     def get_condition(self):
-        now = dt.now()
+        now = datetime.now(timezone.utc)
         condition = self.dwd_weather.get_forecast_condition(now, False)
         if condition == "sunny" and (
             now.hour < self.sun.riseutc(now).hour  # type: ignore
@@ -614,14 +615,14 @@ class DWDWeatherData:
         ):
             value = self.dwd_weather.get_forecast_data(
                 data_type,
-                dt.now(),
+                datetime.now(timezone.utc),
                 shouldUpdate=False,
             )
 
         if self._config[CONF_INTERPOLATE] and value is not None:
             if not hasattr(self, "_interpolate_value"):
                 self._interpolate_value = {}
-            now_time_actual = dt.now()
+            now_time_actual = datetime.now(timezone.utc)
             if data_type not in self._interpolate_value:
                 self._interpolate_value[data_type] = (value, now_time_actual)
             next_value = self.dwd_weather.get_forecast_data(
@@ -632,7 +633,7 @@ class DWDWeatherData:
             if next_value is not None:
                 next_hour_time = self.dwd_weather.strip_to_hour(
                     now_time_actual
-                ).replace(tzinfo=dt.now().tzinfo) + timedelta(hours=1)
+                ).replace(tzinfo=timezone.utc) + timedelta(hours=1)
                 value_diff = round(
                     next_value - self._interpolate_value[data_type][0], 2
                 )
@@ -757,13 +758,13 @@ class DWDWeatherData:
 
     def get_hourly(self, data_type: WeatherDataType):
         data = []
-        timestamp = dt.now()
+        timestamp = datetime.now(timezone.utc)
         timestamp = datetime(
             timestamp.year,
             timestamp.month,
             timestamp.day,
             timestamp.hour,
-            tzinfo=dt.now().tzinfo,
+            tzinfo=timezone.utc,
         )
         forecast_data = self.dwd_weather.forecast_data
 
