@@ -643,12 +643,14 @@ class DWDWeatherData:
                 elapsed_time_diff = (
                     now_time_actual - self._interpolate_value[data_type][1]
                 ).seconds
-
-                new_value = round(
-                    self._interpolate_value[data_type][0]
-                    + (value_diff * (elapsed_time_diff / total_time_diff)),
-                    2,
-                )
+                if total_time_diff != 0:
+                    new_value = round(
+                        self._interpolate_value[data_type][0]
+                        + (value_diff * (elapsed_time_diff / total_time_diff)),
+                        2,
+                    )
+                else:
+                    new_value = self._interpolate_value[data_type][0]
 
                 self._interpolate_value[data_type] = (new_value, now_time_actual)
                 value = new_value
