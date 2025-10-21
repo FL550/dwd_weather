@@ -1007,7 +1007,7 @@ class DWDMapData:
             try:
                 self._maploop.update()
             except Exception as e:
-                _LOGGER.error("Map update failed: {}.".format(e))
+                _LOGGER.error("Map update from cache failed: {}.".format(e))
         else:
             _LOGGER.debug(" Map _update: No direct map update possible. Reconfiguring")
             self.last_config_change = self._configentry.modified_at
@@ -1061,7 +1061,7 @@ class DWDMapData:
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                         )
                     except Exception as e:
-                        _LOGGER.error("Map update failed: {}.".format(e))
+                        _LOGGER.error("Map update germany failed: {}.".format(e))
                 else:
                     _LOGGER.debug(
                         "map async_update get_from_location lat: {}, lon:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
