@@ -1008,6 +1008,7 @@ class DWDMapData:
                 self._maploop.update()
             except Exception as e:
                 _LOGGER.error("Map update from cache failed: {}.".format(e))
+                self._maploop = None  # Invalidate cache so next call will reconfigure
         else:
             _LOGGER.debug(" Map _update: No direct map update possible. Reconfiguring")
             self.last_config_change = self._configentry.modified_at
