@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 import math
+import re
 import time
 import PIL
 import PIL.ImageDraw
@@ -210,10 +211,25 @@ class DWDWeatherData:
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
-            report = self.dwd_weather.get_weather_report(shouldUpdate=False)
-            self._report = (
-                markdownify(report, strip=["br"]) if report is not None else None
+
+            report = {}
+            report["text"] = (
+                markdownify(
+                    self.dwd_weather.get_weather_report(shouldUpdate=False),
+                    strip=["br"],
+                )
+                if self.dwd_weather.get_weather_report(shouldUpdate=False) is not None
+                else None
             )
+            match = None
+            if report["text"] is not None:
+                match = re.search(
+                    r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                    report["text"],
+                )
+            report["time"] = match.group() if match is not None else None
+            self._report = report
+
             _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
             return True
         else:
@@ -598,7 +614,7 @@ class DWDWeatherData:
         return condition
 
     def get_weather_report(self):
-        return self._report
+        return self._report["text"] if self._report else None
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = None

@@ -1,7 +1,6 @@
 """Sensor for Deutscher Wetterdienst weather service."""
 
 import logging
-import re
 from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.entity import DWDWeatherEntity
 from homeassistant.components.sensor.const import SensorStateClass
@@ -330,12 +329,7 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_condition()
         elif self._type == "weather_report":
             result = (
-                re.search(
-                    r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
-                    self._connector.get_weather_report(),
-                ).group()  # type: ignore
-                if self._connector.get_weather_report() is not None
-                else None
+                self._connector._report["time"] if self._connector._report else None
             )
         elif self._type == "temperature":
             result = self._connector.get_temperature()
