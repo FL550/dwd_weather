@@ -115,6 +115,7 @@ class DWDWeatherData:
         self._config = config_entry.data
         self._hass = hass
         self.forecast = None
+        self._report = None
         self.latest_update = None
         self.infos = {}
         self.entities = []
@@ -209,6 +210,10 @@ class DWDWeatherData:
             self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
             self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
             self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
+            report = self.dwd_weather.get_weather_report(shouldUpdate=False)
+            self._report = (
+                markdownify(report, strip=["br"]) if report is not None else None
+            )
             _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
             return True
         else:
@@ -593,8 +598,7 @@ class DWDWeatherData:
         return condition
 
     def get_weather_report(self):
-        report = self.dwd_weather.get_weather_report(shouldUpdate=False)
-        return markdownify(report, strip=["br"]) if report is not None else None
+        return self._report
 
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
