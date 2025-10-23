@@ -2,6 +2,8 @@
 
 import logging
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+
+from custom_components.dwd_weather.connector import DWDWeatherData
 from .const import (
     CONF_STATION_NAME,
     DOMAIN,
@@ -20,7 +22,7 @@ class DWDWeatherEntity:
 
     def __init__(self, hass_data, unique_id):
         """Class initialization."""
-        self._connector = hass_data[DWDWEATHER_DATA]
+        self._connector: DWDWeatherData = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._station_name = self._connector._config[CONF_STATION_NAME]
         self._device_id = (
