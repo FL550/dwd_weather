@@ -1040,7 +1040,7 @@ class DWDMapData:
                         )
                     )
                     try:
-                        maploop = dwdmap.ImageLoop(
+                        self._maploop = dwdmap.ImageLoop(
                             dwdmap.germany_boundaries.minx,
                             dwdmap.germany_boundaries.miny,
                             dwdmap.germany_boundaries.maxx,
@@ -1085,7 +1085,7 @@ class DWDMapData:
                         )  # type: ignore
                     )
                     try:
-                        maploop = dwdmap.ImageLoop(
+                        self._maploop = dwdmap.ImageLoop(
                             self._configdata[CONF_MAP_WINDOW]["longitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
@@ -1108,14 +1108,16 @@ class DWDMapData:
                         )
                     except Exception as e:
                         _LOGGER.error("Map update failed: {}.".format(e))
-
-                    _LOGGER.debug(
-                        "map async_update maploop: {}".format(maploop.get_images())
-                    )
-                self._maploop = maploop
+                    if self._maploop:
+                        _LOGGER.debug(
+                            "map async_update maploop: {}".format(
+                                self._maploop.get_images()
+                            )
+                        )
                 self._cachedheight = self._height
                 self._cachedwidth = self._width
-            self._images = maploop.get_images()
+            if self._maploop:
+                self._images = self._maploop.get_images()
 
     def _update_single(self):
         # prevent distortion of map
@@ -1201,7 +1203,8 @@ class DWDMapData:
             else:
                 self._image_nr += 1
             _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
-            image = self._images[self._image_nr]  # type: ignore
+            if self._images:
+                image = self._images[self._image_nr]  # type: ignore
         else:
             image = self._image
 
