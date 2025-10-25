@@ -1208,6 +1208,7 @@ class DWDMapData:
 
     def get_image(self):
         buf = BytesIO()
+        image = None
         if (
             self._configdata[CONF_MAP_FOREGROUND_TYPE]
             == CONF_MAP_FOREGROUND_PRECIPITATION
