@@ -7,7 +7,6 @@ import re
 import time
 import PIL
 import PIL.ImageDraw
-import PIL.ImageFont
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.util import dt
