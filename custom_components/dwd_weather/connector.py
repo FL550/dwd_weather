@@ -130,6 +130,13 @@ class DWDWeatherData:
                 int(self.dwd_weather.station["elev"]),
             )
 
+        self._forecast_daily_cache = None
+        self._forecast_daily_cache_update = None
+        self._forecast_daily_cache_day = None
+        self._forecast_hourly_cache = None
+        self._forecast_hourly_cache_update = None
+        self._forecast_hourly_cache_hour = None
+
     def register_entity(self, entity):
         self.entities.append(entity)
 
@@ -242,9 +249,24 @@ class DWDWeatherData:
             return self.get_forecast_daily()
 
     def get_forecast_hourly(self) -> list[Forecast] | None:
+        start_time = time.perf_counter()
         weather_interval = 1
         # now = dt.now()
         now = datetime.now(timezone.utc)
+        current_hour = now.replace(minute=0, second=0, microsecond=0)
+        # Check if cache is valid
+        if (
+            self._forecast_hourly_cache is not None
+            and self._forecast_hourly_cache_update == self.latest_update
+            and self._forecast_hourly_cache_hour == current_hour
+        ):
+            _LOGGER.debug("Hourly forecast cache hit")
+            end_time = time.perf_counter()
+            _LOGGER.info(
+                f"get_forecast_hourly (cached) executed in {end_time - start_time:.4f} seconds"
+            )
+            return self._forecast_hourly_cache
+
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
@@ -433,13 +455,36 @@ class DWDWeatherData:
                         )
                     forecast_data.append(data_item)
                     timestep += timedelta(hours=weather_interval)
+        end_time = time.perf_counter()
+        _LOGGER.info(
+            f"get_forecast_hourly executed in {end_time - start_time:.4f} seconds"
+        )
+        # Update cache
+        self._forecast_hourly_cache = forecast_data
+        self._forecast_hourly_cache_update = self.latest_update
+        self._forecast_hourly_cache_hour = current_hour
         return forecast_data
 
     def get_forecast_daily(self) -> list[Forecast] | None:
+        start_time = time.perf_counter()
         weather_interval = 24
         from datetime import datetime, timedelta
 
         now = dt.now()
+        # Check if cache is valid
+        current_day = now.date()
+        if (
+            self._forecast_daily_cache is not None
+            and self._forecast_daily_cache_update == self.latest_update
+            and self._forecast_daily_cache_day == current_day
+        ):
+            _LOGGER.debug("Daily forecast cache hit")
+            end_time = time.perf_counter()
+            _LOGGER.info(
+                f"get_forecast_daily (cached) executed in {end_time - start_time:.4f} seconds"
+            )
+            return self._forecast_daily_cache
+
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
             timestep = datetime(
@@ -601,6 +646,14 @@ class DWDWeatherData:
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)
         _LOGGER.debug("Daily Forecast data {}".format(forecast_data))
+        end_time = time.perf_counter()
+        _LOGGER.info(
+            f"get_forecast_daily executed in {end_time - start_time:.4f} seconds"
+        )
+        # Update cache
+        self._forecast_daily_cache = forecast_data
+        self._forecast_daily_cache_update = self.latest_update
+        self._forecast_daily_cache_day = current_day
         return forecast_data
 
     def get_condition(self):
