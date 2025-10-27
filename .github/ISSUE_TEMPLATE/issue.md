@@ -26,6 +26,10 @@ Issues not containing the minimum requirements will be closed, because without t
 If you are unsure about the version check the const.py file.
 -->
 
+## Station ID (optional)
+<!-- Most of the time, issues are related to a specific weather station. If you provide me the ID, I can have a look in the raw data to confirm if the issue has it's root cause there.
+-->
+
 ## Data update mode
 <!-- Do you use the normal data update rate or do you use the force hourly update?
 -->
