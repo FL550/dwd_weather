@@ -34,12 +34,17 @@ jobs:
         id: run
         env:
           STATION: ${{ steps.parse.outputs.station }}
-        run: python .github/scripts/get_station_data.py
+        run: |
+            python .github/scripts/get_station_data.py > result.txt
+            echo "stdout=result.txt" >> "$GITHUB_OUTPUT"
 
       # 4) post the captured stdout as a comment
       - name: post result
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-           # --- build the folded markdown ---
+            set -euo pipefail
+            # --- build the folded markdown ---
             RAW="$(cat ${{ steps.run.outputs.stdout }})"
 
             # Extract station info (first two lines)
