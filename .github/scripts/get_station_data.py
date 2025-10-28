@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pprint import pprint
 
 station = os.environ["STATION"]
-mode = os.environ["MODE"]
+mode = os.environ.get("MODE", "daily")  # default to 'daily' when unset
 
 dwd_weather = dwdforecast.Weather(station)
 time_now = datetime.now(timezone.utc)
