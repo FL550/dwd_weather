@@ -47,8 +47,7 @@ jobs:
         env:
           STATION: ${{ steps.parse.outputs.station }}
         run: |
-            python .github/scripts/get_station_data.py > result.txt
-            echo "stdout=result.txt" >> "$GITHUB_OUTPUT"
+            python .github/scripts/get_station_data.py >> "$GITHUB_OUTPUT"
 
       - name: parse_result
         id: parse_result
@@ -57,11 +56,11 @@ jobs:
             RAW="$(cat ${{ steps.run.outputs.stdout }})"
 
             # Extract station info (first two lines)
-            STATION_LINE=$(echo "$RAW" | grep '^Station:')
+            STATION_LINE=$(echo "$RAW" | grep '^## Station:' | head -n1 | sed 's/^## //')
             INFO_LINE=$(echo "$RAW" | grep "{" | head -n1)
 
             # Extract forecast header and table (everything after the station info)
-            FORECAST_HEADER=$(echo "$RAW" | grep '^Forecast')
+            FORECAST_HEADER=$(echo "$RAW" | grep '^## Forecast' | head -n1 | sed 's/^## //')
             FORECAST_TABLE=$(echo "$RAW" | awk '/^\|/{print}' | sed ':a;N;$!ba;s/\n/\\n/g')
 
             BODY=$(cat <<EOF
