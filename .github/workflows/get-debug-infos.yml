@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  deploy:
+  debug-info:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v4
       - name: install python deps
-        run: pip install simple_dwd_weatherforecast
+        run: pip install simple_dwd_weatherforecast tkinter
       # use the extracted value
       - name: fetch weather
         id: run
