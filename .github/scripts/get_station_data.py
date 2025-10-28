@@ -44,8 +44,17 @@ if isinstance(forecast_data, dict):
         ("humidity", "rel_humidity"),
         ("PEvap", "evaporation"),
     ]
-    all_keys = [k[0] for k in key_mapping]
-    header = ["timestamp"] + all_keys
+
+    # Build a mapping from original key to display name
+    key_map = {orig: disp for orig, disp in key_mapping}
+
+    all_keys = set()
+    for entry in forecast_data.values():
+        all_keys.update(entry.keys())
+    all_keys = sorted(all_keys)
+
+    # Replace header entries using key_map if present
+    header = ["timestamp"] + [key_map.get(k, k) for k in all_keys]
     print("| " + " | ".join(header) + " |")
     print("|" + " --- |" * len(header))
     for timestamp, values in forecast_data.items():
