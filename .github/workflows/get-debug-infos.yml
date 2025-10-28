@@ -16,6 +16,20 @@ jobs:
       startsWith(github.event.comment.body, '/debug ')
 
     steps:
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('.github/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y python3-tk
+            pip install --cache-dir ~/.cache/pip -r .github/requirements.txt
+      - name: checkout repo
+        uses: actions/checkout@v4
       #  extract the argument (everything after "/debug ")
       - id: parse
         run: |
@@ -23,12 +37,6 @@ jobs:
           MODE=$(echo "${{ github.event.comment.body }}" | awk '{print $3}')
           echo "station=$STATION" >> "$GITHUB_OUTPUT"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-      - name: checkout repo
-        uses: actions/checkout@v4
-      - name: install python deps
-        run: pip install simple_dwd_weatherforecast
-      - name: install tkinter dependency
-        run: sudo apt-get update && sudo apt-get install -y python3-tk
       # use the extracted value
       - name: fetch weather
         id: run
@@ -38,12 +46,9 @@ jobs:
             python .github/scripts/get_station_data.py > result.txt
             echo "stdout=result.txt" >> "$GITHUB_OUTPUT"
 
-      # 4) post the captured stdout as a comment
-      - name: post result
-        env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: parse_result
+        id: parse_result
         run: |
-            set -euo pipefail
             # --- build the folded markdown ---
             RAW="$(cat ${{ steps.run.outputs.stdout }})"
 
@@ -73,7 +78,14 @@ jobs:
             EOF
             )
 
-            # --- post it ---
-            gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
-            --method POST \
-            --field body="$BODY"
+            # expose BODY as a step output for downstream steps
+            echo "body<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$BODY" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Update comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          edit-mode: replace
+          body: "${{ steps.parse_result.outputs.body }}"

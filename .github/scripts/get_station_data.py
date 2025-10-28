@@ -1,5 +1,4 @@
 import os
-from turtle import st
 from simple_dwd_weatherforecast import dwdforecast
 from datetime import datetime, timezone
 from pprint import pprint
