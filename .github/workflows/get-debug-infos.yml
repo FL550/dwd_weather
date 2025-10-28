@@ -1,0 +1,79 @@
+name: Get debug infos
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    # correct author, correct command prefix
+    if: |
+      github.event.comment.user.login == 'FL550' &&
+      startsWith(github.event.comment.body, '/debug ')
+
+    steps:
+      #  extract the argument (everything after "/debug ")
+      - id: parse
+        run: |
+          STATION=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
+          MODE=$(echo "${{ github.event.comment.body }}" | awk '{print $3}')
+          echo "station=$STATION" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: install python deps
+        run: pip install simple_dwd_weatherforecast
+      # use the extracted value
+      - name: fetch weather
+        id: run
+        env:
+          STATION: ${{ steps.parse.outputs.station }}
+        run: python .github/scripts/get_station_data.py
+
+      # 4) post the captured stdout as a comment
+      - name: post result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+           # --- build the folded markdown ---
+            RAW="$(cat ${{ steps.run.outputs.stdout }})"
+
+            # Extract station info (first two lines)
+            STATION_LINE=$(echo "$RAW" | grep '^## Station:')
+            INFO_LINE=$(echo "$RAW" | grep "{" | head -n1)
+
+            # Extract forecast header and table (everything after the station info)
+            FORECAST_HEADER=$(echo "$RAW" | grep '^## Forecast')
+            FORECAST_TABLE=$(echo "$RAW" | awk '/^\|/{print}' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+            BODY=$(cat <<EOF
+            <details>
+            <summary>Station Information</summary>
+
+            $STATION_LINE
+
+            \`\`\`python
+            $INFO_LINE
+            \`\`\`
+            </details>
+
+            <details>
+            <summary>Forecast</summary>
+
+            $FORECAST_HEADER
+
+            \`\`\`markdown
+            $(echo -e "$FORECAST_TABLE")
+            \`\`\`
+            </details>
+            EOF
+            )
+
+            # --- post it ---
+            gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            --method POST \
+            --field body="$BODY"
