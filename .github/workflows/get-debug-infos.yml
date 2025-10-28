@@ -26,7 +26,9 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v4
       - name: install python deps
-        run: pip install simple_dwd_weatherforecast tkinter
+        run: pip install simple_dwd_weatherforecast
+      - name: install tkinter dependency
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
       # use the extracted value
       - name: fetch weather
         id: run
