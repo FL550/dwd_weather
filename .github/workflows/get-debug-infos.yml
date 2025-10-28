@@ -47,7 +47,7 @@ jobs:
         env:
           STATION: ${{ steps.parse.outputs.station }}
         run: |
-            python .github/scripts/get_station_data.py >> "$GITHUB_OUTPUT"
+            python .github/scripts/get_station_data.py
 
       - name: parse_result
         id: parse_result
