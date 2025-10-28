@@ -51,13 +51,18 @@ if isinstance(forecast_data, dict):
     all_keys = set()
     for entry in forecast_data.values():
         all_keys.update(entry.keys())
-    all_keys = sorted(all_keys)
+    # Order keys according to key_mapping; unmapped keys come after, sorted alphabetically
+    order = {orig: idx for idx, (orig, _) in enumerate(key_mapping)}
+    all_keys = list(all_keys)
+    all_keys.sort(key=lambda k: (order.get(k, len(order)), k))
 
     # Replace header entries using key_map if present
     header = ["timestamp"] + [key_map.get(k, k) for k in all_keys]
     print("| " + " | ".join(header) + " |")
     print("|" + " --- |" * len(header))
-    for timestamp, values in forecast_data.items():
+    # Sort forecast_data by timestamp for consistent output
+    for timestamp in sorted(forecast_data.keys()):
+        values = forecast_data[timestamp]
         row = [timestamp]
         for k in all_keys:
             if k == "condition":
