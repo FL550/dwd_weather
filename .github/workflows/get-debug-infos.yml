@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
             sparse-checkout: |
-                .github/requirements.txt
+                .github
             sparse-checkout-cone-mode: false
       - name: Cache pip
         uses: actions/cache@v4
