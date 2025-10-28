@@ -16,6 +16,12 @@ jobs:
       startsWith(github.event.comment.body, '/debug ')
 
     steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+        with:
+            sparse-checkout: |
+                .github/requirements.txt
+            sparse-checkout-cone-mode: false
       - name: Cache pip
         uses: actions/cache@v4
         with:
@@ -28,8 +34,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y python3-tk
             pip install --cache-dir ~/.cache/pip -r .github/requirements.txt
-      - name: checkout repo
-        uses: actions/checkout@v4
       #  extract the argument (everything after "/debug ")
       - id: parse
         run: |
