@@ -38,8 +38,6 @@ jobs:
 
       # 4) post the captured stdout as a comment
       - name: post result
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
            # --- build the folded markdown ---
             RAW="$(cat ${{ steps.run.outputs.stdout }})"
