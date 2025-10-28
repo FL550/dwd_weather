@@ -57,9 +57,7 @@ jobs:
 
             BODY=$(cat <<EOF
             <details>
-            <summary>Station Information</summary>
-
-            $STATION_LINE
+            <summary>$STATION_LINE</summary>
 
             \`\`\`python
             $INFO_LINE
@@ -67,13 +65,10 @@ jobs:
             </details>
 
             <details>
-            <summary>Forecast</summary>
+            <summary>$FORECAST_HEADER</summary>
 
-            $FORECAST_HEADER
-
-            \`\`\`markdown
             $(echo -e "$FORECAST_TABLE")
-            \`\`\`
+
             </details>
             EOF
             )
