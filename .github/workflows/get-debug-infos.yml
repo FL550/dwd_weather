@@ -46,6 +46,7 @@ jobs:
         id: run
         env:
           STATION: ${{ steps.parse.outputs.station }}
+          MODE: ${{ steps.parse.outputs.mode }}
         run: |
             python .github/scripts/get_station_data.py > result.txt
             echo "stdout=result.txt" >> "$GITHUB_OUTPUT"
