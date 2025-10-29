@@ -77,7 +77,7 @@ jobs:
             </details>
 
             <details>
-            <summary>$FORECAST_HEADER</summary>
+            <summary>Raw $FORECAST_HEADER</summary>
 
             $(echo -e "$FORECAST_TABLE")
 
