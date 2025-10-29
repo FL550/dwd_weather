@@ -65,7 +65,7 @@ jobs:
             FORECAST_TABLE=$(echo "$RAW" | awk '/^\|/{print}' | sed ':a;N;$!ba;s/\n/\\n/g')
 
             BODY=$(cat <<EOF
-            Debug information for station **$STATION**
+            Debug information
 
             <details>
             <summary>$STATION_LINE</summary>
