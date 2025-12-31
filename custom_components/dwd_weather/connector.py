@@ -121,6 +121,7 @@ class DWDWeatherData:
         self.entities = []
 
         # Holds the current data from DWD
+        # TODO only initialize if configured and also check at every function call if configured
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
         if self.dwd_weather.station:
             self.sun = SunTimes(
