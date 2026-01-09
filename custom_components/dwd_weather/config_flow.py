@@ -14,7 +14,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     ColorRGBSelector,
 )
-from simple_dwd_weatherforecast import dwdforecast
+from simple_dwd_weatherforecast import dwdforecast, dwdairquality
 
 from .const import (
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
@@ -24,6 +24,7 @@ from .const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
     CONF_ENTITY_TYPE,
+    CONF_ENTITY_TYPE_AIRQUALITY,
     CONF_ENTITY_TYPE_MAP,
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
@@ -104,6 +105,9 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif user_input[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
                 self.config_data[CONF_MAP_ID] = str(uuid.uuid4()).upper()[:4]
                 return await self.async_step_select_map_type()
+            elif user_input[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_AIRQUALITY:
+                _LOGGER.debug("Selected airquality_station")
+                return await self.async_step_airquality_station_select()
 
         data_schema = vol.Schema(
             {
@@ -113,7 +117,11 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): SelectSelector(
                     {
                         "options": list(
-                            [CONF_ENTITY_TYPE_STATION, CONF_ENTITY_TYPE_MAP]
+                            [
+                                CONF_ENTITY_TYPE_STATION,
+                                CONF_ENTITY_TYPE_MAP,
+                                CONF_ENTITY_TYPE_AIRQUALITY,
+                            ]
                         ),
                         "custom_value": False,
                         "mode": "list",
@@ -543,6 +551,70 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Map_homemarker:user_input:error {}".format(errors))
         return self.async_show_form(
             step_id="select_map_homemarker", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_airquality_station_select(self, user_input=None):
+        errors = {}
+        _LOGGER.debug("Airquality:user_input: {}".format(user_input))
+        if user_input is not None:
+            if user_input[CONF_CUSTOM_LOCATION]:
+                _LOGGER.debug("Airquality:custom:")
+
+                user_input[CONF_STATION_ID] = (
+                    dwdairquality.get_nearest_airquality_station_id(
+                        latitude=user_input[CONF_LOCATION_COORDINATES]["latitude"],
+                        longitude=user_input[CONF_LOCATION_COORDINATES]["longitude"],
+                    )
+                )
+
+            station = user_input[CONF_STATION_ID]
+
+            _LOGGER.debug("Airquality:station id {}".format(station))
+            # This is only a validation if the station id exists
+            station = dwdairquality.AirQuality(station, "daily")
+            _LOGGER.debug("Airquality:validation: {}".format(station))
+            if station is not None:
+                self.config_data.update(user_input)
+                _LOGGER.debug("Airquality:configdata: {}".format(self.config_data))
+                # return await self.async_step_station_configure_report()
+            # TODO add correct step
+            else:
+                errors = {"base": "invalid_station_id"}
+        stations_list = dwdairquality.get_stations_sort_by_distance(
+            self.hass.config.latitude, self.hass.config.longitude
+        )
+        stations = []
+
+        for station in stations_list:
+            stations.append(
+                {
+                    "label": f"{station['distance']} km: {station['name']} (H:{station['altitude']}m)",
+                    "value": station["station_id"],
+                }
+            )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_STATION_ID,
+                    default=stations[0]["label"],
+                ): SelectSelector(
+                    {
+                        "options": list(stations),
+                        "custom_value": True,
+                        "mode": "dropdown",
+                    }
+                ),
+                vol.Required(
+                    CONF_CUSTOM_LOCATION,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Optional(CONF_LOCATION_COORDINATES): LocationSelector({}),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="station_select", data_schema=data_schema, errors=errors
         )
 
     @staticmethod
