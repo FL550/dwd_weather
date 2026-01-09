@@ -1,0 +1,283 @@
+{
+  "title": "Deutscher Wetterdienst (Niemiecka Służba Meteorologiczna)",
+  "entity": {
+    "sensor": {
+      "weather_condition": {
+        "name": "Warunki pogodowe",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "hail": "[%key:component::weather::entity_component::_::state::hail%]",
+          "lightning": "[%key:component::weather::entity_component::_::state::lightning%]",
+          "lightning-rainy": "[%key:component::weather::entity_component::_::state::lightning-rainy%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "snowy-rainy": "[%key:component::weather::entity_component::_::state::snowy-rainy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]",
+          "windy": "[%key:component::weather::entity_component::_::state::windy%]",
+          "windy-variant": "[%key:component::weather::entity_component::_::state::windy-variant%]"
+        }
+      },
+      "weather_report": {
+        "name": "Prognoza pogody"
+      },
+      "dewpoint": {
+        "name": "Punkt rosy"
+      },
+      "wind_speed": {
+        "name": "Prędkość wiatru"
+      },
+      "wind_direction": {
+        "name": "Kierunek wiatru"
+      },
+      "wind_gusts": {
+        "name": "Porywy wiatru"
+      },
+      "precipitation": {
+        "name": "Opad atmosferyczny"
+      },
+      "precipitation_probability": {
+        "name": "Prawdopodobieństwo opadów"
+      },
+      "precipitation_duration": {
+        "name": "Czas trwania opadów"
+      },
+      "cloud_coverage": {
+        "name": "Zachmurzenie"
+      },
+      "visibility": {
+        "name": "Widzialność"
+      },
+      "sun_duration": {
+        "name": "Czas trwania nasłonecznienia"
+      },
+      "sun_irradiance": {
+        "name": "Natężenie promieniowania słonecznego"
+      },
+      "fog_probability": {
+        "name": "Prawdopodobieństwo mgły"
+      },
+      "humidity": {
+        "name": "Wilgotność względna"
+      },
+      "humidity_absolute": {
+        "name": "Wilgotność bezwzględna"
+      },
+      "measured_values_time": {
+        "name": "Czas: wartości mierzone"
+      },
+      "forecast_values_time": {
+        "name": "Czas: wartości prognozowane"
+      },
+      "uv_index": {
+        "name": "Indeks UV"
+      },
+      "evaporation": {
+        "name": "Parowanie w ciągu następnych 24 godzin"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Możesz powtórzyć konfigurację i dodać dowolną liczbę encji.",
+        "title": "Deutscher Wetterdienst (Niemiecka Służba Meteorologiczna)",
+        "data": {
+          "entity_type": "Jaki typ encji chcesz skonfigurować?"
+        }
+      },
+      "station_select": {
+        "description": "Niektóre stacje podają rzeczywiste wartości pomiarowe (z niewielkim opóźnieniem około godziny), co może zapewnić dokładniejsze dane. Są one oznaczone na liście symbolem '[X]'. Prognozy są jednak nadal bardzo dokładne i wystarczające w większości przypadków.",
+        "title": "Wybór stacji",
+        "data": {
+          "station_id": "Stacja",
+          "custom_location": "Użyj niestandardowej lokalizacji z mapy"
+        },
+        "data_description": {
+          "station_id": "Możesz wybrać stację z listy uporządkowanej według odległości od Twojego domu lub wyszukać odpowiednią stację bezpośrednio w polu i następnie ją wybrać.",
+          "custom_location": "Jeśli chcesz wybrać stację najbliższą określonej lokalizacji, przełącz ten przycisk i przeciągnij znacznik na mapie poniżej."
+        }
+      },
+      "station_configure_report": {
+        "description": "Wybrano stację, na której dostępne są rzeczywiste pomiary. Zmierzone wartości oferują większą dokładność, ale są dostępne z tylko niewielkim opóźnieniem, wynoszącym około godziny. Aktualność danych pogodowych można wyświetlić jako odczyt czujnika.\n\nPrognoza zawiera więcej punktów danych niż zmierzonych wartości. Możesz wybrać, których danych użyć.",
+        "title": "Konfiguracja źródła danych",
+        "data": {
+          "data_type": "Źródło danych o bieżącej pogodzie"
+        },
+        "data_description": {
+          "data_type": "To ustawienie ma wpływ tylko na odczyty czujników dotyczące bieżącej pogody. Prognoza pozostaje niezmieniona."
+        }
+      },
+      "station_configure": {
+        "title": "Konfiguracja stacji",
+        "data": {
+          "station_name": "Nazwa stacji",
+          "wind_direction_type": "Typ wartości kierunku wiatru",
+          "interpolate": "Interpolacja wartości",
+          "hourly_update": "Wymuś aktualizację danych co godzinę (zobacz ostrzeżenie poniżej)",
+          "sensor_forecast_steps": "Ogranicz dostępne kroki prognozy w atrybutach czujnika",
+          "additional_forecast_attributes": "Aktywuj dodatkowe atrybuty prognozy",
+          "daily_temp_high_precision": "Użyj wyższej precyzji wyświetlania dla dziennych temperatur"
+        },
+        "data_description": {
+          "station_name": "To jest wyświetlana nazwa stacji.",
+          "wind_direction_type": "Dotyczy wartości czujnika kierunku wiatru.",
+          "interpolate": "Ponieważ wartości są podawane tylko co godzinę, mogą występować skoki w wyświetlanych wartościach. Ta opcja spowoduje wygładzenie danych.",
+          "hourly_update": "Standardowo pogoda jest aktualizowana co 6 godzin. DWD również zapewnia cogodzinną aktualizację danych, ale brakuje w niej niektórych informacji (prawdopodobieństwo opadów, czas ich trwania, parowanie). Spowoduje to jednak znaczne zwiększenie wykorzystania danych, ponieważ wartości z czujników są łączone w cogodzinną aktualizację (~37 MB w porównaniu z ~0,17 MB pobierania na aktualizację). Należy pamiętać, że oczywiście spowalnia to również aktualizację nowych wartości.",
+          "sensor_forecast_steps": "Może to być przydatne, jeśli używasz tylko ograniczonej liczby kroków prognozowania i chcesz zwiększyć przejrzystość atrybutów czujnika.",
+          "additional_forecast_attributes": "Spowoduje to dodanie do obiektu pogodowego dodatkowych atrybutów prognozy, takich jak prawdopodobieństwo wystąpienia mgły, parowania, czasu trwania nasłonecznienia itp.",
+          "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych."
+        }
+      },
+      "select_map_type": {
+        "title": "Sekcja mapy",
+        "data": {
+          "map_type": "Którą sekcję mapy należy skonfigurować?"
+        }
+      },
+      "select_map_window": {
+        "title": "Okno mapy",
+        "description": "Przesuń znacznik na środek żądanego obszaru i odpowiednio dostosuj promień. Aby kontynuować, musisz przesunąć znacznik co najmniej raz."
+      },
+      "select_map_content": {
+        "title": "Konfiguracja mapy",
+        "data": {
+          "map_foreground_type": "Jakie dane chcesz zobaczyć?",
+          "map_background_type": "Co powinno być wyświetlane w tle?",
+          "map_marker": "Czy środek mapy powinien być oznaczony?",
+          "map_homemarker": "Czy mapa powinna zawierać znacznik domu?",
+          "map_dark_mode": "Czy mapa powinna być wyświetlana w trybie ciemnym?"
+        }
+      },
+      "select_map_loop": {
+        "title": "Pętla opadów",
+        "data": {
+          "map_timestamp": "Czy na obrazie powinien być wyświetlany czas?",
+          "map_loop_count": "Ile obrazów radarowych z przeszłości chciałbyś zobaczyć?",
+          "map_loop_speed": "Jak szybko powinna być odtwarzana animacja?"
+        },
+        "data_description": {
+          "map_loop_count": "Obraz radarowy jest dostarczany co 5 minut. Oznacza to, że przez 30 minut w pętli będzie wyświetlanych 6 obrazów. Ta wartość odnosi się do ostatniego dostępnego obrazu.",
+          "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego."
+        }
+      },
+      "select_map_homemarker": {
+        "title": "Konfiguracja znacznika domu",
+        "data": {
+          "map_homemarker_shape": "Jaki kształt powinien mieć znacznik domu?",
+          "map_homemarker_size": "Jak duży powinien być znacznik domu?",
+          "map_homemarker_color": "Jakiego koloru powinien być znacznik domu?"
+        }
+      }
+    },
+    "error": {
+      "invalid_station_id": "Nieprawidłowa stacja! Wybierz jedną z listy.",
+      "already_configured": "Stacja o tym samym identyfikatorze i nazwie jest już skonfigurowana, wybierz inną nazwę.",
+      "unknown": "Nieznany błąd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Ponowna konfiguracja encji",
+        "title": "Deutscher Wetterdienst (Niemiecka Służba Meteorologiczna)",
+        "data": {
+          "station_name": "Nazwa stacji",
+          "wind_direction_type": "Typ wartości kierunku wiatru",
+          "interpolate": "Interpolacja wartości",
+          "hourly_update": "Wymuś aktualizację danych co godzinę (zobacz ostrzeżenie poniżej)",
+          "sensor_forecast_steps": "Ogranicz dostępne kroki prognozy w atrybutach czujnika",
+          "map_options_message": "Niedostępne ustawienie",
+          "map_background_type": "Co powinno być wyświetlane w tle?",
+          "map_marker": "Czy środek mapy powinien być oznaczony?",
+          "map_homemarker": "Czy na mapie należy umieścić znacznik domu?",
+          "map_timestamp": "Czy na obrazie powinien być wyświetlany czas?",
+          "map_loop_count": "Ile obrazów radarowych z przeszłości chciałbyś zobaczyć?",
+          "map_loop_speed": "Jak szybko powinna być odtwarzana animacja?",
+          "additional_forecast_attributes": "Aktywuj dodatkowe atrybuty prognozy",
+          "map_dark_mode": "Czy mapa powinna być wyświetlana w trybie ciemnym?",
+          "daily_temp_high_precision": "Użyj wyższej precyzji wyświetlania dla dziennych temperatur"
+        },
+        "data_description": {
+          "station_name": "To jest wyświetlana nazwa stacji.",
+          "wind_direction_type": "Dotyczy wartości czujnika kierunku wiatru.",
+          "interpolate": "Ponieważ wartości są podawane tylko co godzinę, mogą występować skoki w wyświetlanych wartościach. Ta opcja spowoduje wygładzenie danych.",
+          "hourly_update": "Standardowo pogoda jest aktualizowana co 6 godzin. DWD również zapewnia cogodzinną aktualizację danych, ale brakuje w niej niektórych informacji (prawdopodobieństwo opadów, czas ich trwania, parowanie). Spowoduje to jednak znaczne zwiększenie wykorzystania danych, ponieważ wartości z czujników są łączone w cogodzinną aktualizację (~37 MB w porównaniu z ~0,17 MB pobierania na aktualizację). Należy pamiętać, że oczywiście spowalnia to również aktualizację nowych wartości.",
+          "map_options_message": "W tej chwili nie można skonfigurować wykresu. Usuń ten element i dodaj go ponownie z żądanymi ustawieniami.",
+          "map_loop_count": "Obraz radarowy jest dostarczany co 5 minut. Oznacza to, że przez 30 minut w pętli będzie wyświetlanych 6 obrazów. Ta wartość odnosi się do ostatniego dostępnego obrazu.",
+          "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego.",
+          "sensor_forecast_steps": "Może to być przydatne, jeśli używasz tylko ograniczonej liczby kroków prognozowania i chcesz zwiększyć przejrzystość atrybutów czujnika.",
+          "additional_forecast_attributes": "Spowoduje to dodanie do obiektu pogodowego dodatkowych atrybutów prognozy, takich jak prawdopodobieństwo wystąpienia mgły, parowania, czasu trwania nasłonecznienia itp.",
+          "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych."
+        }
+      },
+      "homemarker": {
+        "description": "",
+        "title": "Konfiguracja znacznika domu",
+        "data": {
+          "map_homemarker_shape": "Jaki kształt powinien mieć znacznik domu?",
+          "map_homemarker_size": "Jak duży powinien być znacznik domu?",
+          "map_homemarker_color": "Jakiego koloru powinien być znacznik domu?"
+        }
+      }
+    }
+  },
+  "selector": {
+    "entity_type": {
+      "options": {
+        "weather_station": "Stacja meteorologiczna",
+        "weather_map": "Mapa pogody"
+      }
+    },
+    "data_type": {
+      "options": {
+        "mixed_data": "Jeśli są dostępne, należy korzystać z wartości zmierzonych, w przeciwnym razie należy korzystać z danych prognozowanych (zalecane).",
+        "report_data": "Używaj tylko pomiarów bieżącej pogody (dostępnych jest mniej typów czujników)",
+        "forecast_data": "Używaj tylko danych prognozowanych dla bieżącej pogody."
+      }
+    },
+    "wind_direction_type": {
+      "options": {
+        "degrees": "Stopnie",
+        "direction": "Kierunek (N, NE, E, ...)"
+      }
+    },
+    "map_type": {
+      "options": {
+        "map_germany": "Niemcy",
+        "map_custom": "Niestandardowa sekcja mapy"
+      }
+    },
+    "map_foreground_type": {
+      "options": {
+        "map_foreground_precipitation": "Radar opadów",
+        "map_foreground_maxtemp": "Maksymalna temperatura odczuwalna",
+        "map_foreground_uvindex": "Indeks UV",
+        "map_foreground_pollenflug": "Prognoza pyłków",
+        "map_foreground_satellite_rgb": "Obraz satelitarny RGB",
+        "map_foreground_satellite_ir": "Obraz satelitarny IR",
+        "map_foreground_warnungen_gem": "Ostrzeżenia pogodowe dla poszczególnych gmin",
+        "map_foreground_warnungen_kreise": "Ostrzeżenia pogodowe dla poszczególnych powiatów"
+      }
+    },
+    "map_background_type": {
+      "options": {
+        "map_background_laender": "Kraje",
+        "map_background_bundeslaender": "Niemieckie kraje związkowe (landy)",
+        "map_background_kreise": "Niemieckie powiaty",
+        "map_background_gemeinden": "Niemieckie gminy",
+        "map_background_satellit": "Obraz satelitarny"
+      }
+    },
+    "map_homemarker_shape": {
+      "options": {
+        "map_homemarker_shape_circle": "Koło",
+        "map_homemarker_shape_square": "Kwadrat",
+        "map_homemarker_shape_cross": "Krzyż"
+      }
+    }
+  }
+}
