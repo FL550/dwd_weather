@@ -160,7 +160,7 @@
           "map_loop_speed": "Jak szybko powinna być odtwarzana animacja?"
         },
         "data_description": {
-          "map_loop_count": Obraz radarowy jest dostarczany co 5 minut. Oznacza to, że przez 30 minut w pętli będzie wyświetlanych 6 obrazów. Ta wartość odnosi się do ostatniego dostępnego obrazu.",
+          "map_loop_count": "Obraz radarowy jest dostarczany co 5 minut. Oznacza to, że przez 30 minut w pętli będzie wyświetlanych 6 obrazów. Ta wartość odnosi się do ostatniego dostępnego obrazu.",
           "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego."
         }
       },
