@@ -14,12 +14,13 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.core import callback
 from simple_dwd_weatherforecast import dwdforecast
 
-from .connector import DWDMapData, DWDWeatherData
+from .connector import DWDAirqualityData, DWDMapData, DWDWeatherData
 from .const import (
     CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_ENTITY_TYPE,
+    CONF_ENTITY_TYPE_AIRQUALITY,
     CONF_ENTITY_TYPE_MAP,
     CONF_ENTITY_TYPE_STATION,
     CONF_HOURLY_UPDATE,
@@ -39,6 +40,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     CONF_WIND_DIRECTION_TYPE,
+    DEFAULT_AIRQUALITY_INTERVAL,
     DEFAULT_INTERPOLATION,
     DEFAULT_MAP_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -118,6 +120,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         }
 
         await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
+    elif entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_AIRQUALITY:
+        dwd_airquality_data = DWDAirqualityData(hass, entry)
+
+        # Coordinator checks for new updates
+        dwdweather_coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name="DWD Airquality Coordinator",
+            update_method=dwd_airquality_data.async_update,
+            update_interval=DEFAULT_AIRQUALITY_INTERVAL
+            + timedelta(seconds=random_delay),
+        )
+        # Save the data
+        dwdweather_hass_data = hass.data.setdefault(DOMAIN, {})
+        dwdweather_hass_data[entry.entry_id] = {
+            DWDWEATHER_DATA: dwd_airquality_data,
+            DWDWEATHER_COORDINATOR: dwdweather_coordinator,
+        }
+
+        await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
 
     return True
 

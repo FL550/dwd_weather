@@ -1,7 +1,7 @@
 """Sensor for Deutscher Wetterdienst weather service."""
 
 import logging
-from custom_components.dwd_weather.connector import DWDWeatherData
+from custom_components.dwd_weather.connector import DWDAirqualityData, DWDWeatherData
 from custom_components.dwd_weather.entity import DWDWeatherEntity
 from homeassistant.components.sensor.const import SensorStateClass
 
@@ -44,6 +44,7 @@ from .const import (
     DOMAIN,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
+    CONF_AIRQUALITY_STATION_ID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -256,6 +257,30 @@ SENSOR_TYPES = {
     ],
 }
 
+# TODO anpassen for airquality
+# Sensor types are defined as:
+#   variable -> [0]title, [1]device_class, [2]units, [3]icon, [4]enabled_by_default, [5]state_class, [6]enabled_in_hourly_update
+AIRQUALITY_TYPES = {
+    "weather_condition": [
+        "Weather",
+        None,
+        None,
+        "mdi:weather-partly-cloudy",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "weather_report": [
+        "Weather Report",
+        None,
+        None,
+        "mdi:weather-partly-cloudy",
+        False,
+        None,
+        True,
+    ],
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigType, async_add_entities
@@ -296,14 +321,18 @@ async def async_setup_entry(
                 ],
                 False,
             )
+    if CONF_AIRQUALITY_STATION_ID in entry.data:  # type: ignore
+        _LOGGER.debug("Airquality async_setup_entry")
+        # TODO implement airquality sensors
 
 
+# TODO clone this to airquality
 class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
     """Implementation of a DWD current weather condition sensor."""
 
     def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
-        dwd_data: DWDWeatherData = hass_data[DWDWEATHER_DATA]
+        dwd_data: DWDAirqualityData = hass_data[DWDWEATHER_DATA]
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._type = sensor_type
 

@@ -121,7 +121,6 @@ class DWDWeatherData:
         self.entities = []
 
         # Holds the current data from DWD
-        # TODO only initialize if configured and also check at every function call if configured
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
         if self.dwd_weather.station:
             self.sun = SunTimes(
@@ -1364,3 +1363,23 @@ class DWDMapData:
             image_height = 1400
         self._width = image_width
         self._height = image_height
+
+
+class DWDAirqualityData:
+    def __init__(self, hass, config_entry: ConfigEntry):
+        """Initialize the data object."""
+        self._config = config_entry.data
+        self._hass = hass
+        self.entities = []
+
+    def register_entity(self, entity):
+        self.entities.append(entity)
+
+    async def async_update(self):
+        """Async wrapper for update method."""
+        _LOGGER.debug("airquality async_update")
+        return await self._hass.async_add_executor_job(self._update)
+
+    def _update(self):
+        # TODO implement airquality data update
+        pass
