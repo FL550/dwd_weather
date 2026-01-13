@@ -18,6 +18,9 @@ from simple_dwd_weatherforecast import dwdforecast, dwdairquality
 
 from .const import (
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+    CONF_AIRQUALITY_UPDATE_FREQ,
+    CONF_AIRQUALITY_UPDATE_FREQ_DAILY,
+    CONF_AIRQUALITY_UPDATE_FREQ_HOURLY,
     CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
@@ -576,8 +579,17 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if station is not None:
                 self.config_data.update(user_input)
                 _LOGGER.debug("Airquality:configdata: {}".format(self.config_data))
-                # return await self.async_step_station_configure_report()
-            # TODO add correct step
+                station_id = (
+                    f"{self.config_data[CONF_STATION_ID]}: {station.station_name}"
+                )
+                if await self.async_set_unique_id(station_id) is not None:
+                    errors = {"base": "already_configured"}
+                else:
+                    self.config_data.update(user_input)
+                    # The data is the data which is picked up by the async_setup_entry in sensor or weather
+                    return self.async_create_entry(
+                        title=station_id, data=self.config_data
+                    )
             else:
                 errors = {"base": "invalid_station_id"}
         stations_list = dwdairquality.get_stations_sort_by_distance(
@@ -597,12 +609,29 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_STATION_ID,
-                    default=stations[0]["label"],
+                    default=stations[0]["value"],
                 ): SelectSelector(
                     {
                         "options": list(stations),
-                        "custom_value": True,
+                        "custom_value": False,
                         "mode": "dropdown",
+                    }
+                ),
+                vol.Required(
+                    CONF_AIRQUALITY_UPDATE_FREQ,
+                    default=CONF_AIRQUALITY_UPDATE_FREQ_DAILY,  # type: ignore
+                ): SelectSelector(
+                    {
+                        "options": list(
+                            [
+                                CONF_AIRQUALITY_UPDATE_FREQ_DAILY,
+                                CONF_AIRQUALITY_UPDATE_FREQ_HOURLY,
+                            ]
+                        ),
+                        "custom_value": False,
+                        "mode": "dropdown",
+                        # TODO add strings for translation
+                        "translation_key": CONF_AIRQUALITY_UPDATE_FREQ,
                     }
                 ),
                 vol.Required(
@@ -614,7 +643,7 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="station_select", data_schema=data_schema, errors=errors
+            step_id="airquality_station_select", data_schema=data_schema, errors=errors
         )
 
     @staticmethod

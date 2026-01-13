@@ -111,3 +111,6 @@ CONF_MAP_HOMEMARKER_SHAPE_SQUARE = "map_homemarker_shape_square"
 CONF_OPTION_MAP_MESSAGE = "map_options_message"
 
 CONF_AIRQUALITY_STATION_ID = "airquality_station_id"
+CONF_AIRQUALITY_UPDATE_FREQ = "airquality_update_freq"
+CONF_AIRQUALITY_UPDATE_FREQ_DAILY = "airquality_update_freq_daily"
+CONF_AIRQUALITY_UPDATE_FREQ_HOURLY = "airquality_update_freq_hourly"
