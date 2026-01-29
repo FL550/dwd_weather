@@ -219,7 +219,7 @@ SENSOR_TYPES = {
         True,
     ],
     "measured_values_time": [
-        "Report Time (UTC)",
+        "Report Time",
         "",
         "",
         "mdi:clock-time-four-outline",
@@ -228,7 +228,7 @@ SENSOR_TYPES = {
         True,
     ],
     "forecast_values_time": [
-        "Forecast Time (UTC)",
+        "Forecast Time",
         "",
         "",
         "mdi:clock-time-four-outline",
