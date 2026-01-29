@@ -210,7 +210,7 @@ class DWDWeatherData:
                 or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
             ) and self.dwd_weather.report_data is not None:
                 report_date_array = self.dwd_weather.report_data["date"].split(".")
-                date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]} {self.dwd_weather.report_data['time']}"
+                date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]}T{self.dwd_weather.report_data['time']}:00+00:00"
                 self.infos[ATTR_REPORT_ISSUE_TIME] = date
             else:
                 self.infos[ATTR_REPORT_ISSUE_TIME] = ""
