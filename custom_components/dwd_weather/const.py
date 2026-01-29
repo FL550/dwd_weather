@@ -17,9 +17,9 @@ PLATFORMS = [
 INTEGRATION_VERSION = "0.0.0.dev0"
 MIN_REQUIRED_HA_VERSION = "2024.10"
 
-ATTR_LATEST_UPDATE = "latest_update_utc"
-ATTR_REPORT_ISSUE_TIME = "report_time_utc"
-ATTR_ISSUE_TIME = "forecast_time_utc"
+ATTR_LATEST_UPDATE = "latest_update"
+ATTR_REPORT_ISSUE_TIME = "report_time"
+ATTR_ISSUE_TIME = "forecast_time"
 ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
