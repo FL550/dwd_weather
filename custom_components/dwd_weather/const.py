@@ -36,6 +36,7 @@ ATTR_FORECAST_HUMIDITY_ABSOLUTE = "humidity_absolute"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_MAP_INTERVAL = timedelta(minutes=1)
+DEFAULT_AIRQUALITY_INTERVAL = timedelta(minutes=1)
 DEFAULT_WIND_DIRECTION_TYPE = "degrees"
 DEFAULT_INTERPOLATION = True
 
@@ -46,6 +47,7 @@ DWDWEATHER_MONITORED_CONDITIONS = "dwd_weather_monitored_conditions"
 CONF_ENTITY_TYPE = "entity_type"
 CONF_ENTITY_TYPE_STATION = "weather_station"
 CONF_ENTITY_TYPE_MAP = "weather_map"
+CONF_ENTITY_TYPE_AIRQUALITY = "weather_airquality"
 CONF_STATION_ID = "station_id"
 CONF_MAP_ID = "map_id"
 CONF_CUSTOM_LOCATION = "custom_location"
@@ -107,3 +109,8 @@ CONF_MAP_HOMEMARKER_SHAPE_CROSS = "map_homemarker_shape_cross"
 CONF_MAP_HOMEMARKER_SHAPE_SQUARE = "map_homemarker_shape_square"
 
 CONF_OPTION_MAP_MESSAGE = "map_options_message"
+
+CONF_AIRQUALITY_STATION_ID = "airquality_station_id"
+CONF_AIRQUALITY_UPDATE_FREQ = "airquality_update_freq"
+CONF_AIRQUALITY_UPDATE_FREQ_DAILY = "airquality_update_freq_daily"
+CONF_AIRQUALITY_UPDATE_FREQ_HOURLY = "airquality_update_freq_hourly"
