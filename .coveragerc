@@ -1,0 +1,36 @@
+[run]
+# Coverage configuration for DWD Weather Custom Component
+source = custom_components/dwd_weather
+branch = True
+omit =
+    */tests/*
+    */test_*.py
+    */__pycache__/*
+    */site-packages/*
+
+[report]
+# Exclude lines from coverage
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @abc.abstractmethod
+    @overload
+
+# Coverage report options
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+# HTML report directory
+directory = htmlcov
+
+[paths]
+source =
+    custom_components/dwd_weather
+    */site-packages/custom_components/dwd_weather

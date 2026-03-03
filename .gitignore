@@ -1,5 +1,7 @@
 __pycache__
 .pytest*
+.coverage
+htmlcov/
 
 # Home Assistant configuration
 config/*
