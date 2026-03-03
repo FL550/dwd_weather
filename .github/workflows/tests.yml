@@ -30,7 +30,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-homeassistant-custom-component
+          # Extract and install requirements from manifest.json
+          python << 'EOF'
+          import json
+          with open('custom_components/dwd_weather/manifest.json') as f:
+            manifest = json.load(f)
+          requirements = manifest.get('requirements', [])
+          if requirements:
+            import subprocess
+            subprocess.check_call(['pip', 'install'] + requirements)
+          EOF
 
       - name: Create mock Home Assistant config
         run: |
