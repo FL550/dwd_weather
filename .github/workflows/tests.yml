@@ -55,9 +55,6 @@ jobs:
                   from custom_components.dwd_weather import async_setup_entry
                   print("✓ Component async_setup_entry imported successfully")
 
-                  from custom_components.dwd_weather.const import *
-                  print("✓ Component constants imported successfully")
-
                   from custom_components.dwd_weather.connector import DWDWeatherData
                   print("✓ DWDWeatherData connector imported successfully")
 
