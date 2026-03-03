@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - master
+  #     - dev
+  # pull_request:
+
+jobs:
+  integration-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Home Assistant and integration
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-homeassistant-custom-component
+
+      - name: Create mock Home Assistant config
+        run: |
+          mkdir -p config/custom_components
+          cp -r custom_components/dwd_weather config/custom_components/
+
+      - name: Test Home Assistant component loading
+        run: |
+          python << 'EOF'
+          import asyncio
+          import sys
+          from pathlib import Path
+
+          # Add component directory to path
+          sys.path.insert(0, str(Path.cwd()))
+
+          async def test_component_import():
+              """Test that component can be imported without errors."""
+              try:
+                  from custom_components.dwd_weather import async_setup
+                  print("✓ Component async_setup imported successfully")
+
+                  from custom_components.dwd_weather import async_setup_entry
+                  print("✓ Component async_setup_entry imported successfully")
+
+                  from custom_components.dwd_weather.const import *
+                  print("✓ Component constants imported successfully")
+
+                  from custom_components.dwd_weather.connector import DWDWeatherData
+                  print("✓ DWDWeatherData connector imported successfully")
+
+                  print("\n✓ All component imports successful - no import errors detected")
+                  return True
+              except Exception as e:
+                  print(f"✗ Component import failed: {e}", file=sys.stderr)
+                  import traceback
+                  traceback.print_exc()
+                  return False
+
+          result = asyncio.run(test_component_import())
+          sys.exit(0 if result else 1)
+          EOF
