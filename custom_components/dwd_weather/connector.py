@@ -57,6 +57,8 @@ from .const import (
     ATTR_STATION_NAME,
     ATTR_FORECAST_SUN_DURATION,
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+    CONF_DOWNLOAD_AIRQUALITY,
+    CONF_DOWNLOAD_APPARENT_TEMPERATURE,
     CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
@@ -169,6 +171,9 @@ class DWDWeatherData:
                 ),
                 with_report=True,
                 with_uv=True,
+                with_apparent_temperature=self._config[
+                    CONF_DOWNLOAD_APPARENT_TEMPERATURE
+                ],
             )
             if self._config[
                 CONF_HOURLY_UPDATE

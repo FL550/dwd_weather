@@ -19,6 +19,8 @@ from simple_dwd_weatherforecast import dwdforecast
 from .const import (
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
     CONF_DAILY_TEMP_HIGH_PRECISION,
+    CONF_DOWNLOAD_AIRQUALITY,
+    CONF_DOWNLOAD_APPARENT_TEMPERATURE,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -274,6 +276,14 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): BooleanSelector({}),
                     vol.Required(
                         CONF_HOURLY_UPDATE,
+                        default=False,  # type: ignore
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+                        default=False,  # type: ignore
+                    ): BooleanSelector({}),
+                    vol.Required(
+                        CONF_DOWNLOAD_AIRQUALITY,
                         default=False,  # type: ignore
                     ): BooleanSelector({}),
                     vol.Required(
@@ -619,6 +629,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Required(
                             CONF_HOURLY_UPDATE,
                             default=self.config_entry.data[CONF_HOURLY_UPDATE],
+                        ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+                            default=self.config_entry.data.get(
+                                CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+                                False,
+                            ),
+                        ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_DOWNLOAD_AIRQUALITY,
+                            default=self.config_entry.data.get(
+                                CONF_DOWNLOAD_AIRQUALITY,
+                                False,
+                            ),
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_SENSOR_FORECAST_STEPS,

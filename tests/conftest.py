@@ -160,6 +160,8 @@ def mock_dwd_data_fixture(hass, mock_dwd_weather_object):
         "latitude": 52.5,
         "longitude": 13.4,
         "hourly_update": False,
+        "download_airquality": False,
+        "download_apparent_temperature": False,
         "data_type": CONF_DATA_TYPE_FORECAST,
         "interpolate": True,
         "daily_temp_high_precision": False,
