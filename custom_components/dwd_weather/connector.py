@@ -41,6 +41,7 @@ from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
 from .const import (
+    ATTR_FORECAST_APPARENT_TEMP,
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_EVAPORATION,
     ATTR_FORECAST_FOG_PROBABILITY,
@@ -383,6 +384,16 @@ class DWDWeatherData:
                         else None,
                         ATTR_FORECAST_NATIVE_TEMP: round(temp_max - 273.1, 1)
                         if temp_max is not None
+                        else None,
+                        ATTR_FORECAST_APPARENT_TEMP: round(
+                            self.dwd_weather.get_apparent_temperature(
+                                shouldUpdate=False
+                            )
+                            - 273.1,
+                            1,
+                        )
+                        if self.dwd_weather.get_apparent_temperature(shouldUpdate=False)
+                        is not None
                         else None,
                         ATTR_WEATHER_UV_INDEX: uv_index,
                         ATTR_FORECAST_NATIVE_WIND_SPEED: (

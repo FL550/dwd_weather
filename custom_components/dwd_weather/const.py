@@ -23,6 +23,7 @@ ATTR_ISSUE_TIME = "forecast_time"
 ATTR_STATION_ID = "station_id"
 ATTR_STATION_NAME = "station_name"
 
+ATTR_FORECAST_APPARENT_TEMP = "apparent_temperature"
 ATTR_FORECAST_SUN_DURATION = "sun_duration"
 ATTR_FORECAST_PRESSURE = "pressure"
 ATTR_FORECAST_PRECIPITATION_DURATION = "precipitation_duration"
