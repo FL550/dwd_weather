@@ -83,6 +83,15 @@ SENSOR_TYPES = {
         SensorStateClass.MEASUREMENT,
         True,
     ],
+    "apparent_temperature": [
+        "Apparent Temperature",
+        SensorDeviceClass.TEMPERATURE,
+        UnitOfTemperature.CELSIUS,
+        "mdi:thermometer-lines",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
     "dewpoint": [
         "Dewpoint",
         SensorDeviceClass.TEMPERATURE,
@@ -333,6 +342,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             )
         elif self._type == "temperature":
             result = self._connector.get_temperature()
+        elif self._type == "apparent_temperature":
+            result = self._connector.get_apparent_temperature()
         elif self._type == "dewpoint":
             result = self._connector.get_dewpoint()
         elif self._type == "pressure":
@@ -413,6 +424,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_weather_report()
         elif self._type == "temperature":
             attributes["data"] = self._connector.get_temperature_hourly()
+        elif self._type == "apparent_temperature":
+            attributes["data"] = self._connector.get_apparent_temperature_hourly()
         elif self._type == "dewpoint":
             attributes["data"] = self._connector.get_dewpoint_hourly()
         elif self._type == "pressure":

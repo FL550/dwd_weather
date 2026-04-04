@@ -28,6 +28,7 @@ def weather_entity(hass_data):
     connector.get_visibility = MagicMock(return_value=12.0)
     connector.get_humidity = MagicMock(return_value=65)
     connector.get_uv_index = MagicMock(return_value=3)
+    connector.get_apparent_temperature = MagicMock(return_value=10.9)
     connector.get_forecast = MagicMock(return_value=[{"condition": "sunny"}])
     connector.infos = {"station_id": "L732"}
 
@@ -74,7 +75,10 @@ def test_weather_value_properties(weather_entity):
 def test_weather_attribution_and_extra_attributes(weather_entity):
     """Attribution and passthrough attributes should be available."""
     assert weather_entity.attribution == ATTRIBUTION
-    assert weather_entity.extra_state_attributes == {"station_id": "L732"}
+    assert weather_entity.extra_state_attributes == {
+        "station_id": "L732",
+        "apparent_temperature": 10.9,
+    }
 
 
 @pytest.mark.asyncio

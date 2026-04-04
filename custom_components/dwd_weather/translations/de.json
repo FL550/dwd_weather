@@ -24,6 +24,9 @@
       "weather_report": {
         "name": "Wetterbericht"
       },
+      "apparent_temperature": {
+        "name": "Gefühlte Temperatur"
+      },
       "dewpoint": {
         "name": "Taupunkt"
       },

@@ -62,6 +62,28 @@ def test_sensor_extra_attributes(sensor_entity):
     assert ATTR_ISSUE_TIME in attrs
 
 
+def test_apparent_temperature_sensor_state_and_attributes(hass_data):
+    """Apparent temperature sensor should expose value and hourly data."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector.get_apparent_temperature = MagicMock(return_value=13.2)
+    connector.get_apparent_temperature_hourly = MagicMock(
+        return_value=[{"value": 13.2}, {"value": 14.0}]
+    )
+    connector.infos = {
+        ATTR_ISSUE_TIME: "2026-01-01T00:00:00+00:00",
+        ATTR_LATEST_UPDATE: "2026-01-01T00:01:00+00:00",
+        ATTR_STATION_ID: "L732",
+        ATTR_STATION_NAME: "Test Station",
+    }
+    connector.latest_update = "2026-01-01T00:01:00+00:00"
+
+    entity = DWDWeatherForecastSensor(MOCK_CONFIG, hass_data, "apparent_temperature")
+
+    assert entity.state == 13.2
+    attrs = entity.extra_state_attributes
+    assert attrs["data"] == [{"value": 13.2}, {"value": 14.0}]
+
+
 def test_sensor_available_reflects_latest_update(sensor_entity):
     """Sensor availability follows connector latest_update availability."""
     assert sensor_entity.available is True

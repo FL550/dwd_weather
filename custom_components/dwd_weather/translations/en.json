@@ -24,6 +24,9 @@
       "weather_report": {
         "name": "Weather report"
       },
+      "apparent_temperature": {
+        "name": "Apparent temperature"
+      },
       "dewpoint": {
         "name": "Dewpoint"
       },

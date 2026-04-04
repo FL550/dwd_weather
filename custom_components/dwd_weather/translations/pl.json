@@ -24,6 +24,9 @@
       "weather_report": {
         "name": "Prognoza pogody"
       },
+      "apparent_temperature": {
+        "name": "Temperatura odczuwalna"
+      },
       "dewpoint": {
         "name": "Punkt rosy"
       },

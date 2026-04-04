@@ -766,6 +766,10 @@ class DWDWeatherData:
     def get_temperature(self):
         return self.get_weather_value(WeatherDataType.TEMPERATURE)
 
+    def get_apparent_temperature(self):
+        apparent_temp = self.dwd_weather.get_apparent_temperature(shouldUpdate=False)
+        return apparent_temp - 273.15 if apparent_temp is not None else None
+
     def get_dewpoint(self):
         return self.get_weather_value(WeatherDataType.DEWPOINT)
 
@@ -902,6 +906,19 @@ class DWDWeatherData:
 
     def get_temperature_hourly(self):
         return self.get_hourly(WeatherDataType.TEMPERATURE)
+
+    def get_apparent_temperature_hourly(self):
+        data = []
+        forecast_data = self.dwd_weather.get_apparent_temperature_forecast(
+            shouldUpdate=False
+        )
+        if forecast_data:
+            for key in forecast_data:
+                value = forecast_data[key]
+                if value is not None:
+                    value = round(value - 273.15, 1)
+                data.append({ATTR_FORECAST_TIME: key, "value": value})
+        return data
 
     def get_dewpoint_hourly(self):
         return self.get_hourly(WeatherDataType.DEWPOINT)
