@@ -145,6 +145,8 @@ class DWDWeatherData:
         self._forecast_hourly_cache = None
         self._forecast_hourly_cache_update = None
         self._forecast_hourly_cache_hour = None
+        self._forecast_timestamp_cache = {}
+        self._forecast_timestamp_cache_update = None
 
         self._airquality_station_id = None
         self._airquality_hourly = None
@@ -1051,6 +1053,21 @@ class DWDWeatherData:
                 data.append({ATTR_FORECAST_TIME: key, "value": value})
         return data
 
+    def _get_forecast_timestamp(self, key: str) -> datetime:
+        if self._forecast_timestamp_cache_update != self.latest_update:
+            self._forecast_timestamp_cache = {}
+            self._forecast_timestamp_cache_update = self.latest_update
+
+        timestamp = self._forecast_timestamp_cache.get(key)
+        if timestamp is None:
+            timestamp = datetime(
+                *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]),
+                0,
+                timezone.utc,
+            )
+            self._forecast_timestamp_cache[key] = timestamp
+        return timestamp
+
     def get_hourly(self, data_type: WeatherDataType):
         data = []
         timestamp = datetime.now(timezone.utc)
@@ -1092,14 +1109,7 @@ class DWDWeatherData:
                     and item_counter >= self._config[CONF_SENSOR_FORECAST_STEPS]
                 ):
                     break
-                if (
-                    datetime(
-                        *(time.strptime(key, "%Y-%m-%dT%H:%M:%S.%fZ")[0:6]),
-                        0,
-                        timezone.utc,
-                    )
-                    < timestamp
-                ):
+                if self._get_forecast_timestamp(key) < timestamp:
                     continue
                 item_counter += 1
                 item = forecast_data[key]
