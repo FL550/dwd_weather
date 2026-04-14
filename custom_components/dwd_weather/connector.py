@@ -180,112 +180,114 @@ class DWDWeatherData:
     def _update(self):
         """Get the latest data from DWD."""
         timestamp = datetime.now(timezone.utc)
-        if timestamp.minute % 10 == 0 or self.latest_update is None:
-            _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
-            current_hour_data = None
-            if self._config[CONF_HOURLY_UPDATE]:
-                if self.dwd_weather.forecast_data and self.dwd_weather.is_in_timerange(
-                    timestamp
-                ):
-                    current_hour_data = self.dwd_weather.forecast_data[  # type: ignore
-                        self.dwd_weather.strip_to_hour_str(timestamp)
-                    ]
-            self.dwd_weather.update(
-                force_hourly=self._config[CONF_HOURLY_UPDATE],
-                with_forecast=True,
-                with_measurements=(
-                    True
-                    if self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
-                    or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
-                    else False
-                ),
-                with_report=True,
-                with_uv=True,
-                with_apparent_temperature=self._config[
-                    CONF_DOWNLOAD_APPARENT_TEMPERATURE
-                ],
-            )
-            if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
-                if self._airquality_hourly is not None:
-                    self._airquality_hourly.update()
-                if self._airquality_daily is not None:
-                    self._airquality_daily.update(with_current_day=True)
-            if self._config[
-                CONF_HOURLY_UPDATE
-            ] and not self.dwd_weather.is_in_timerange(timestamp):
-                # Hacky workaround: as the hourly data does not provide a forecast for the actual hour, we have to clone the next hour and pretend we have a forecast
-                first_date = datetime(
-                    *(
-                        time.strptime(
-                            next(iter(self.dwd_weather.forecast_data)),  # type: ignore
-                            "%Y-%m-%dT%H:%M:%S.%fZ",
-                        )[0:6]
-                    ),
-                    0,
-                    timezone.utc,
-                )
-                if self.dwd_weather.forecast_data:
-                    # If this is the first update, we have to clone the next hour data to be used as current hour data
-                    if current_hour_data is None:
-                        current_hour_data = self.dwd_weather.forecast_data[
-                            first_date.strftime("%Y-%m-%dT%H:00:00.000Z")
-                        ]
-                    self.dwd_weather.forecast_data[
-                        (first_date - timedelta(hours=1)).strftime(
-                            "%Y-%m-%dT%H:00:00.000Z"
-                        )
-                    ] = current_hour_data
-                    self.dwd_weather.forecast_data.move_to_end(
-                        (first_date - timedelta(hours=1)).strftime(
-                            "%Y-%m-%dT%H:00:00.000Z"
-                        ),
-                        last=False,
-                    )
-                # Hacky workaround end
-
-            self.infos[ATTR_LATEST_UPDATE] = timestamp
-            self.latest_update = timestamp
-            if (
-                self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
-                or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
-            ) and self.dwd_weather.report_data is not None:
-                report_date_array = self.dwd_weather.report_data["date"].split(".")
-                date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]}T{self.dwd_weather.report_data['time']}:00+00:00"
-                self.infos[ATTR_REPORT_ISSUE_TIME] = date
-            else:
-                self.infos[ATTR_REPORT_ISSUE_TIME] = ""
-            self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
-            self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
-            self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
-
-            report = {}
-            report["text"] = (
-                markdownify(
-                    self.dwd_weather.get_weather_report(shouldUpdate=False),
-                    strip=["br"],
-                )
-                if self.dwd_weather.get_weather_report(shouldUpdate=False) is not None
-                else None
-            )
-            match = None
-            if report["text"] is not None:
-                match = re.search(
-                    r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
-                    report["text"],
-                )
-            report["time"] = match.group() if match is not None else None
-            self._report = report
-
-            _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
-            return True
-        else:
+        if timestamp.minute % 10 != 0 and self.latest_update is not None:
             return False
 
-    def get_forecast(self, WeatherEntityFeature_FORECAST) -> list[Forecast] | None:
-        if WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_HOURLY:
-            return self.get_forecast_hourly()
-        elif WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_DAILY:
-            return self.get_forecast_daily()
+        _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
+        current_hour_data = None
+        if self._config[CONF_HOURLY_UPDATE]:
+            if self.dwd_weather.forecast_data and self.dwd_weather.is_in_timerange(
+                timestamp
+            ):
+                current_hour_data = self.dwd_weather.forecast_data[  # type: ignore
+                    self.dwd_weather.strip_to_hour_str(timestamp)
+                ]
+
+        should_request_measurements = self._config[CONF_DATA_TYPE] in (
+            CONF_DATA_TYPE_REPORT,
+            CONF_DATA_TYPE_MIXED,
+        )
+        self.dwd_weather.update(
+            force_hourly=self._config[CONF_HOURLY_UPDATE],
+            with_forecast=True,
+            with_measurements=should_request_measurements,
+            with_report=True,
+            with_uv=True,
+            with_apparent_temperature=self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE],
+        )
+
+        if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
+            if self._airquality_hourly is not None:
+                self._airquality_hourly.update()
+            if self._airquality_daily is not None:
+                self._airquality_daily.update(with_current_day=True)
+
+        if self._config[CONF_HOURLY_UPDATE] and not self.dwd_weather.is_in_timerange(
+            timestamp
+        ):
+            # Hacky workaround: as the hourly data does not provide a forecast for the actual hour, we have to clone the next hour and pretend we have a forecast
+            first_date = datetime(
+                *(
+                    time.strptime(
+                        next(iter(self.dwd_weather.forecast_data)),  # type: ignore
+                        "%Y-%m-%dT%H:%M:%S.%fZ",
+                    )[0:6]
+                ),
+                0,
+                timezone.utc,
+            )
+            if self.dwd_weather.forecast_data:
+                # If this is the first update, we have to clone the next hour data to be used as current hour data
+                if current_hour_data is None:
+                    current_hour_data = self.dwd_weather.forecast_data[
+                        first_date.strftime("%Y-%m-%dT%H:00:00.000Z")
+                    ]
+                missing_hour_key = (first_date - timedelta(hours=1)).strftime(
+                    "%Y-%m-%dT%H:00:00.000Z"
+                )
+                self.dwd_weather.forecast_data[missing_hour_key] = current_hour_data
+                self.dwd_weather.forecast_data.move_to_end(
+                    missing_hour_key,
+                    last=False,
+                )
+            # Hacky workaround end
+
+        self.infos[ATTR_LATEST_UPDATE] = timestamp
+        self.latest_update = timestamp
+        if (
+            self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_REPORT
+            or self._config[CONF_DATA_TYPE] == CONF_DATA_TYPE_MIXED
+        ) and self.dwd_weather.report_data is not None:
+            report_date_array = self.dwd_weather.report_data["date"].split(".")
+            date = f"20{report_date_array[2]}-{report_date_array[1]}-{report_date_array[0]}T{self.dwd_weather.report_data['time']}:00+00:00"
+            self.infos[ATTR_REPORT_ISSUE_TIME] = date
+        else:
+            self.infos[ATTR_REPORT_ISSUE_TIME] = ""
+        self.infos[ATTR_ISSUE_TIME] = self.dwd_weather.issue_time
+        self.infos[ATTR_STATION_ID] = self._config[CONF_STATION_ID]
+        self.infos[ATTR_STATION_NAME] = self._config[CONF_STATION_NAME]
+
+        weather_report_text = self.dwd_weather.get_weather_report(shouldUpdate=False)
+        report_text = (
+            markdownify(weather_report_text, strip=["br"])
+            if weather_report_text is not None
+            else None
+        )
+        match = (
+            re.search(
+                r"\w+, \d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}",
+                report_text,
+            )
+            if report_text is not None
+            else None
+        )
+        self._report = {
+            "text": report_text,
+            "time": match.group() if match is not None else None,
+        }
+
+        _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
+        return True
+
+    def get_forecast(
+        self, forecast_feature: WeatherEntityFeature
+    ) -> list[Forecast] | None:
+        forecast_getters = {
+            WeatherEntityFeature.FORECAST_HOURLY: self.get_forecast_hourly,
+            WeatherEntityFeature.FORECAST_DAILY: self.get_forecast_daily,
+        }
+        getter = forecast_getters.get(forecast_feature)
+        return getter() if getter is not None else None
 
     def _should_add_airquality_to_forecast(self) -> bool:
         return self._config.get(
@@ -578,8 +580,6 @@ class DWDWeatherData:
     def get_forecast_daily(self) -> list[Forecast] | None:
         start_time = time.perf_counter()
         weather_interval = 24
-        from datetime import datetime, timedelta
-
         now = dt.now()
         # Check if cache is valid
         current_day = now.date()
