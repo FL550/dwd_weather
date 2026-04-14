@@ -43,6 +43,29 @@ async def test_sensor_setup_entry_callable():
     assert async_setup_entry is not None
 
 
+@pytest.mark.asyncio
+async def test_async_setup_skips_apparent_temperature_when_not_supported(
+    hass, hass_data
+):
+    """Platform setup should not create apparent temperature sensor when unsupported."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector.supports_apparent_temperature = MagicMock(return_value=False)
+
+    hass.data = {"dwd_weather": {"entry-id": hass_data}}
+    entry = MagicMock()
+    entry.data = MOCK_CONFIG
+    entry.entry_id = "entry-id"
+
+    created_entities = []
+
+    def _collect(entities, _update_before_add):
+        created_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, _collect)
+
+    assert all(entity._type != "apparent_temperature" for entity in created_entities)
+
+
 def test_sensor_unique_id_contains_station(sensor_entity):
     """Unique id should contain station id for stable identification."""
     assert "L732" in sensor_entity.unique_id

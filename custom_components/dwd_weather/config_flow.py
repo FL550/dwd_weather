@@ -82,6 +82,18 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = CONF_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def _supports_apparent_temperature(self, station_id: str) -> bool:
+        """Return whether the selected station supports apparent temperature."""
+        try:
+            weather = dwdforecast.Weather(station_id)
+            supports_fn = getattr(weather, "supports_apparent_temperature", None)
+            if callable(supports_fn):
+                return bool(supports_fn())
+            return True
+        except Exception:
+            # Keep the option visible on lookup errors to avoid blocking setup.
+            return True
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -236,6 +248,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
         if user_input is not None:
+            if not self._supports_apparent_temperature(
+                self.config_data[CONF_STATION_ID]
+            ):
+                user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
             station_id = (
                 f"{self.config_data[CONF_STATION_ID]}: {user_input[CONF_STATION_NAME]}"
             )
@@ -253,53 +269,60 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         station = dwdforecast.load_station_id(self.config_data[CONF_STATION_ID])
         if station:
-            data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_STATION_NAME,
-                        default=station["name"],
-                    ): TextSelector({}),
-                    vol.Required(
-                        CONF_WIND_DIRECTION_TYPE,
-                        default="degrees",  # type: ignore
-                    ): SelectSelector(
-                        {
-                            "options": list(["degrees", "direction"]),
-                            "custom_value": False,
-                            "mode": "list",
-                            "translation_key": CONF_WIND_DIRECTION_TYPE,
-                        }
-                    ),
-                    vol.Required(
-                        CONF_INTERPOLATE,
-                        default=True,  # type: ignore
-                    ): BooleanSelector({}),
-                    vol.Required(
-                        CONF_HOURLY_UPDATE,
-                        default=False,  # type: ignore
-                    ): BooleanSelector({}),
+            supports_apparent_temperature = self._supports_apparent_temperature(
+                self.config_data[CONF_STATION_ID]
+            )
+            schema_dict = {
+                vol.Required(
+                    CONF_STATION_NAME,
+                    default=station["name"],
+                ): TextSelector({}),
+                vol.Required(
+                    CONF_WIND_DIRECTION_TYPE,
+                    default="degrees",  # type: ignore
+                ): SelectSelector(
+                    {
+                        "options": list(["degrees", "direction"]),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_WIND_DIRECTION_TYPE,
+                    }
+                ),
+                vol.Required(
+                    CONF_INTERPOLATE,
+                    default=True,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_HOURLY_UPDATE,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DOWNLOAD_AIRQUALITY,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_SENSOR_FORECAST_STEPS,
+                    default=250,  # type: ignore
+                ): NumberSelector({"min": 1, "max": 250, "step": 1, "mode": "box"}),
+                vol.Required(
+                    CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DAILY_TEMP_HIGH_PRECISION,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+            }
+
+            if supports_apparent_temperature:
+                schema_dict[
                     vol.Required(
                         CONF_DOWNLOAD_APPARENT_TEMPERATURE,
                         default=False,  # type: ignore
-                    ): BooleanSelector({}),
-                    vol.Required(
-                        CONF_DOWNLOAD_AIRQUALITY,
-                        default=False,  # type: ignore
-                    ): BooleanSelector({}),
-                    vol.Required(
-                        CONF_SENSOR_FORECAST_STEPS,
-                        default=250,  # type: ignore
-                    ): NumberSelector({"min": 1, "max": 250, "step": 1, "mode": "box"}),
-                    vol.Required(
-                        CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
-                        default=False,  # type: ignore
-                    ): BooleanSelector({}),
-                    vol.Required(
-                        CONF_DAILY_TEMP_HIGH_PRECISION,
-                        default=False,  # type: ignore
-                    ): BooleanSelector({}),
-                }
-            )
+                    )
+                ] = BooleanSelector({})
+
+            data_schema = vol.Schema(schema_dict)
 
         return self.async_show_form(
             step_id="station_configure", data_schema=data_schema, errors=errors
@@ -567,13 +590,32 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     config_data = {}
 
+    def _supports_apparent_temperature(self) -> bool:
+        """Return whether the configured station supports apparent temperature."""
+        station_id = self.config_entry.data.get(CONF_STATION_ID)
+        if station_id is None:
+            return True
+
+        try:
+            weather = dwdforecast.Weather(station_id)
+            supports_fn = getattr(weather, "supports_apparent_temperature", None)
+            if callable(supports_fn):
+                return bool(supports_fn())
+            return True
+        except Exception:
+            return True
+
     async def async_step_init(self, user_input: dict[str] | None = None) -> FlowResult:  # type: ignore
         """Manage the options."""
         if self.config_entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
+            supports_apparent_temperature = self._supports_apparent_temperature()
             if user_input is not None:
                 _LOGGER.debug(
                     "OptionsFlowHandler station: user_input {}".format(user_input)
                 )
+
+                if not supports_apparent_temperature:
+                    user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
 
                 user_input[CONF_ENTITY_TYPE] = self.config_entry.data[CONF_ENTITY_TYPE]
                 user_input[CONF_STATION_ID] = self.config_entry.data[CONF_STATION_ID]
@@ -590,80 +632,78 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data=user_input)
 
-            return self.async_show_form(
-                step_id="init",
-                data_schema=vol.Schema(
+            schema_dict = {
+                vol.Required(
+                    CONF_DATA_TYPE,
+                    default=self.config_entry.data[CONF_DATA_TYPE],
+                ): SelectSelector(
                     {
-                        vol.Required(
-                            CONF_DATA_TYPE,
-                            default=self.config_entry.data[CONF_DATA_TYPE],
-                        ): SelectSelector(
-                            {
-                                "options": list(
-                                    [
-                                        CONF_DATA_TYPE_MIXED,
-                                        CONF_DATA_TYPE_REPORT,
-                                        CONF_DATA_TYPE_FORECAST,
-                                    ]
-                                ),
-                                "custom_value": False,
-                                "mode": "list",
-                                "translation_key": CONF_DATA_TYPE,
-                            }
+                        "options": list(
+                            [
+                                CONF_DATA_TYPE_MIXED,
+                                CONF_DATA_TYPE_REPORT,
+                                CONF_DATA_TYPE_FORECAST,
+                            ]
                         ),
-                        vol.Required(
-                            CONF_WIND_DIRECTION_TYPE,
-                            default=self.config_entry.data[CONF_WIND_DIRECTION_TYPE],
-                        ): SelectSelector(
-                            {
-                                "options": list(["degrees", "direction"]),
-                                "custom_value": False,
-                                "mode": "list",
-                                "translation_key": CONF_WIND_DIRECTION_TYPE,
-                            }
-                        ),
-                        vol.Required(
-                            CONF_INTERPOLATE,
-                            default=self.config_entry.data[CONF_INTERPOLATE],
-                        ): BooleanSelector({}),
-                        vol.Required(
-                            CONF_HOURLY_UPDATE,
-                            default=self.config_entry.data[CONF_HOURLY_UPDATE],
-                        ): BooleanSelector({}),
-                        vol.Required(
-                            CONF_DOWNLOAD_APPARENT_TEMPERATURE,
-                            default=self.config_entry.data.get(
-                                CONF_DOWNLOAD_APPARENT_TEMPERATURE,
-                                False,
-                            ),
-                        ): BooleanSelector({}),
-                        vol.Required(
-                            CONF_DOWNLOAD_AIRQUALITY,
-                            default=self.config_entry.data.get(
-                                CONF_DOWNLOAD_AIRQUALITY,
-                                False,
-                            ),
-                        ): BooleanSelector({}),
-                        vol.Required(
-                            CONF_SENSOR_FORECAST_STEPS,
-                            default=self.config_entry.data[CONF_SENSOR_FORECAST_STEPS],
-                        ): NumberSelector(
-                            {"min": 1, "max": 250, "step": 1, "mode": "box"}
-                        ),
-                        vol.Required(
-                            CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
-                            default=self.config_entry.data[
-                                CONF_ADDITIONAL_FORECAST_ATTRIBUTES
-                            ],
-                        ): BooleanSelector({}),
-                        vol.Required(
-                            CONF_DAILY_TEMP_HIGH_PRECISION,
-                            default=self.config_entry.data[
-                                CONF_DAILY_TEMP_HIGH_PRECISION
-                            ],  # type: ignore
-                        ): BooleanSelector({}),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_DATA_TYPE,
                     }
                 ),
+                vol.Required(
+                    CONF_WIND_DIRECTION_TYPE,
+                    default=self.config_entry.data[CONF_WIND_DIRECTION_TYPE],
+                ): SelectSelector(
+                    {
+                        "options": list(["degrees", "direction"]),
+                        "custom_value": False,
+                        "mode": "list",
+                        "translation_key": CONF_WIND_DIRECTION_TYPE,
+                    }
+                ),
+                vol.Required(
+                    CONF_INTERPOLATE,
+                    default=self.config_entry.data[CONF_INTERPOLATE],
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_HOURLY_UPDATE,
+                    default=self.config_entry.data[CONF_HOURLY_UPDATE],
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DOWNLOAD_AIRQUALITY,
+                    default=self.config_entry.data.get(
+                        CONF_DOWNLOAD_AIRQUALITY,
+                        False,
+                    ),
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_SENSOR_FORECAST_STEPS,
+                    default=self.config_entry.data[CONF_SENSOR_FORECAST_STEPS],
+                ): NumberSelector({"min": 1, "max": 250, "step": 1, "mode": "box"}),
+                vol.Required(
+                    CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
+                    default=self.config_entry.data[CONF_ADDITIONAL_FORECAST_ATTRIBUTES],
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DAILY_TEMP_HIGH_PRECISION,
+                    default=self.config_entry.data[CONF_DAILY_TEMP_HIGH_PRECISION],  # type: ignore
+                ): BooleanSelector({}),
+            }
+
+            if supports_apparent_temperature:
+                schema_dict[
+                    vol.Required(
+                        CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+                        default=self.config_entry.data.get(
+                            CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+                            False,
+                        ),
+                    )
+                ] = BooleanSelector({})
+
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(schema_dict),
             )  # type: ignore
         elif self.config_entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
             if user_input is not None:

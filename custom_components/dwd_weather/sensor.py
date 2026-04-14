@@ -317,6 +317,10 @@ async def async_setup_entry(
             for k, v in SENSOR_TYPES.items()
             if k != "measured_values_time"
             and not (
+                k == "apparent_temperature"
+                and not hass_data[DWDWEATHER_DATA].supports_apparent_temperature()
+            )
+            and not (
                 k.startswith("airquality")
                 and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
             )

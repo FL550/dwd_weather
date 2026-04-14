@@ -249,3 +249,31 @@ def test_hourly_forecast_does_not_include_airquality_when_additional_attrs_disab
 
     assert result is not None
     assert "airquality_pm2_5" not in result[0]
+
+
+def test_get_apparent_temperature_returns_none_when_not_supported(mock_dwd_data):
+    """Apparent temperature should be unavailable when the feature is unsupported."""
+    mock_dwd_data._config["download_apparent_temperature"] = True
+    mock_dwd_data.dwd_weather.supports_apparent_temperature = MagicMock(
+        return_value=False
+    )
+
+    result = mock_dwd_data.get_apparent_temperature()
+
+    assert result is None
+    mock_dwd_data.dwd_weather.get_apparent_temperature.assert_not_called()
+
+
+def test_get_apparent_temperature_hourly_returns_empty_when_not_supported(
+    mock_dwd_data,
+):
+    """Hourly apparent temperature list should be empty when unsupported."""
+    mock_dwd_data._config["download_apparent_temperature"] = True
+    mock_dwd_data.dwd_weather.supports_apparent_temperature = MagicMock(
+        return_value=False
+    )
+
+    result = mock_dwd_data.get_apparent_temperature_hourly()
+
+    assert result == []
+    mock_dwd_data.dwd_weather.get_apparent_temperature_forecast.assert_not_called()

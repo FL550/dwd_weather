@@ -1,11 +1,14 @@
 """Tests for config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.dwd_weather.config_flow import DWDWeatherConfigFlow
+from custom_components.dwd_weather.config_flow import (
+    DWDWeatherConfigFlow,
+    OptionsFlowHandler,
+)
 from custom_components.dwd_weather.const import (
     CONF_CUSTOM_LOCATION,
     CONF_DATA_TYPE,
@@ -25,6 +28,11 @@ from custom_components.dwd_weather.const import (
     CONF_STATION_NAME,
 )
 from .const import MOCK_CONFIG, MOCK_CONFIG_FORECAST
+
+
+def _schema_has_field(schema, key_name: str) -> bool:
+    """Return whether a voluptuous schema contains a field key."""
+    return any(getattr(field, "schema", None) == key_name for field in schema.schema)
 
 
 @pytest.mark.asyncio
@@ -280,3 +288,97 @@ def test_config_constants_are_consistent():
     """Basic consistency checks for config constants used in tests."""
     assert MOCK_CONFIG[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION
     assert MOCK_CONFIG_FORECAST[CONF_DATA_TYPE] == CONF_DATA_TYPE_FORECAST
+
+
+@pytest.mark.asyncio
+async def test_station_configure_hides_apparent_temperature_when_not_supported():
+    """Station configure form should hide apparent temperature selector when unsupported."""
+    flow = DWDWeatherConfigFlow()
+    flow.hass = MagicMock()
+    flow.config_data = {CONF_STATION_ID: "L732"}
+
+    weather = MagicMock()
+    weather.supports_apparent_temperature.return_value = False
+
+    with (
+        patch(
+            "custom_components.dwd_weather.config_flow.dwdforecast.load_station_id",
+            return_value={"report_available": 1, "name": "Berlin", "elev": 34},
+        ),
+        patch(
+            "custom_components.dwd_weather.config_flow.dwdforecast.Weather",
+            return_value=weather,
+        ),
+    ):
+        result = await flow.async_step_station_configure()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "station_configure"
+    assert not _schema_has_field(
+        result["data_schema"],
+        CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    )
+
+
+@pytest.mark.asyncio
+async def test_station_configure_shows_apparent_temperature_when_supported():
+    """Station configure form should show apparent temperature selector when supported."""
+    flow = DWDWeatherConfigFlow()
+    flow.hass = MagicMock()
+    flow.config_data = {CONF_STATION_ID: "L732"}
+
+    weather = MagicMock()
+    weather.supports_apparent_temperature.return_value = True
+
+    with (
+        patch(
+            "custom_components.dwd_weather.config_flow.dwdforecast.load_station_id",
+            return_value={"report_available": 1, "name": "Berlin", "elev": 34},
+        ),
+        patch(
+            "custom_components.dwd_weather.config_flow.dwdforecast.Weather",
+            return_value=weather,
+        ),
+    ):
+        result = await flow.async_step_station_configure()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "station_configure"
+    assert _schema_has_field(
+        result["data_schema"],
+        CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    )
+
+
+@pytest.mark.asyncio
+async def test_options_flow_hides_apparent_temperature_when_not_supported():
+    """Station options form should hide apparent temperature selector when unsupported."""
+    flow = OptionsFlowHandler()
+    flow.hass = MagicMock()
+    config_entry = MagicMock()
+    config_entry.data = dict(MOCK_CONFIG)
+    config_entry.options = {}
+
+    weather = MagicMock()
+    weather.supports_apparent_temperature.return_value = False
+
+    with (
+        patch(
+            "custom_components.dwd_weather.config_flow.dwdforecast.Weather",
+            return_value=weather,
+        ),
+        patch.object(
+            OptionsFlowHandler,
+            "config_entry",
+            new_callable=PropertyMock,
+            return_value=config_entry,
+        ),
+    ):
+        result = await flow.async_step_init()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert not _schema_has_field(
+        result["data_schema"],
+        CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    )

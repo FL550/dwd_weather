@@ -173,6 +173,17 @@ class DWDWeatherData:
     def register_entity(self, entity):
         self.entities.append(entity)
 
+    def supports_apparent_temperature(self) -> bool:
+        """Return whether apparent temperature data can be requested."""
+        if not self._config.get(CONF_DOWNLOAD_APPARENT_TEMPERATURE, False):
+            return False
+
+        supports_fn = getattr(self.dwd_weather, "supports_apparent_temperature", None)
+        if callable(supports_fn):
+            return bool(supports_fn())
+
+        return True
+
     async def async_update(self):
         """Async wrapper for update method."""
         if await self._hass.async_add_executor_job(self._update):
@@ -205,7 +216,7 @@ class DWDWeatherData:
             with_measurements=should_request_measurements,
             with_report=True,
             with_uv=True,
-            with_apparent_temperature=self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE],
+            with_apparent_temperature=self.supports_apparent_temperature(),
         )
 
         if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
@@ -392,7 +403,7 @@ class DWDWeatherData:
                         False,
                     )
 
-                    if self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE]:
+                    if self.supports_apparent_temperature():
                         apparent_temp = self.dwd_weather.get_apparent_temperature(
                             shouldUpdate=False
                         )
@@ -490,7 +501,7 @@ class DWDWeatherData:
                         ),
                         ATTR_FORECAST_WIND_BEARING: wind_dir,
                     }
-                    if self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE]:
+                    if self.supports_apparent_temperature():
                         data_item[ATTR_FORECAST_APPARENT_TEMP] = (
                             round(apparent_temp - 273.1, 1)
                             if apparent_temp is not None
@@ -881,6 +892,9 @@ class DWDWeatherData:
         return self.get_weather_value(WeatherDataType.TEMPERATURE)
 
     def get_apparent_temperature(self):
+        if not self.supports_apparent_temperature():
+            return None
+
         apparent_temp = self.dwd_weather.get_apparent_temperature(shouldUpdate=False)
         return apparent_temp - 273.15 if apparent_temp is not None else None
 
@@ -1130,6 +1144,9 @@ class DWDWeatherData:
         return self.get_hourly(WeatherDataType.TEMPERATURE)
 
     def get_apparent_temperature_hourly(self):
+        if not self.supports_apparent_temperature():
+            return []
+
         data = []
         forecast_data = self.dwd_weather.get_apparent_temperature_forecast(
             shouldUpdate=False
