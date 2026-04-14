@@ -80,6 +80,18 @@
       },
       "evaporation": {
         "name": "Verdunstung in den nächsten 24 Stunden"
+      },
+      "airquality_stickstoffdioxid": {
+        "name": "Luftqualität Stickstoffdioxid"
+      },
+      "airquality_ozon": {
+        "name": "Luftqualität Ozon"
+      },
+      "airquality_pm2_5": {
+        "name": "Luftqualität PM2.5"
+      },
+      "airquality_pm10": {
+        "name": "Luftqualität PM10"
       }
     }
   },

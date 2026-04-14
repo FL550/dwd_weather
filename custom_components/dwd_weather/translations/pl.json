@@ -80,6 +80,18 @@
       },
       "evaporation": {
         "name": "Parowanie w ciągu następnych 24 godzin"
+      },
+      "airquality_stickstoffdioxid": {
+        "name": "Jakość powietrza Dwutlenek azotu"
+      },
+      "airquality_ozon": {
+        "name": "Jakość powietrza Ozon"
+      },
+      "airquality_pm2_5": {
+        "name": "Jakość powietrza PM2.5"
+      },
+      "airquality_pm10": {
+        "name": "Jakość powietrza PM10"
       }
     }
   },

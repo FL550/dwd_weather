@@ -10,6 +10,7 @@ from custom_components.dwd_weather.sensor import (
     async_setup_entry,
 )
 from custom_components.dwd_weather.const import (
+    CONF_DOWNLOAD_AIRQUALITY,
     ATTR_ISSUE_TIME,
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
@@ -89,6 +90,34 @@ def test_sensor_available_reflects_latest_update(sensor_entity):
     assert sensor_entity.available is True
     sensor_entity._connector.latest_update = None
     assert sensor_entity.available is False
+
+
+def test_airquality_pm10_sensor_state_and_attributes(hass_data):
+    """Airquality PM10 sensor should expose component state and hourly component data."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector._config[CONF_DOWNLOAD_AIRQUALITY] = True
+    connector.get_airquality_component_state = MagicMock(return_value=20.0)
+    connector.get_airquality_component_hourly = MagicMock(
+        return_value=[{"value": 20.0}, {"value": 18.0}]
+    )
+    connector.infos = {
+        ATTR_ISSUE_TIME: "2026-01-01T00:00:00+00:00",
+        ATTR_LATEST_UPDATE: "2026-01-01T00:01:00+00:00",
+        ATTR_STATION_ID: "L732",
+        ATTR_STATION_NAME: "Test Station",
+    }
+    connector.latest_update = "2026-01-01T00:01:00+00:00"
+
+    entity = DWDWeatherForecastSensor(MOCK_CONFIG, hass_data, "airquality_pm10")
+
+    assert entity.state == 20.0
+    connector.get_airquality_component_state.assert_called_once_with("PM10")
+    attrs = entity.extra_state_attributes
+    assert attrs["data"] == [
+        {"value": 20.0},
+        {"value": 18.0},
+    ]
+    connector.get_airquality_component_hourly.assert_called_once_with("PM10")
 
 
 @pytest.mark.asyncio

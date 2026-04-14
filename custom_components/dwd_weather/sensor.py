@@ -38,6 +38,7 @@ from .const import (
     ATTRIBUTION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
+    CONF_DOWNLOAD_AIRQUALITY,
     CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -263,6 +264,42 @@ SENSOR_TYPES = {
         None,
         False,
     ],
+    "airquality_stickstoffdioxid": [
+        "Air Quality Stickstoffdioxid",
+        None,
+        "µg/m³",
+        "mdi:molecule-co2",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "airquality_ozon": [
+        "Air Quality Ozon",
+        None,
+        "µg/m³",
+        "mdi:molecule-co2",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "airquality_pm2_5": [
+        "Air Quality PM2.5",
+        None,
+        "µg/m³",
+        "mdi:molecule-co2",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "airquality_pm10": [
+        "Air Quality PM10",
+        None,
+        "µg/m³",
+        "mdi:molecule-co2",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
 }
 
 
@@ -279,6 +316,10 @@ async def async_setup_entry(
             k: v
             for k, v in SENSOR_TYPES.items()
             if k != "measured_values_time"
+            and not (
+                k.startswith("airquality")
+                and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
+            )
             # and contains_weather_data(k, hass_data[DWDWEATHER_DATA])
             and not (
                 hass_data[DWDWEATHER_DATA]._config[CONF_HOURLY_UPDATE] and not v[6]
@@ -382,6 +423,14 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_uv_index()
         elif self._type == "evaporation":
             result = self._connector.get_evaporation()
+        elif self._type == "airquality":
+            result = self._connector.get_airquality_state()
+        elif self._type == "airquality_stickstoffdioxid":
+            result = self._connector.get_airquality_component_state("Stickstoffdioxid")
+        elif self._type == "airquality_ozon":
+            result = self._connector.get_airquality_component_state("Ozon")
+        elif self._type == "airquality_pm10":
+            result = self._connector.get_airquality_component_state("PM10")
         return result
 
     @property
@@ -460,6 +509,17 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_uv_index_daily()
         elif self._type == "evaporation":
             attributes["data"] = self._connector.get_evaporation_daily()
+        elif self._type == "airquality":
+            attributes["airquality"] = self._connector.get_airquality()
+            attributes["data"] = self._connector.get_airquality_hourly()
+        elif self._type == "airquality_stickstoffdioxid":
+            attributes["data"] = self._connector.get_airquality_component_hourly(
+                "Stickstoffdioxid"
+            )
+        elif self._type == "airquality_ozon":
+            attributes["data"] = self._connector.get_airquality_component_hourly("Ozon")
+        elif self._type == "airquality_pm10":
+            attributes["data"] = self._connector.get_airquality_component_hourly("PM10")
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]

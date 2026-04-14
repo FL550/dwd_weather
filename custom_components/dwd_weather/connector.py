@@ -39,9 +39,16 @@ from homeassistant.components.weather.const import (
 from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
+from simple_dwd_weatherforecast.dwdairquality import (
+    AirQuality,
+)
 
 from .const import (
     ATTR_FORECAST_APPARENT_TEMP,
+    ATTR_FORECAST_AIRQUALITY_OZON,
+    ATTR_FORECAST_AIRQUALITY_PM10,
+    ATTR_FORECAST_AIRQUALITY_PM2_5,
+    ATTR_FORECAST_AIRQUALITY_STICKSTOFFDIOXID,
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_EVAPORATION,
     ATTR_FORECAST_FOG_PROBABILITY,
@@ -139,6 +146,28 @@ class DWDWeatherData:
         self._forecast_hourly_cache_update = None
         self._forecast_hourly_cache_hour = None
 
+        self._airquality_station_id = None
+        self._airquality_hourly = None
+        self._airquality_daily = None
+        if (
+            self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
+            and self.dwd_weather.station
+        ):
+            try:
+                self._airquality_hourly = AirQuality.get_station_from_location(
+                    self.dwd_weather.station["lat"],
+                    self.dwd_weather.station["lon"],
+                    "hourly",
+                )
+                self._airquality_station_id = self._airquality_hourly.station_id
+                if self._airquality_station_id is not None:
+                    self._airquality_daily = AirQuality(
+                        self._airquality_station_id,
+                        "daily",
+                    )
+            except Exception as error:
+                _LOGGER.warning("Failed to initialize air quality data: %s", error)
+
     def register_entity(self, entity):
         self.entities.append(entity)
 
@@ -176,6 +205,11 @@ class DWDWeatherData:
                     CONF_DOWNLOAD_APPARENT_TEMPERATURE
                 ],
             )
+            if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
+                if self._airquality_hourly is not None:
+                    self._airquality_hourly.update()
+                if self._airquality_daily is not None:
+                    self._airquality_daily.update(with_current_day=True)
             if self._config[
                 CONF_HOURLY_UPDATE
             ] and not self.dwd_weather.is_in_timerange(timestamp):
@@ -253,6 +287,54 @@ class DWDWeatherData:
         elif WeatherEntityFeature_FORECAST == WeatherEntityFeature.FORECAST_DAILY:
             return self.get_forecast_daily()
 
+    def _should_add_airquality_to_forecast(self) -> bool:
+        return self._config.get(
+            CONF_ADDITIONAL_FORECAST_ATTRIBUTES, False
+        ) and self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
+
+    @staticmethod
+    def _to_forecast_airquality_fields(airquality_entry: dict | None) -> dict:
+        if not isinstance(airquality_entry, dict):
+            return {}
+
+        # Keep key names aligned with dedicated air quality sensors.
+        mapping = {
+            "Stickstoffdioxid": ATTR_FORECAST_AIRQUALITY_STICKSTOFFDIOXID,
+            "Ozon": ATTR_FORECAST_AIRQUALITY_OZON,
+            "PM2_5": ATTR_FORECAST_AIRQUALITY_PM2_5,
+            "PM10": ATTR_FORECAST_AIRQUALITY_PM10,
+        }
+        result = {}
+        for source_key, target_key in mapping.items():
+            if source_key in airquality_entry:
+                result[target_key] = airquality_entry[source_key]
+        return result
+
+    def _get_airquality_forecast_values(
+        self, forecast_type: WeatherEntityFeature, index: int
+    ) -> dict:
+        if not self._should_add_airquality_to_forecast():
+            return {}
+
+        airquality_data = self._resolve_airquality_source(forecast_type)
+        if forecast_type == WeatherEntityFeature.FORECAST_HOURLY:
+            if isinstance(airquality_data, list) and index < len(airquality_data):
+                return self._to_forecast_airquality_fields(airquality_data[index])
+            return {}
+
+        if isinstance(airquality_data, dict):
+            day_keys = ["today", "tomorrow", "day_after"]
+            if index < len(day_keys):
+                return self._to_forecast_airquality_fields(
+                    airquality_data.get(day_keys[index])
+                )
+            return {}
+
+        if isinstance(airquality_data, list) and index < len(airquality_data):
+            return self._to_forecast_airquality_fields(airquality_data[index])
+
+        return {}
+
     def get_forecast_hourly(self) -> list[Forecast] | None:
         start_time = time.perf_counter()
         weather_interval = 1
@@ -282,6 +364,7 @@ class DWDWeatherData:
                 tzinfo=timezone.utc,
             )
 
+            forecast_index = 0
             for _ in range(0, 9):
                 for _ in range(int(24 / weather_interval)):
                     condition = self.dwd_weather.get_timeframe_condition(
@@ -304,6 +387,11 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
+
+                    if self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE]:
+                        apparent_temp = self.dwd_weather.get_apparent_temperature(
+                            shouldUpdate=False
+                        )
 
                     dew_point = self.dwd_weather.get_timeframe_max(
                         WeatherDataType.DEWPOINT,
@@ -385,16 +473,6 @@ class DWDWeatherData:
                         ATTR_FORECAST_NATIVE_TEMP: round(temp_max - 273.1, 1)
                         if temp_max is not None
                         else None,
-                        ATTR_FORECAST_APPARENT_TEMP: round(
-                            self.dwd_weather.get_apparent_temperature(
-                                shouldUpdate=False
-                            )
-                            - 273.1,
-                            1,
-                        )
-                        if self.dwd_weather.get_apparent_temperature(shouldUpdate=False)
-                        is not None
-                        else None,
                         ATTR_WEATHER_UV_INDEX: uv_index,
                         ATTR_FORECAST_NATIVE_WIND_SPEED: (
                             round(wind_speed * 3.6, 1)
@@ -408,6 +486,12 @@ class DWDWeatherData:
                         ),
                         ATTR_FORECAST_WIND_BEARING: wind_dir,
                     }
+                    if self._config[CONF_DOWNLOAD_APPARENT_TEMPERATURE]:
+                        data_item[ATTR_FORECAST_APPARENT_TEMP] = (
+                            round(apparent_temp - 273.1, 1)
+                            if apparent_temp is not None
+                            else None
+                        )
                     # Additional attributes raises errors when parsed in HA weather template so this has to be optional
                     if self._config[CONF_ADDITIONAL_FORECAST_ATTRIBUTES]:
                         temp_min = self.dwd_weather.get_timeframe_min(
@@ -468,7 +552,18 @@ class DWDWeatherData:
                                 ATTR_FORECAST_HUMIDITY_ABSOLUTE: humidity_absolute,
                             }
                         )
+                        if (
+                            self._config[CONF_DOWNLOAD_AIRQUALITY]
+                            and self._airquality_hourly is not None
+                        ):
+                            data_item.update(
+                                self._get_airquality_forecast_values(
+                                    WeatherEntityFeature.FORECAST_HOURLY,
+                                    forecast_index,
+                                )
+                            )
                     forecast_data.append(data_item)
+                    forecast_index += 1
                     timestep += timedelta(hours=weather_interval)
         end_time = time.perf_counter()
         _LOGGER.info(
@@ -509,7 +604,7 @@ class DWDWeatherData:
                 tzinfo=now.tzinfo,
             )
 
-            for _ in range(0, 9):
+            for day_index in range(0, 9):
                 _LOGGER.debug("Timestep {}".format(timestep))
                 condition = self.dwd_weather.get_daily_condition(
                     timestep,
@@ -657,6 +752,12 @@ class DWDWeatherData:
                                 False,
                             ),
                         }
+                    )
+                    data_item.update(
+                        self._get_airquality_forecast_values(
+                            WeatherEntityFeature.FORECAST_DAILY,
+                            day_index,
+                        )
                     )
                 forecast_data.append(data_item)
                 timestep += timedelta(hours=weather_interval)
@@ -831,6 +932,106 @@ class DWDWeatherData:
 
     def get_uv_index(self):
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
+
+    def _resolve_airquality_source(
+        self, forecast_type: WeatherEntityFeature
+    ) -> dict | list | None:
+        if not self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
+            return None
+
+        # Fallback to dedicated airquality download objects.
+        source = (
+            self._airquality_daily
+            if forecast_type == WeatherEntityFeature.FORECAST_DAILY
+            else self._airquality_hourly
+        )
+        if source is not None:
+            return source.data
+
+        return None
+
+    def get_airquality(
+        self, forecast_type: WeatherEntityFeature = WeatherEntityFeature.FORECAST_HOURLY
+    ):
+        data = self._resolve_airquality_source(forecast_type)
+        if data is None:
+            return None
+
+        if forecast_type == WeatherEntityFeature.FORECAST_DAILY:
+            if isinstance(data, dict):
+                return data.get("today", data)
+            if isinstance(data, list) and len(data) > 0:
+                return data[0]
+            return None
+
+        if isinstance(data, list):
+            return data[0] if len(data) > 0 else None
+        return data
+
+    def get_airquality_hourly(self):
+        data = self._resolve_airquality_source(WeatherEntityFeature.FORECAST_HOURLY)
+        if not isinstance(data, list) or len(data) == 0:
+            return []
+
+        timestamp = datetime.now(timezone.utc).replace(
+            minute=0, second=0, microsecond=0
+        )
+        result = []
+        for index, item in enumerate(data):
+            if (
+                self._config[CONF_SENSOR_FORECAST_STEPS]
+                and index >= self._config[CONF_SENSOR_FORECAST_STEPS]
+            ):
+                break
+            result.append(
+                {
+                    ATTR_FORECAST_TIME: (timestamp + timedelta(hours=index)).strftime(
+                        "%Y-%m-%dT%H:00:00Z"
+                    ),
+                    "value": item,
+                }
+            )
+        return result
+
+    def get_airquality_daily(self):
+        data = self._resolve_airquality_source(WeatherEntityFeature.FORECAST_DAILY)
+        if isinstance(data, dict):
+            return data
+        if isinstance(data, list) and len(data) > 0:
+            result = {"today": data[0]}
+            if len(data) > 1:
+                result["tomorrow"] = data[1]
+            if len(data) > 2:
+                result["day_after"] = data[2]
+            return result
+        return None
+
+    def get_airquality_state(self):
+        current = self.get_airquality(WeatherEntityFeature.FORECAST_HOURLY)
+        if current is None:
+            return None
+        # Prefer PM2.5 as the sensor state and expose full pollutant data in attributes.
+        return current.get("PM2_5")
+
+    def get_airquality_component_state(self, component_name: str):
+        current = self.get_airquality(WeatherEntityFeature.FORECAST_HOURLY)
+        if not isinstance(current, dict):
+            return None
+        return current.get(component_name)
+
+    def get_airquality_component_hourly(self, component_name: str):
+        data = self.get_airquality_hourly()
+        result = []
+        for item in data:
+            value = item.get("value")
+            if isinstance(value, dict):
+                result.append(
+                    {
+                        ATTR_FORECAST_TIME: item.get(ATTR_FORECAST_TIME),
+                        "value": value.get(component_name),
+                    }
+                )
+        return result
 
     def get_evaporation(self):
         # Evaporation is reported as "within the last 24 hours. Therefore we have to add a day in the request"

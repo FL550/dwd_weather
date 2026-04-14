@@ -108,3 +108,144 @@ def test_mock_config_contains_required_keys():
     """Sanity-check minimal config shape required by connector."""
     for key in ("station_id", "station_name", "data_type"):
         assert key in MOCK_CONFIG
+
+
+@pytest.mark.asyncio
+async def test_connector_initializes_airquality_clients_when_enabled(
+    hass: HomeAssistant, mock_dwd_weather_object
+):
+    """Air quality clients should be created during connector initialization."""
+    entry = MagicMock()
+    entry.data = {**MOCK_CONFIG, "download_airquality": True}
+
+    with (
+        patch(
+            "custom_components.dwd_weather.connector.dwdforecast.Weather",
+            return_value=mock_dwd_weather_object,
+        ),
+        patch("custom_components.dwd_weather.connector.AirQuality") as mock_airquality,
+    ):
+        hourly_client = MagicMock()
+        hourly_client.station_id = "station-1"
+        daily_client = MagicMock()
+        mock_airquality.get_station_from_location.return_value = hourly_client
+        mock_airquality.return_value = daily_client
+
+        data = DWDWeatherData(hass, entry)
+
+    assert data._airquality_hourly is hourly_client
+    assert data._airquality_daily is daily_client
+    mock_airquality.get_station_from_location.assert_called_once()
+    mock_airquality.assert_called_once_with("station-1", "daily")
+
+
+def test_get_airquality_uses_hourly_when_requested(mock_dwd_data):
+    """Air quality getter should return hourly current value for hourly forecast."""
+    mock_dwd_data._config["download_airquality"] = True
+    mock_dwd_data._airquality_hourly = MagicMock()
+    mock_dwd_data._airquality_hourly.data = [{"PM2_5": 11.0}, {"PM2_5": 9.0}]
+
+    result = mock_dwd_data.get_airquality(WeatherEntityFeature.FORECAST_HOURLY)
+
+    assert result == {"PM2_5": 11.0}
+
+
+def test_get_airquality_uses_daily_when_requested(mock_dwd_data):
+    """Air quality getter should return today's value for daily forecast."""
+    mock_dwd_data._config["download_airquality"] = True
+    mock_dwd_data._airquality_daily = MagicMock()
+    mock_dwd_data._airquality_daily.data = {
+        "today": {"PM2_5": 20.0},
+        "tomorrow": {"PM2_5": 15.0},
+        "day_after": {"PM2_5": 12.0},
+    }
+
+    result = mock_dwd_data.get_airquality(WeatherEntityFeature.FORECAST_DAILY)
+
+    assert result == {"PM2_5": 20.0}
+
+
+def test_update_does_not_download_airquality_when_disabled(mock_dwd_data):
+    """Air quality updates should not run when air quality is not enabled."""
+    mock_dwd_data._config["download_airquality"] = False
+    mock_dwd_data.latest_update = None
+    mock_dwd_data._airquality_hourly = MagicMock()
+    mock_dwd_data._airquality_daily = MagicMock()
+
+    assert mock_dwd_data._update() is True
+    mock_dwd_data._airquality_hourly.update.assert_not_called()
+    mock_dwd_data._airquality_daily.update.assert_not_called()
+
+
+def test_update_downloads_airquality_when_enabled(mock_dwd_data):
+    """Air quality clients should be updated during _update when enabled."""
+    mock_dwd_data._config["download_airquality"] = True
+    mock_dwd_data.latest_update = None
+    hourly_client = MagicMock()
+    daily_client = MagicMock()
+    mock_dwd_data._airquality_hourly = hourly_client
+    mock_dwd_data._airquality_daily = daily_client
+
+    assert mock_dwd_data._update() is True
+
+    hourly_client.update.assert_called_once_with()
+    daily_client.update.assert_called_once_with(with_current_day=True)
+
+
+def _setup_forecast_weather_mocks(mock_dwd_data):
+    """Configure deterministic weather mock return values for forecast methods."""
+    dwd_weather = mock_dwd_data.dwd_weather
+    dwd_weather.is_in_timerange = MagicMock(return_value=True)
+    dwd_weather.get_timeframe_condition = MagicMock(return_value="sunny")
+    dwd_weather.get_timeframe_max = MagicMock(return_value=280.0)
+    dwd_weather.get_timeframe_min = MagicMock(return_value=278.0)
+    dwd_weather.get_timeframe_sum = MagicMock(return_value=1.0)
+    dwd_weather.get_timeframe_avg = MagicMock(return_value=180.0)
+    dwd_weather.get_daily_condition = MagicMock(return_value="sunny")
+    dwd_weather.get_daily_max = MagicMock(return_value=280.0)
+    dwd_weather.get_daily_min = MagicMock(return_value=278.0)
+    dwd_weather.get_daily_avg = MagicMock(return_value=180.0)
+    dwd_weather.get_daily_sum = MagicMock(return_value=1.0)
+    dwd_weather.get_uv_index = MagicMock(return_value=2)
+
+
+def test_hourly_forecast_includes_airquality_when_both_options_enabled(mock_dwd_data):
+    """Hourly forecast should include air quality fields only when both toggles are enabled."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+
+    mock_dwd_data._config["additional_forecast_attributes"] = True
+    mock_dwd_data._config["download_airquality"] = True
+    mock_dwd_data._airquality_hourly = MagicMock()
+    mock_dwd_data._airquality_hourly.data = [
+        {
+            "Stickstoffdioxid": 21.0,
+            "Ozon": 34.0,
+            "PM2_5": 12.0,
+            "PM10": 19.0,
+        }
+    ]
+
+    result = mock_dwd_data.get_forecast_hourly()
+
+    assert result is not None
+    assert result[0]["airquality_stickstoffdioxid"] == 21.0
+    assert result[0]["airquality_ozon"] == 34.0
+    assert result[0]["airquality_pm2_5"] == 12.0
+    assert result[0]["airquality_pm10"] == 19.0
+
+
+def test_hourly_forecast_does_not_include_airquality_when_additional_attrs_disabled(
+    mock_dwd_data,
+):
+    """Hourly forecast should omit air quality fields when additional attrs are disabled."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+
+    mock_dwd_data._config["additional_forecast_attributes"] = False
+    mock_dwd_data._config["download_airquality"] = True
+    mock_dwd_data._airquality_hourly = MagicMock()
+    mock_dwd_data._airquality_hourly.data = [{"PM2_5": 12.0}]
+
+    result = mock_dwd_data.get_forecast_hourly()
+
+    assert result is not None
+    assert "airquality_pm2_5" not in result[0]

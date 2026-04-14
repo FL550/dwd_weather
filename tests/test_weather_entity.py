@@ -29,6 +29,7 @@ def weather_entity(hass_data):
     connector.get_humidity = MagicMock(return_value=65)
     connector.get_uv_index = MagicMock(return_value=3)
     connector.get_apparent_temperature = MagicMock(return_value=10.9)
+    connector.get_airquality = MagicMock(return_value={"PM2_5": 12.0, "PM10": 20.0})
     connector.get_forecast = MagicMock(return_value=[{"condition": "sunny"}])
     connector.infos = {"station_id": "L732"}
 

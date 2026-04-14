@@ -80,6 +80,18 @@
       },
       "evaporation": {
         "name": "Evaporation in the next 24 hours"
+      },
+      "airquality_stickstoffdioxid": {
+        "name": "Air Quality Nitrogen Dioxide"
+      },
+      "airquality_ozon": {
+        "name": "Air Quality Ozone"
+      },
+      "airquality_pm2_5": {
+        "name": "Air Quality PM2.5"
+      },
+      "airquality_pm10": {
+        "name": "Air Quality PM10"
       }
     }
   },

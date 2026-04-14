@@ -34,6 +34,10 @@ ATTR_FORECAST_FOG_PROBABILITY = "fog_probability"
 ATTR_FORECAST_EVAPORATION = "evaporation"
 ATTR_FORECAST_HUMIDITY = "humidity"
 ATTR_FORECAST_HUMIDITY_ABSOLUTE = "humidity_absolute"
+ATTR_FORECAST_AIRQUALITY_OZON = "airquality_ozon"
+ATTR_FORECAST_AIRQUALITY_PM10 = "airquality_pm10"
+ATTR_FORECAST_AIRQUALITY_PM2_5 = "airquality_pm2_5"
+ATTR_FORECAST_AIRQUALITY_STICKSTOFFDIOXID = "airquality_stickstoffdioxid"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_MAP_INTERVAL = timedelta(minutes=1)
