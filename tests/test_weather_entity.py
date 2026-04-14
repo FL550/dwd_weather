@@ -77,7 +77,6 @@ def test_weather_attribution_and_extra_attributes(weather_entity):
     assert weather_entity.attribution == ATTRIBUTION
     assert weather_entity.extra_state_attributes == {
         "station_id": "L732",
-        "apparent_temperature": 10.9,
     }
 
 
