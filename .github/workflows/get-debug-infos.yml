@@ -1,5 +1,6 @@
 name: Get debug infos
-
+# Usage: Comment /debug STATION_ID MODE
+# Mode is optional an can be "hourly". Default is "daily"
 on:
   issue_comment:
     types: [created]
