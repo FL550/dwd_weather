@@ -151,24 +151,6 @@ class DWDWeatherData:
         self._airquality_station_id = None
         self._airquality_hourly = None
         self._airquality_daily = None
-        if (
-            self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
-            and self.dwd_weather.station
-        ):
-            try:
-                self._airquality_hourly = AirQuality.get_station_from_location(
-                    self.dwd_weather.station["lat"],
-                    self.dwd_weather.station["lon"],
-                    "hourly",
-                )
-                self._airquality_station_id = self._airquality_hourly.station_id
-                if self._airquality_station_id is not None:
-                    self._airquality_daily = AirQuality(
-                        self._airquality_station_id,
-                        "daily",
-                    )
-            except Exception as error:
-                _LOGGER.warning("Failed to initialize air quality data: %s", error)
 
     def register_entity(self, entity):
         self.entities.append(entity)
@@ -186,6 +168,26 @@ class DWDWeatherData:
 
     async def async_update(self):
         """Async wrapper for update method."""
+        if (
+            self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
+            and self.dwd_weather.station
+            and self._airquality_hourly is None
+            and self._airquality_daily is None
+        ):
+            try:
+                self._airquality_hourly = await AirQuality.get_station_from_location(
+                    self.dwd_weather.station["lat"],
+                    self.dwd_weather.station["lon"],
+                    "hourly",
+                )
+                self._airquality_station_id = self._airquality_hourly.station_id
+                if self._airquality_station_id is not None:
+                    self._airquality_daily = await AirQuality.create(
+                        self._airquality_station_id,
+                        "daily",
+                    )
+            except Exception as error:
+                _LOGGER.warning("Failed to initialize air quality data: %s", error)
         if await self._hass.async_add_executor_job(self._update):
             for entity in self.entities:
                 await entity.async_update_listeners(("daily", "hourly"))
