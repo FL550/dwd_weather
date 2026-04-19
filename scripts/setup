@@ -4,5 +4,10 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-push
+fi
+
 python3 -m pip install --requirement requirements.txt --pre
 cat custom_components/dwd_weather/manifest.json | jq -r '.requirements | .[]'  | python3 -m pip install -r /dev/stdin

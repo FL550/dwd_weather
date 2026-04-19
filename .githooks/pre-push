@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+echo "Running test suite before push..."
+pytest -x --tb=short
