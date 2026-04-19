@@ -114,7 +114,7 @@ def test_mock_config_contains_required_keys():
 async def test_connector_initializes_airquality_clients_when_enabled(
     hass: HomeAssistant, mock_dwd_weather_object
 ):
-    """Air quality clients should be created during connector initialization."""
+    """Air quality clients should be created during async_update when enabled."""
     entry = MagicMock()
     entry.data = {**MOCK_CONFIG, "download_airquality": True}
 
@@ -128,15 +128,19 @@ async def test_connector_initializes_airquality_clients_when_enabled(
         hourly_client = MagicMock()
         hourly_client.station_id = "station-1"
         daily_client = MagicMock()
-        mock_airquality.get_station_from_location.return_value = hourly_client
-        mock_airquality.return_value = daily_client
+        mock_airquality.get_station_from_location = AsyncMock(
+            return_value=hourly_client
+        )
+        mock_airquality.create = AsyncMock(return_value=daily_client)
 
         data = DWDWeatherData(hass, entry)
+        data._update = MagicMock(return_value=False)
+        await data.async_update()
 
     assert data._airquality_hourly is hourly_client
     assert data._airquality_daily is daily_client
-    mock_airquality.get_station_from_location.assert_called_once()
-    mock_airquality.assert_called_once_with("station-1", "daily")
+    mock_airquality.get_station_from_location.assert_awaited_once()
+    mock_airquality.create.assert_awaited_once_with("station-1", "daily")
 
 
 def test_get_airquality_uses_hourly_when_requested(mock_dwd_data):
