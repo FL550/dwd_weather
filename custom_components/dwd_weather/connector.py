@@ -274,7 +274,7 @@ class DWDWeatherData:
 
         weather_report_text = self.dwd_weather.get_weather_report(shouldUpdate=False)
         report_text = (
-            markdownify(weather_report_text, strip=["br"])
+            markdownify(weather_report_text, strip=["pre","br"])
             if weather_report_text is not None
             else None
         )
