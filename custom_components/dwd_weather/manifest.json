@@ -11,7 +11,7 @@
   ],
   "requirements": [
     "simple_dwd_weatherforecast==3.4.2",
-    "markdownify==0.6.5",
+    "markdownify>=1.2",
     "suntimes==1.1.2"
   ],
   "iot_class": "cloud_polling"
