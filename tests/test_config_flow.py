@@ -16,6 +16,7 @@ from custom_components.dwd_weather.const import (
     CONF_DATA_TYPE_MIXED,
     CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_ENTITY_TYPE,
     CONF_ENTITY_TYPE_MAP,
     CONF_ENTITY_TYPE_STATION,
@@ -128,6 +129,7 @@ async def test_station_configure_creates_entry():
         "hourly_update": False,
         CONF_DOWNLOAD_AIRQUALITY: False,
         CONF_DOWNLOAD_APPARENT_TEMPERATURE: False,
+        CONF_DOWNLOAD_PRECIPITATION_SENSORS: False,
         CONF_SENSOR_FORECAST_STEPS: 10,
         "additional_forecast_attributes": False,
         "daily_temp_high_precision": False,
@@ -240,6 +242,7 @@ async def test_station_configure_duplicate_unique_id_shows_form():
             "hourly_update": False,
             CONF_DOWNLOAD_AIRQUALITY: False,
             CONF_DOWNLOAD_APPARENT_TEMPERATURE: False,
+            CONF_DOWNLOAD_PRECIPITATION_SENSORS: False,
             CONF_SENSOR_FORECAST_STEPS: 10,
             "additional_forecast_attributes": False,
             "daily_temp_high_precision": False,
@@ -318,6 +321,10 @@ async def test_station_configure_hides_apparent_temperature_when_not_supported()
         result["data_schema"],
         CONF_DOWNLOAD_APPARENT_TEMPERATURE,
     )
+    assert _schema_has_field(
+        result["data_schema"],
+        CONF_DOWNLOAD_PRECIPITATION_SENSORS,
+    )
 
 
 @pytest.mark.asyncio
@@ -381,4 +388,8 @@ async def test_options_flow_hides_apparent_temperature_when_not_supported():
     assert not _schema_has_field(
         result["data_schema"],
         CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    )
+    assert _schema_has_field(
+        result["data_schema"],
+        CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     )

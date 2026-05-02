@@ -11,6 +11,7 @@ from custom_components.dwd_weather.sensor import (
 )
 from custom_components.dwd_weather.const import (
     CONF_DOWNLOAD_AIRQUALITY,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     ATTR_ISSUE_TIME,
     ATTR_LATEST_UPDATE,
     ATTR_STATION_ID,
@@ -151,3 +152,52 @@ async def test_sensor_async_update_requests_refresh(sensor_entity):
     await sensor_entity.async_update()
 
     sensor_entity._coordinator.async_request_refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_async_setup_skips_radar_precipitation_sensors_when_disabled(
+    hass, hass_data
+):
+    """Platform setup should not create radar precipitation sensors when disabled."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector._config[CONF_DOWNLOAD_PRECIPITATION_SENSORS] = False
+
+    hass.data = {"dwd_weather": {"entry-id": hass_data}}
+    entry = MagicMock()
+    entry.data = MOCK_CONFIG
+    entry.entry_id = "entry-id"
+
+    created_entities = []
+
+    def _collect(entities, _update_before_add):
+        created_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, _collect)
+
+    assert all(not entity._type.startswith("radar_") for entity in created_entities)
+
+
+@pytest.mark.asyncio
+async def test_async_setup_includes_radar_precipitation_sensors_when_enabled(
+    hass, hass_data
+):
+    """Platform setup should create radar precipitation sensors when enabled."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector._config[CONF_DOWNLOAD_PRECIPITATION_SENSORS] = True
+
+    hass.data = {"dwd_weather": {"entry-id": hass_data}}
+    entry = MagicMock()
+    entry.data = MOCK_CONFIG
+    entry.entry_id = "entry-id"
+
+    created_entities = []
+
+    def _collect(entities, _update_before_add):
+        created_entities.extend(entities)
+
+    await async_setup_entry(hass, entry, _collect)
+
+    radar_entities = [
+        entity for entity in created_entities if entity._type.startswith("radar_")
+    ]
+    assert len(radar_entities) == 2

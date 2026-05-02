@@ -21,6 +21,7 @@ from .const import (
     CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
@@ -298,6 +299,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): BooleanSelector({}),
                 vol.Required(
                     CONF_DOWNLOAD_AIRQUALITY,
+                    default=False,  # type: ignore
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
                 vol.Required(
@@ -673,6 +678,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_DOWNLOAD_AIRQUALITY,
                     default=self.config_entry.data.get(
                         CONF_DOWNLOAD_AIRQUALITY,
+                        False,
+                    ),
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
+                    default=self.config_entry.data.get(
+                        CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                         False,
                     ),
                 ): BooleanSelector({}),

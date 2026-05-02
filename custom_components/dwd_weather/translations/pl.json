@@ -92,6 +92,12 @@
       },
       "airquality_pm10": {
         "name": "Jakość powietrza PM10"
+      },
+      "radar_precipitation_now": {
+        "name": "Opad radarowy teraz"
+      },
+      "radar_next_precipitation": {
+        "name": "Radarowy następny opad"
       }
     }
   },
@@ -135,6 +141,7 @@
           "hourly_update": "Wymuś aktualizację danych co godzinę (zobacz ostrzeżenie poniżej)",
           "download_apparent_temperature": "Pobieraj wartości temperatury odczuwalnej",
           "download_airquality": "Pobieraj wartości jakości powietrza",
+          "download_precipitation_sensors": "Włącz radarowe czujniki opadów",
           "sensor_forecast_steps": "Ogranicz dostępne kroki prognozy w atrybutach czujnika",
           "additional_forecast_attributes": "Aktywuj dodatkowe atrybuty prognozy",
           "daily_temp_high_precision": "Użyj wyższej precyzji wyświetlania dla dziennych temperatur"
@@ -146,6 +153,7 @@
           "hourly_update": "Standardowo pogoda jest aktualizowana co 6 godzin. DWD również zapewnia cogodzinną aktualizację danych, ale brakuje w niej niektórych informacji (prawdopodobieństwo opadów, czas ich trwania, parowanie). Spowoduje to jednak znaczne zwiększenie wykorzystania danych, ponieważ wartości z czujników są łączone w cogodzinną aktualizację (~37 MB w porównaniu z ~0,17 MB pobierania na aktualizację). Należy pamiętać, że oczywiście spowalnia to również aktualizację nowych wartości.",
           "download_apparent_temperature": "Pobiera wartości temperatury odczuwalnej wraz ze standardowymi danymi pogodowymi.",
           "download_airquality": "Pobiera wartości jakości powietrza wraz ze standardowymi danymi pogodowymi.",
+          "download_precipitation_sensors": "Pobiera krótkoterminowe radarowe wartości opadów i aktywuje dedykowane czujniki opadów.",
           "sensor_forecast_steps": "Może to być przydatne, jeśli używasz tylko ograniczonej liczby kroków prognozowania i chcesz zwiększyć przejrzystość atrybutów czujnika.",
           "additional_forecast_attributes": "Spowoduje to dodanie do obiektu pogodowego dodatkowych atrybutów prognozy, takich jak prawdopodobieństwo wystąpienia mgły, parowania, czasu trwania nasłonecznienia itp.",
           "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych."
@@ -210,6 +218,7 @@
           "hourly_update": "Wymuś aktualizację danych co godzinę (zobacz ostrzeżenie poniżej)",
           "download_apparent_temperature": "Pobieraj wartości temperatury odczuwalnej",
           "download_airquality": "Pobieraj wartości jakości powietrza",
+          "download_precipitation_sensors": "Włącz radarowe czujniki opadów",
           "sensor_forecast_steps": "Ogranicz dostępne kroki prognozy w atrybutach czujnika",
           "map_options_message": "Niedostępne ustawienie",
           "map_background_type": "Co powinno być wyświetlane w tle?",
@@ -229,6 +238,7 @@
           "hourly_update": "Standardowo pogoda jest aktualizowana co 6 godzin. DWD również zapewnia cogodzinną aktualizację danych, ale brakuje w niej niektórych informacji (prawdopodobieństwo opadów, czas ich trwania, parowanie). Spowoduje to jednak znaczne zwiększenie wykorzystania danych, ponieważ wartości z czujników są łączone w cogodzinną aktualizację (~37 MB w porównaniu z ~0,17 MB pobierania na aktualizację). Należy pamiętać, że oczywiście spowalnia to również aktualizację nowych wartości.",
           "download_apparent_temperature": "Pobiera wartości temperatury odczuwalnej wraz ze standardowymi danymi pogodowymi.",
           "download_airquality": "Pobiera wartości jakości powietrza wraz ze standardowymi danymi pogodowymi.",
+          "download_precipitation_sensors": "Pobiera krótkoterminowe radarowe wartości opadów i aktywuje dedykowane czujniki opadów.",
           "map_options_message": "W tej chwili nie można skonfigurować wykresu. Usuń ten element i dodaj go ponownie z żądanymi ustawieniami.",
           "map_loop_count": "Obraz radarowy jest dostarczany co 5 minut. Oznacza to, że przez 30 minut w pętli będzie wyświetlanych 6 obrazów. Ta wartość odnosi się do ostatniego dostępnego obrazu.",
           "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego.",

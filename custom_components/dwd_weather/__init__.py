@@ -21,6 +21,7 @@ from .const import (
     CONF_DATA_TYPE_FORECAST,
     CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_ENTITY_TYPE,
     CONF_ENTITY_TYPE_MAP,
     CONF_ENTITY_TYPE_STATION,
@@ -210,6 +211,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         new[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
         new[CONF_DOWNLOAD_AIRQUALITY] = False
         hass.config_entries.async_update_entry(config_entry, data=new, version=13)
+    elif config_entry.version == 13:
+        new = {**config_entry.data}
+        new[CONF_DOWNLOAD_PRECIPITATION_SENSORS] = False
+        hass.config_entries.async_update_entry(config_entry, data=new, version=14)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

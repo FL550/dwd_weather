@@ -281,3 +281,67 @@ def test_get_apparent_temperature_hourly_returns_empty_when_not_supported(
 
     assert result == []
     mock_dwd_data.dwd_weather.get_apparent_temperature_forecast.assert_not_called()
+
+
+def test_update_refreshes_radar_precipitation_only_when_enabled(mock_dwd_data):
+    """Radar precipitation methods should be called during _update only when enabled."""
+    mock_dwd_data._config["download_precipitation_sensors"] = True
+    mock_dwd_data.latest_update = None
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
+        return_value={}
+    )
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
+
+    assert mock_dwd_data._update() is True
+
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_called_once_with(
+        shouldUpdate=True
+    )
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
+        shouldUpdate=False
+    )
+
+
+def test_update_skips_radar_precipitation_when_disabled(mock_dwd_data):
+    """Radar precipitation methods should not be called when feature toggle is disabled."""
+    mock_dwd_data._config["download_precipitation_sensors"] = False
+    mock_dwd_data.latest_update = None
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
+        return_value={}
+    )
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
+
+    assert mock_dwd_data._update() is True
+
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_not_called()
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_not_called()
+
+
+def test_radar_getters_do_not_trigger_refresh_calls(mock_dwd_data):
+    """Radar getters should only read cached update data and never trigger downloads."""
+    mock_dwd_data._radar_precipitation_forecast = {
+        datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc): 0.0,
+        datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc): 1.2,
+    }
+    mock_dwd_data._radar_next_precipitation = {
+        "start": datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc),
+        "end": datetime(2026, 1, 1, 0, 15, tzinfo=timezone.utc),
+        "max": 3.6,
+        "sum": 0.9,
+        "length": datetime(2026, 1, 1, 0, 10, tzinfo=timezone.utc)
+        - datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
+    }
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock()
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock()
+
+    start = mock_dwd_data.get_radar_next_precipitation_start()
+    assert start == "2026-01-01T00:05:00+00:00"
+    attrs = mock_dwd_data.get_radar_next_precipitation_attributes()
+    assert attrs["end"] == "2026-01-01T00:15:00+00:00"
+    assert attrs["length"] == 10
+    assert attrs["max"] == 3.6
+    assert attrs["sum"] == 0.9
+    assert len(mock_dwd_data.get_radar_precipitation_hourly()) == 2
+
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_not_called()
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_not_called()

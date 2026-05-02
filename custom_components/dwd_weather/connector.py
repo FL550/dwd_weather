@@ -67,6 +67,7 @@ from .const import (
     CONF_ADDITIONAL_FORECAST_ATTRIBUTES,
     CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_APPARENT_TEMPERATURE,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_DAILY_TEMP_HIGH_PRECISION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
@@ -151,6 +152,8 @@ class DWDWeatherData:
         self._airquality_station_id = None
         self._airquality_hourly = None
         self._airquality_daily = None
+        self._radar_precipitation_forecast = None
+        self._radar_next_precipitation = None
 
     def register_entity(self, entity):
         self.entities.append(entity)
@@ -221,6 +224,8 @@ class DWDWeatherData:
             with_apparent_temperature=self.supports_apparent_temperature(),
         )
 
+        self._update_radar_precipitation()
+
         if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
             if self._airquality_hourly is not None:
                 self._airquality_hourly.update()
@@ -274,7 +279,7 @@ class DWDWeatherData:
 
         weather_report_text = self.dwd_weather.get_weather_report(shouldUpdate=False)
         report_text = (
-            markdownify(weather_report_text, strip=["pre","br"])
+            markdownify(weather_report_text, strip=["pre", "br"])
             if weather_report_text is not None
             else None
         )
@@ -293,6 +298,31 @@ class DWDWeatherData:
 
         _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
         return True
+
+    def _update_radar_precipitation(self) -> None:
+        """Refresh radar precipitation data during connector update cycle only."""
+        self._radar_precipitation_forecast = None
+        self._radar_next_precipitation = None
+
+        if not self._config.get(CONF_DOWNLOAD_PRECIPITATION_SENSORS, False):
+            return
+
+        try:
+            self._radar_precipitation_forecast = (
+                self.dwd_weather.get_radar_precipitation_forecast(shouldUpdate=True)
+            )
+        except Exception as error:
+            _LOGGER.warning("Failed to update radar precipitation forecast: %s", error)
+
+        try:
+            # Reuse freshly downloaded data from forecast call where possible.
+            self._radar_next_precipitation = (
+                self.dwd_weather.get_radar_next_precipitation(shouldUpdate=False)
+            )
+        except Exception as error:
+            _LOGGER.warning(
+                "Failed to update radar next precipitation details: %s", error
+            )
 
     def get_forecast(
         self, forecast_feature: WeatherEntityFeature
@@ -950,6 +980,68 @@ class DWDWeatherData:
 
     def get_uv_index(self):
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
+
+    def get_radar_precipitation_now(self):
+        forecast = self._radar_precipitation_forecast
+        if not isinstance(forecast, dict) or len(forecast) == 0:
+            return None
+
+        now_ts = datetime.now(timezone.utc)
+        items = sorted(forecast.items())
+        current = None
+        for timestamp, value in items:
+            if timestamp <= now_ts:
+                current = value
+            elif current is not None:
+                break
+
+        if current is None:
+            current = items[0][1]
+        return round(current, 1) if current is not None else None
+
+    def get_radar_next_precipitation_start(self):
+        if not isinstance(self._radar_next_precipitation, dict):
+            return None
+        start = self._radar_next_precipitation.get("start")
+        if start is None:
+            return None
+        return start.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+    def get_radar_next_precipitation_attributes(self):
+        if not isinstance(self._radar_next_precipitation, dict):
+            return {}
+        result = {}
+        end = self._radar_next_precipitation.get("end")
+        if end is not None:
+            result["end"] = end.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        length = self._radar_next_precipitation.get("length")
+        if length is not None:
+            result["length"] = int(length.total_seconds() / 60)
+        max_val = self._radar_next_precipitation.get("max")
+        if max_val is not None:
+            result["max"] = round(max_val, 1)
+        sum_val = self._radar_next_precipitation.get("sum")
+        if sum_val is not None:
+            result["sum"] = round(sum_val, 1)
+        return result
+
+    def get_radar_precipitation_hourly(self):
+        forecast = self._radar_precipitation_forecast
+        if not isinstance(forecast, dict):
+            return []
+
+        result = []
+        for timestamp, value in sorted(forecast.items()):
+            result.append(
+                {
+                    ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "value": round(value, 1) if value is not None else None,
+                }
+            )
+
+        if self._config[CONF_SENSOR_FORECAST_STEPS]:
+            return result[: self._config[CONF_SENSOR_FORECAST_STEPS]]
+        return result
 
     def _resolve_airquality_source(
         self, forecast_type: WeatherEntityFeature

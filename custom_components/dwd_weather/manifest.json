@@ -10,7 +10,7 @@
     "@FL550"
   ],
   "requirements": [
-    "simple_dwd_weatherforecast==3.4.3",
+    "simple_dwd_weatherforecast==3.4.4",
     "markdownify>=1.2",
     "suntimes==1.1.2"
   ],

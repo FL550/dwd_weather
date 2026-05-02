@@ -92,6 +92,12 @@
       },
       "airquality_pm10": {
         "name": "Luftqualität PM10"
+      },
+      "radar_precipitation_now": {
+        "name": "Radar Niederschlag aktuell"
+      },
+      "radar_next_precipitation": {
+        "name": "Radar nächster Niederschlag"
       }
     }
   },
@@ -135,6 +141,7 @@
           "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
           "download_apparent_temperature": "Aktiviere gefühlte Temperatur",
           "download_airquality": "Aktiviere Luftqualitätswerte",
+          "download_precipitation_sensors": "Aktiviere Radar-Niederschlagssensoren",
           "sensor_forecast_steps": "Begrenze verfügbare Vorhersageschritte in Sensorattributen",
           "additional_forecast_attributes": "Aktiviere zusätzliche Vorhersageattribute",
           "daily_temp_high_precision": "Erhöhe die Anzeigegenauigkeit der täglichen Temperaturvorhersagen"
@@ -146,6 +153,7 @@
           "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an bei denen ein paar Informationen fehlen (Niederschlagswahrscheinlichkeit, Niederschlagsdauer, Verdunstung), allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
           "download_apparent_temperature": "Lädt zusätzlich zur Standard-Wettervorhersage die Werte der gefühlten Temperatur herunter.",
           "download_airquality": "Lädt zusätzlich zur Standard-Wettervorhersage Luftqualitätswerte herunter.",
+          "download_precipitation_sensors": "Lädt kurzfristige Radar-Niederschlagswerte und aktiviert dedizierte Niederschlagssensoren.",
           "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu.",
           "daily_temp_high_precision": "Die Vorhersage der täglichen Höchst- und Tiefsttemperatur wird auf eine Kommastelle genau angezeigt."
@@ -210,6 +218,7 @@
           "hourly_update": "Erzwinge die stündliche Aktualisierung der Daten (siehe Hinweis unten)",
           "download_apparent_temperature": "Aktiviere gefühlte Temperatur",
           "download_airquality": "Aktiviere Luftqualitätswerte",
+          "download_precipitation_sensors": "Aktiviere Radar-Niederschlagssensoren",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
           "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
@@ -228,6 +237,7 @@
           "hourly_update": "Normalerweise werden die Wetterdaten alle 6 Stunden aktualisiert. Der DWD bietet aber auch eine stündliche Aktualisierung der Daten an, allerdings erhöht das die Datennutzung erheblich (~37MB vs. ~0.17MB an Download-Daten), da die Sensorwerte für alle verfügbaren Stationen in der stündlichen Aktualisierung enthalten sind.",
           "download_apparent_temperature": "Lädt zusätzlich zur Standard-Wettervorhersage die Werte der gefühlten Temperatur herunter.",
           "download_airquality": "Lädt zusätzlich zur Standard-Wettervorhersage Luftqualitätswerte herunter.",
+          "download_precipitation_sensors": "Lädt kurzfristige Radar-Niederschlagswerte und aktiviert dedizierte Niederschlagssensoren.",
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",

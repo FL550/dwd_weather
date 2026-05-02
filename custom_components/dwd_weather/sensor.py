@@ -39,6 +39,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
     CONF_DOWNLOAD_AIRQUALITY,
+    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -300,6 +301,24 @@ SENSOR_TYPES = {
         SensorStateClass.MEASUREMENT,
         True,
     ],
+    "radar_precipitation_now": [
+        "Radar Precipitation Now",
+        None,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        "mdi:weather-rainy",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "radar_next_precipitation": [
+        "Radar Next Precipitation",
+        SensorDeviceClass.TIMESTAMP,
+        None,
+        "mdi:weather-rainy-clock",
+        False,
+        None,
+        True,
+    ],
 }
 
 
@@ -323,6 +342,13 @@ async def async_setup_entry(
             and not (
                 k.startswith("airquality")
                 and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
+            )
+            and not (
+                k.startswith("radar_")
+                and not hass_data[DWDWEATHER_DATA]._config.get(
+                    CONF_DOWNLOAD_PRECIPITATION_SENSORS,
+                    False,
+                )
             )
             # and contains_weather_data(k, hass_data[DWDWEATHER_DATA])
             and not (
@@ -435,6 +461,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_airquality_component_state("Ozon")
         elif self._type == "airquality_pm10":
             result = self._connector.get_airquality_component_state("PM10")
+        elif self._type == "radar_precipitation_now":
+            result = self._connector.get_radar_precipitation_now()
+        elif self._type == "radar_next_precipitation":
+            result = self._connector.get_radar_next_precipitation_start()
         return result
 
     @property
@@ -524,6 +554,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_airquality_component_hourly("Ozon")
         elif self._type == "airquality_pm10":
             attributes["data"] = self._connector.get_airquality_component_hourly("PM10")
+        elif self._type == "radar_precipitation_now":
+            attributes["data"] = self._connector.get_radar_precipitation_hourly()
+        elif self._type == "radar_next_precipitation":
+            attributes.update(self._connector.get_radar_next_precipitation_attributes())
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]
