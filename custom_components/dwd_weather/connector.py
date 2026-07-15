@@ -42,6 +42,7 @@ from simple_dwd_weatherforecast.dwdmap import MarkerShape
 from simple_dwd_weatherforecast.dwdairquality import (
     AirQuality,
 )
+from .map_loop import FutureImageLoop
 
 from .const import (
     ATTR_FORECAST_APPARENT_TEMP,
@@ -85,6 +86,7 @@ from .const import (
     CONF_MAP_HOMEMARKER_SHAPE_SQUARE,
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_COUNT_FUTURE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
@@ -1485,7 +1487,7 @@ class DWDMapData:
                         )
                     )
                     try:
-                        self._maploop = dwdmap.ImageLoop(
+                        self._maploop = FutureImageLoop(
                             dwdmap.germany_boundaries.minx,
                             dwdmap.germany_boundaries.miny,
                             dwdmap.germany_boundaries.maxx,
@@ -1500,7 +1502,10 @@ class DWDMapData:
                                     self._configdata[CONF_MAP_BACKGROUND_TYPE]  # type: ignore
                                 )
                             ],
-                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_past=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_future=self._configdata.get(
+                                CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
@@ -1530,7 +1535,7 @@ class DWDMapData:
                         )  # type: ignore
                     )
                     try:
-                        self._maploop = dwdmap.ImageLoop(
+                        self._maploop = FutureImageLoop(
                             self._configdata[CONF_MAP_WINDOW]["longitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
@@ -1545,7 +1550,10 @@ class DWDMapData:
                                     self._configdata[CONF_MAP_BACKGROUND_TYPE]
                                 )  # type: ignore
                             ],
-                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_past=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_future=self._configdata.get(
+                                CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
@@ -1644,7 +1652,8 @@ class DWDMapData:
                 )
             )
 
-            if self._image_nr == self._configdata[CONF_MAP_LOOP_COUNT] - 1:
+            loop_len = len(self._images) if self._images else 1
+            if self._image_nr >= loop_len - 1:
                 self._image_nr = 0
             else:
                 self._image_nr += 1
@@ -1672,25 +1681,41 @@ class DWDMapData:
                 and self._configdata[CONF_MAP_TIMESTAMP]
                 and self._maploop
             ):
-                timestamp = self._maploop._last_update - timedelta(minutes=5) * (
-                    self._configdata[CONF_MAP_LOOP_COUNT] - self._image_nr - 1
+                ref_time = getattr(self._maploop, "_last_now", None) or getattr(
+                    self._maploop, "_last_update", None
                 )
-                boxcolor = (0, 0, 0)
-                textcolor = (255, 255, 255)
-                if (
-                    CONF_MAP_DARK_MODE in self._configdata
-                    and self._configdata[CONF_MAP_DARK_MODE]
-                ):
-                    boxcolor = (225, 225, 225)
-                    textcolor = (0, 0, 0)
+                if ref_time:
+                    # In FutureImageLoop, index steps_past - 1 corresponds to reference time (now).
+                    # For original ImageLoop, CONF_MAP_LOOP_COUNT - 1 is the last index (now).
+                    if hasattr(self._maploop, "_steps_past"):
+                        steps_past = self._maploop._steps_past
+                        timestamp = ref_time - timedelta(minutes=5) * (
+                            steps_past - 1 - self._image_nr
+                        )
+                    else:
+                        timestamp = ref_time - timedelta(minutes=5) * (
+                            self._configdata[CONF_MAP_LOOP_COUNT] - 1 - self._image_nr
+                        )
+                else:
+                    timestamp = None
 
-                draw.rectangle((8, 13, 175, 32), fill=boxcolor)
-                draw.text(
-                    (10, 10),
-                    timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
-                    fill=textcolor,
-                    font_size=20,
-                )
+                if timestamp:
+                    boxcolor = (0, 0, 0)
+                    textcolor = (255, 255, 255)
+                    if (
+                        CONF_MAP_DARK_MODE in self._configdata
+                        and self._configdata[CONF_MAP_DARK_MODE]
+                    ):
+                        boxcolor = (225, 225, 225)
+                        textcolor = (0, 0, 0)
+
+                    draw.rectangle((8, 13, 175, 32), fill=boxcolor)
+                    draw.text(
+                        (10, 10),
+                        timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
+                        fill=textcolor,
+                        font_size=20,
+                    )
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()

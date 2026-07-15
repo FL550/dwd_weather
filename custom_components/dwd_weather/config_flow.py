@@ -60,6 +60,7 @@ from .const import (
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_ID,
     CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_COUNT_FUTURE,
     CONF_MAP_LOOP_SPEED,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
@@ -526,6 +527,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Map_loop:user_input: {}".format(user_input))
         if user_input is not None:
             user_input[CONF_MAP_LOOP_COUNT] = int(user_input[CONF_MAP_LOOP_COUNT] / 5)
+            if CONF_MAP_LOOP_COUNT_FUTURE in user_input:
+                user_input[CONF_MAP_LOOP_COUNT_FUTURE] = int(
+                    user_input[CONF_MAP_LOOP_COUNT_FUTURE] / 5
+                )
             self.config_data.update(user_input)
 
             if (
@@ -552,6 +557,18 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     {
                         "min": 5,
                         "max": 60,
+                        "step": "5",
+                        "mode": "slider",
+                        "unit_of_measurement": "min",
+                    }
+                ),
+                vol.Required(
+                    CONF_MAP_LOOP_COUNT_FUTURE,
+                    default=0,  # type: ignore
+                ): NumberSelector(
+                    {
+                        "min": 0,
+                        "max": 120,
                         "step": "5",
                         "mode": "slider",
                         "unit_of_measurement": "min",
@@ -790,6 +807,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input[CONF_MAP_LOOP_COUNT] = int(
                         user_input[CONF_MAP_LOOP_COUNT] / 5
                     )
+                if CONF_MAP_LOOP_COUNT_FUTURE in user_input:
+                    user_input[CONF_MAP_LOOP_COUNT_FUTURE] = int(
+                        user_input[CONF_MAP_LOOP_COUNT_FUTURE] / 5
+                    )
                 if user_input[CONF_MAP_HOMEMARKER]:
                     self.config_data.update(user_input)
                     return await self.async_step_homemarker()
@@ -840,6 +861,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             {
                                 "min": 5,
                                 "max": 60,
+                                "step": "5",
+                                "mode": "slider",
+                                "unit_of_measurement": "min",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_LOOP_COUNT_FUTURE,
+                            default=self.config_entry.data.get(CONF_MAP_LOOP_COUNT_FUTURE, 0) * 5,  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 0,
+                                "max": 120,
                                 "step": "5",
                                 "mode": "slider",
                                 "unit_of_measurement": "min",

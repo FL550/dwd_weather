@@ -99,6 +99,7 @@ CONF_MAP_HOMEMARKER_SIZE = "map_homemarker_size"
 CONF_MAP_HOMEMARKER_COLOR = "map_homemarker_color"
 CONF_MAP_TIMESTAMP = "map_timestamp"
 CONF_MAP_LOOP_COUNT = "map_loop_count"
+CONF_MAP_LOOP_COUNT_FUTURE = "map_loop_count_future"
 CONF_MAP_LOOP_SPEED = "map_loop_speed"
 
 conversion_table_map_foreground = {
