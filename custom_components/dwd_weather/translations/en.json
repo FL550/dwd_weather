@@ -197,6 +197,7 @@
       },
       "select_map_loop": {
         "title": "Precipitation loop",
+        "data": {
           "map_timestamp": "Should the time of the image be visible on the image?",
           "map_loop_count": "How many radar images from the past you would like to see?",
           "map_loop_count_future": "How many radar images from the future you would like to see?",
