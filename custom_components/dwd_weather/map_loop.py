@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class FutureImageLoop:
-    """Radar loop generator capable of displaying past and future (forecast) images."""
+    """Radar loop generator capable of displaying past, nowcast, and model forecast images."""
 
     def __init__(
         self,
@@ -26,10 +26,11 @@ class FutureImageLoop:
         miny: float,
         maxx: float,
         maxy: float,
-        map_types: list[WeatherMapType],
+        map_types: list[WeatherMapType | str],
         background_types: list[WeatherBackgroundMapType],
         steps_past: int = 6,
         steps_future: int = 0,
+        hours_future: int = 0,
         image_width: int = 520,
         image_height: int = 580,
         markers: list[Marker] = [],
@@ -43,6 +44,7 @@ class FutureImageLoop:
         self._background_types = background_types
         self._steps_past = steps_past
         self._steps_future = steps_future
+        self._hours_future = hours_future
         self._image_width = image_width
         self._image_height = image_height
         self.markers = markers
@@ -51,6 +53,8 @@ class FutureImageLoop:
         self._cached_images: dict[datetime, ImageFile.ImageFile] = {}
         self._images: list[ImageFile.ImageFile] = []
         self._last_now: datetime | None = None
+        self._model_times: set[datetime] = set()
+        self._all_times: list[datetime] = []
 
         self.update()
 
@@ -74,10 +78,20 @@ class FutureImageLoop:
         past_times = [
             now - timedelta(minutes=5 * i) for i in range(self._steps_past - 1, 0, -1)
         ]
-        future_times = [
+        nowcast_times = [
             now + timedelta(minutes=5 * i) for i in range(1, self._steps_future + 1)
         ]
-        all_times = past_times + [now] + future_times
+
+        # Calculate model times (starting at the next hour after the end of nowcast)
+        last_nowcast = nowcast_times[-1] if nowcast_times else now
+        start_model = last_nowcast.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        model_times = [
+            start_model + timedelta(hours=i) for i in range(self._hours_future)
+        ]
+
+        self._model_times = set(model_times)
+        all_times = past_times + [now] + nowcast_times + model_times
+        self._all_times = all_times
 
         new_images: dict[datetime, ImageFile.ImageFile] = {}
         for t in all_times:
@@ -89,10 +103,10 @@ class FutureImageLoop:
                     # Fetch fresh (especially future times, which update dynamically)
                     new_images[t] = self._get_image(t)
                 except Exception as e:
-                    _LOGGER.warning("Could not fetch radar image for time %s: %s", t, e)
+                    _LOGGER.warning("Could not fetch weather image for time %s: %s", t, e)
                     # If fetching a future image fails, try to use a previous frame
                     # to keep the loop complete, or fall back to cached version
-                    prev_t = t - timedelta(minutes=5)
+                    prev_t = t - (timedelta(hours=1) if t in self._model_times else timedelta(minutes=5))
                     if prev_t in new_images:
                         new_images[t] = new_images[prev_t]
                     elif t in self._cached_images:
@@ -104,8 +118,14 @@ class FutureImageLoop:
         ]
 
     def _get_image(self, date: datetime) -> ImageFile.ImageFile:
-        # Combine map types into a single string
-        map_layers = ",".join(map_type.value for map_type in self._map_types)
+        # Determine if we should request the model forecast or radar nowcast layer
+        if date in self._model_times:
+            map_layers = "dwd:Icon-eu_reg00625_fd_sl_TOTPREC01H"
+        else:
+            map_layers = ",".join(
+                map_type.value if hasattr(map_type, "value") else str(map_type)
+                for map_type in self._map_types
+            )
 
         # Separate special layers and others for background types
         special_layers = [

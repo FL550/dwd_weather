@@ -87,6 +87,7 @@ from .const import (
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_LOOP_COUNT_FUTURE,
+    CONF_MAP_LOOP_HOURS_FUTURE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
@@ -1506,6 +1507,9 @@ class DWDMapData:
                             steps_future=self._configdata.get(
                                 CONF_MAP_LOOP_COUNT_FUTURE, 0
                             ),
+                            hours_future=self._configdata.get(
+                                CONF_MAP_LOOP_HOURS_FUTURE, 0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
@@ -1553,6 +1557,9 @@ class DWDMapData:
                             steps_past=self._configdata[CONF_MAP_LOOP_COUNT],
                             steps_future=self._configdata.get(
                                 CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            ),
+                            hours_future=self._configdata.get(
+                                CONF_MAP_LOOP_HOURS_FUTURE, 0
                             ),
                             image_width=width,
                             image_height=self._height,
@@ -1684,20 +1691,35 @@ class DWDMapData:
                 ref_time = getattr(self._maploop, "_last_now", None) or getattr(
                     self._maploop, "_last_update", None
                 )
-                if ref_time:
-                    # In FutureImageLoop, index steps_past - 1 corresponds to reference time (now).
-                    # For original ImageLoop, CONF_MAP_LOOP_COUNT - 1 is the last index (now).
-                    if hasattr(self._maploop, "_steps_past"):
-                        steps_past = self._maploop._steps_past
-                        timestamp = ref_time - timedelta(minutes=5) * (
-                            steps_past - 1 - self._image_nr
-                        )
+                
+                label = ""
+                if hasattr(self._maploop, "_all_times") and self._maploop._all_times:
+                    if self._image_nr < len(self._maploop._all_times):
+                        timestamp = self._maploop._all_times[self._image_nr]
                     else:
-                        timestamp = ref_time - timedelta(minutes=5) * (
-                            self._configdata[CONF_MAP_LOOP_COUNT] - 1 - self._image_nr
-                        )
+                        timestamp = self._maploop._all_times[-1]
+                    
+                    if ref_time:
+                        last_nowcast = ref_time + timedelta(minutes=5) * getattr(self._maploop, "_steps_future", 0)
+                        if timestamp <= ref_time:
+                            label = "Radar"
+                        elif timestamp <= last_nowcast:
+                            label = "Nowcast"
+                        else:
+                            label = "Model"
                 else:
-                    timestamp = None
+                    if ref_time:
+                        if hasattr(self._maploop, "_steps_past"):
+                            steps_past = self._maploop._steps_past
+                            timestamp = ref_time - timedelta(minutes=5) * (
+                                steps_past - 1 - self._image_nr
+                            )
+                        else:
+                            timestamp = ref_time - timedelta(minutes=5) * (
+                                self._configdata[CONF_MAP_LOOP_COUNT] - 1 - self._image_nr
+                            )
+                    else:
+                        timestamp = None
 
                 if timestamp:
                     boxcolor = (0, 0, 0)
@@ -1709,10 +1731,13 @@ class DWDMapData:
                         boxcolor = (225, 225, 225)
                         textcolor = (0, 0, 0)
 
-                    draw.rectangle((8, 13, 175, 32), fill=boxcolor)
+                    time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
+                    display_text = f"{time_str} ({label})" if label else time_str
+
+                    draw.rectangle((8, 13, 240, 32), fill=boxcolor)
                     draw.text(
                         (10, 10),
-                        timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
+                        display_text,
                         fill=textcolor,
                         font_size=20,
                     )
