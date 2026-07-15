@@ -88,6 +88,8 @@ from .const import (
     CONF_MAP_LOOP_COUNT,
     CONF_MAP_LOOP_COUNT_FUTURE,
     CONF_MAP_LOOP_HOURS_FUTURE,
+    CONF_MAP_LOOP_SPEED,
+    CONF_MAP_LOOP_SPEED_FUTURE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
@@ -1510,6 +1512,12 @@ class DWDMapData:
                             hours_future=self._configdata.get(
                                 CONF_MAP_LOOP_HOURS_FUTURE, 0
                             ),
+                            speed=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED, 0.5
+                            ),
+                            speed_future=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED_FUTURE, 2.0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
@@ -1560,6 +1568,12 @@ class DWDMapData:
                             ),
                             hours_future=self._configdata.get(
                                 CONF_MAP_LOOP_HOURS_FUTURE, 0
+                            ),
+                            speed=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED, 0.5
+                            ),
+                            speed_future=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED_FUTURE, 2.0
                             ),
                             image_width=width,
                             image_height=self._height,
@@ -1741,24 +1755,15 @@ class DWDMapData:
                         except Exception:
                             text_width = len(display_text) * 15
 
-                        if is_future:
-                            x2 = image.size[0] - 8
-                            x1 = x2 - text_width - 8
-                            draw.rectangle((x1, 10, x2, 44), fill=boxcolor)
-                            draw.text(
-                                (x1 + 4, 8),
-                                display_text,
-                                fill=textcolor,
-                                font_size=28,
-                            )
-                        else:
-                            draw.rectangle((8, 10, 8 + text_width + 8, 44), fill=boxcolor)
-                            draw.text(
-                                (10, 8),
-                                display_text,
-                                fill=textcolor,
-                                font_size=28,
-                            )
+                        x2 = image.size[0] - 8
+                        x1 = x2 - text_width - 8
+                        draw.rectangle((x1, 10, x2, 44), fill=boxcolor)
+                        draw.text(
+                            (x1 + 4, 8),
+                            display_text,
+                            fill=textcolor,
+                            font_size=28,
+                        )
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()

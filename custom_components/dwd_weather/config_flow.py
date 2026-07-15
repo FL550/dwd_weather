@@ -63,6 +63,7 @@ from .const import (
     CONF_MAP_LOOP_COUNT_FUTURE,
     CONF_MAP_LOOP_HOURS_FUTURE,
     CONF_MAP_LOOP_SPEED,
+    CONF_MAP_LOOP_SPEED_FUTURE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE,
@@ -596,6 +597,18 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             "unit_of_measurement": "h",
                         }
                     ),
+                    vol.Required(
+                        CONF_MAP_LOOP_SPEED_FUTURE,
+                        default=2.0,  # type: ignore
+                    ): NumberSelector(
+                        {
+                            "min": 0.5,
+                            "max": 5.0,
+                            "step": "0.1",
+                            "mode": "slider",
+                            "unit_of_measurement": "s",
+                        }
+                    ),
                 }
             )
 
@@ -917,6 +930,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                 "step": "1",
                                 "mode": "slider",
                                 "unit_of_measurement": "h",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_LOOP_SPEED_FUTURE,
+                            default=self.config_entry.data.get(CONF_MAP_LOOP_SPEED_FUTURE, 2.0),  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 0.5,
+                                "max": 5.0,
+                                "step": "0.1",
+                                "mode": "slider",
+                                "unit_of_measurement": "s",
                             }
                         ),
                         vol.Required(

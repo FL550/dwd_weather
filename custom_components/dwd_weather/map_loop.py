@@ -14,6 +14,14 @@ from simple_dwd_weatherforecast.dwdmap import (
     get_time_last_5_min,
 )
 
+try:
+    from .const import CONF_MAP_DEFAULT_WMS_STYLE
+except (ImportError, ModuleNotFoundError):
+    try:
+        from const import CONF_MAP_DEFAULT_WMS_STYLE
+    except (ImportError, ModuleNotFoundError):
+        CONF_MAP_DEFAULT_WMS_STYLE = "niederschlagsradar"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -31,6 +39,8 @@ class FutureImageLoop:
         steps_past: int = 6,
         steps_future: int = 0,
         hours_future: int = 0,
+        speed: float = 0.5,
+        speed_future: float = 2.0,
         image_width: int = 520,
         image_height: int = 580,
         markers: list[Marker] = [],
@@ -45,6 +55,8 @@ class FutureImageLoop:
         self._steps_past = int(steps_past)
         self._steps_future = int(steps_future)
         self._hours_future = int(hours_future)
+        self._speed = float(speed)
+        self._speed_future = float(speed_future)
         self._image_width = image_width
         self._image_height = image_height
         self.markers = markers
@@ -64,7 +76,8 @@ class FutureImageLoop:
     def get_images(self) -> Iterable[ImageFile.ImageFile]:
         return self._images
 
-    def update(self):
+    def update(self) -> None:
+        """Update and rebuild the radar/nowcast/forecast loop image lists."""
         now = get_time_last_5_min(datetime.now(timezone.utc))
 
         if self._last_now == now:
@@ -90,11 +103,28 @@ class FutureImageLoop:
         ]
 
         self._model_times = set(model_times)
-        all_times = past_times + [now] + nowcast_times + model_times
-        self._all_times = all_times
+
+        # Determine repeat count for model frames (base speed is self._speed)
+        radar_speed = self._speed
+        model_speed = self._speed_future
+        repeat_count = max(1, round(model_speed / radar_speed))
+
+        # Build loop_times with repeated model times
+        loop_times = []
+        for t in past_times + [now] + nowcast_times:
+            loop_times.append(t)
+        for t in model_times:
+            for _ in range(repeat_count):
+                loop_times.append(t)
+
+        self._all_times = loop_times
 
         new_images: dict[datetime, ImageFile.ImageFile] = {}
-        for t in all_times:
+        for t in loop_times:
+            # De-duplication: skip if this timestamp has already been fetched/resolved in this update run
+            if t in new_images:
+                continue
+
             # Past and current times can be cached
             if t <= now and t in self._cached_images:
                 new_images[t] = self._cached_images[t]
@@ -104,17 +134,27 @@ class FutureImageLoop:
                     new_images[t] = self._get_image(t)
                 except Exception as e:
                     _LOGGER.warning("Could not fetch weather image for time %s: %s", t, e)
-                    # If fetching a future image fails, try to use a previous frame
-                    # to keep the loop complete, or fall back to cached version
-                    prev_t = t - (timedelta(hours=1) if t in self._model_times else timedelta(minutes=5))
-                    if prev_t in new_images:
-                        new_images[t] = new_images[prev_t]
-                    elif t in self._cached_images:
+                    # Recursive lookback search: scan backwards to find any successfully loaded frame
+                    fallback_found = False
+                    curr_lookback = t
+                    step_delta = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
+                    # Scan up to 12 steps back (12 hours for model, or 1 hour for nowcast)
+                    for _ in range(12):
+                        curr_lookback -= step_delta
+                        if curr_lookback in new_images:
+                            new_images[t] = new_images[curr_lookback]
+                            fallback_found = True
+                            break
+                        elif curr_lookback in self._cached_images:
+                            new_images[t] = self._cached_images[curr_lookback]
+                            fallback_found = True
+                            break
+                    if not fallback_found and t in self._cached_images:
                         new_images[t] = self._cached_images[t]
 
         self._cached_images = new_images
         self._images = [
-            self._cached_images[t] for t in all_times if t in self._cached_images
+            self._cached_images[t] for t in loop_times if t in self._cached_images
         ]
 
     def _get_image(self, date: datetime) -> ImageFile.ImageFile:
@@ -154,6 +194,20 @@ class FutureImageLoop:
                 ","
             ).rstrip(",")
         )
+
+        # Build style list matching the layers list exactly
+        layer_styles = []
+        for _ in special_layers:
+            layer_styles.append("")
+        for _ in range(len(self._map_types)):
+            if date in self._model_times:
+                layer_styles.append(CONF_MAP_DEFAULT_WMS_STYLE)
+            else:
+                layer_styles.append("")
+        for _ in other_layers:
+            layer_styles.append("")
+        styles = ",".join(layer_styles)
+
         bgcolor = "0xFFFFFF"
         if self.dark_mode:
             bgcolor = "0x1C1C1C"
@@ -161,7 +215,7 @@ class FutureImageLoop:
         url = (
             f"https://maps.dwd.de/geoserver/dwd/wms?service=WMS&version=1.3.0"
             f"&request=GetMap&layers={layers}&bbox={self._miny},{self._minx},{self._maxy},{self._maxx}"
-            f"&width={self._image_width}&height={self._image_height}&srs=EPSG:4326&styles=&format=image/png"
+            f"&width={self._image_width}&height={self._image_height}&srs=EPSG:4326&styles={styles}&format=image/png"
             f"&TIME={date.strftime('%Y-%m-%dT%H:%M:00.0Z')}&bgcolor={bgcolor}"
         )
 
