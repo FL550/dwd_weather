@@ -1736,28 +1736,28 @@ class DWDMapData:
                         display_text = f"{time_str} ({label})" if label else time_str
 
                         try:
-                            bbox = draw.textbbox((0, 0), display_text, font_size=20)
+                            bbox = draw.textbbox((0, 0), display_text, font_size=28)
                             text_width = bbox[2] - bbox[0]
                         except Exception:
-                            text_width = len(display_text) * 11
+                            text_width = len(display_text) * 15
 
                         if is_future:
                             x2 = image.size[0] - 8
                             x1 = x2 - text_width - 8
-                            draw.rectangle((x1, 13, x2, 32), fill=boxcolor)
+                            draw.rectangle((x1, 10, x2, 44), fill=boxcolor)
                             draw.text(
-                                (x1 + 4, 10),
+                                (x1 + 4, 8),
                                 display_text,
                                 fill=textcolor,
-                                font_size=20,
+                                font_size=28,
                             )
                         else:
-                            draw.rectangle((8, 13, 8 + text_width + 8, 32), fill=boxcolor)
+                            draw.rectangle((8, 10, 8 + text_width + 8, 44), fill=boxcolor)
                             draw.text(
-                                (10, 10),
+                                (10, 8),
                                 display_text,
                                 fill=textcolor,
-                                font_size=20,
+                                font_size=28,
                             )
 
             image.save(buf, format="PNG")  # type: ignore()
