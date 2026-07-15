@@ -42,9 +42,9 @@ class FutureImageLoop:
         self._maxy = maxy
         self._map_types = map_types
         self._background_types = background_types
-        self._steps_past = steps_past
-        self._steps_future = steps_future
-        self._hours_future = hours_future
+        self._steps_past = int(steps_past)
+        self._steps_future = int(steps_future)
+        self._hours_future = int(hours_future)
         self._image_width = image_width
         self._image_height = image_height
         self.markers = markers

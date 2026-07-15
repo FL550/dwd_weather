@@ -1683,11 +1683,7 @@ class DWDMapData:
                     [center[0], center[1] - length, center[0], center[1] + length],
                     fill=(255, 0, 0),
                 )
-            if (
-                CONF_MAP_TIMESTAMP in self._configdata
-                and self._configdata[CONF_MAP_TIMESTAMP]
-                and self._maploop
-            ):
+            if self._maploop:
                 ref_time = getattr(self._maploop, "_last_now", None) or getattr(
                     self._maploop, "_last_update", None
                 )
@@ -1722,25 +1718,47 @@ class DWDMapData:
                         timestamp = None
 
                 if timestamp:
-                    boxcolor = (0, 0, 0)
-                    textcolor = (255, 255, 255)
+                    is_future = label in ["Nowcast", "Model"]
                     if (
-                        CONF_MAP_DARK_MODE in self._configdata
-                        and self._configdata[CONF_MAP_DARK_MODE]
+                        (CONF_MAP_TIMESTAMP in self._configdata and self._configdata[CONF_MAP_TIMESTAMP])
+                        or is_future
                     ):
-                        boxcolor = (225, 225, 225)
-                        textcolor = (0, 0, 0)
+                        boxcolor = (0, 0, 0)
+                        textcolor = (255, 255, 255)
+                        if (
+                            CONF_MAP_DARK_MODE in self._configdata
+                            and self._configdata[CONF_MAP_DARK_MODE]
+                        ):
+                            boxcolor = (225, 225, 225)
+                            textcolor = (0, 0, 0)
 
-                    time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
-                    display_text = f"{time_str} ({label})" if label else time_str
+                        time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
+                        display_text = f"{time_str} ({label})" if label else time_str
 
-                    draw.rectangle((8, 13, 240, 32), fill=boxcolor)
-                    draw.text(
-                        (10, 10),
-                        display_text,
-                        fill=textcolor,
-                        font_size=20,
-                    )
+                        try:
+                            bbox = draw.textbbox((0, 0), display_text, font_size=20)
+                            text_width = bbox[2] - bbox[0]
+                        except Exception:
+                            text_width = len(display_text) * 11
+
+                        if is_future:
+                            x2 = image.size[0] - 8
+                            x1 = x2 - text_width - 8
+                            draw.rectangle((x1, 13, x2, 32), fill=boxcolor)
+                            draw.text(
+                                (x1 + 4, 10),
+                                display_text,
+                                fill=textcolor,
+                                font_size=20,
+                            )
+                        else:
+                            draw.rectangle((8, 13, 8 + text_width + 8, 32), fill=boxcolor)
+                            draw.text(
+                                (10, 10),
+                                display_text,
+                                fill=textcolor,
+                                font_size=20,
+                            )
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
