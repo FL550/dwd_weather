@@ -1759,6 +1759,7 @@ class DWDMapData:
             image = self._image
 
         if image:
+            image = image.copy()
             draw = PIL.ImageDraw.ImageDraw(image)
             if self._configdata[CONF_MAP_CENTERMARKER]:
                 center = (image.size[0] / 2, image.size[1] / 2)
@@ -1847,15 +1848,6 @@ class DWDMapData:
                         distinct_times.append(t)
 
                 if len(distinct_times) > 1:
-                    # Find active index (closest distinct time to the current frame timestamp)
-                    active_idx = 0
-                    min_diff = None
-                    for idx, t in enumerate(distinct_times):
-                        diff = abs((t - timestamp).total_seconds())
-                        if min_diff is None or diff < min_diff:
-                            min_diff = diff
-                            active_idx = idx
-
                     # Coordinates
                     bar_y = 75
                     bar_left = 20
@@ -1869,26 +1861,32 @@ class DWDMapData:
                     )
                     bg_color = (200, 200, 200) if is_dark else (80, 80, 80)
                     accent_color = (0, 180, 216) if is_dark else (255, 110, 0)
-                    text_color = (255, 255, 255) if is_dark else (0, 0, 0)
                     tick_color = (150, 150, 150) if is_dark else (100, 100, 100)
 
                     # Draw base line
                     draw.rectangle((bar_left, bar_y - 2, bar_right, bar_y + 2), fill=bg_color)
 
-                    # Find "NOW" index (closest distinct time to now)
+                    # Find "NOW" time (closest distinct time to now)
                     now_utc = datetime.now(timezone.utc)
-                    now_idx = 0
+                    now_time = distinct_times[0]
                     min_now_diff = None
-                    for idx, t in enumerate(distinct_times):
+                    for t in distinct_times:
                         diff = abs((t - now_utc).total_seconds())
                         if min_now_diff is None or diff < min_now_diff:
                             min_now_diff = diff
-                            now_idx = idx
+                            now_time = t
+
+                    # Calculate positions linearly based on time difference from start to end of loop
+                    start_time = distinct_times[0]
+                    end_time = distinct_times[-1]
+                    total_duration = (end_time - start_time).total_seconds()
 
                     # Draw ticks representing the distinct frames
-                    for idx in range(len(distinct_times)):
-                        x = bar_left + int((idx / (len(distinct_times) - 1)) * bar_width)
-                        if idx == now_idx:
+                    for t in distinct_times:
+                        time_diff = (t - start_time).total_seconds()
+                        x = bar_left + int((time_diff / total_duration) * bar_width)
+                        
+                        if t == now_time:
                             # NOW tick is larger
                             draw.line((x, bar_y - 8, x, bar_y + 8), fill=accent_color, width=3)
                             # Draw "NOW" label under the tick
@@ -1898,38 +1896,9 @@ class DWDMapData:
                             draw.line((x, bar_y - 4, x, bar_y + 4), fill=tick_color, width=1)
 
                     # Draw active frame slider handle (large circle)
-                    active_x = bar_left + int((active_idx / (len(distinct_times) - 1)) * bar_width)
+                    active_diff = (timestamp - start_time).total_seconds()
+                    active_x = bar_left + int((active_diff / total_duration) * bar_width)
                     draw.ellipse((active_x - 7, bar_y - 7, active_x + 7, bar_y + 7), fill=accent_color)
-
-                    # Draw section labels (Past, Nowcast, Model) above the line
-                    # Past Section: center of 0 to now_idx
-                    if now_idx > 0:
-                        past_center_idx = now_idx / 2
-                        past_x = bar_left + int((past_center_idx / (len(distinct_times) - 1)) * bar_width)
-                        draw.text((past_x - 18, bar_y - 25), "Past", fill=text_color, font_size=16)
-
-                    # Nowcast / Model boundary
-                    model_idx = None
-                    for idx, t in enumerate(distinct_times):
-                        if hasattr(self._maploop, "_model_times") and t in self._maploop._model_times:
-                            model_idx = idx
-                            break
-
-                    if model_idx is not None:
-                        # Nowcast section: center of now_idx to model_idx
-                        nowcast_center_idx = (now_idx + model_idx) / 2
-                        nowcast_x = bar_left + int((nowcast_center_idx / (len(distinct_times) - 1)) * bar_width)
-                        draw.text((nowcast_x - 30, bar_y - 25), "Nowcast", fill=text_color, font_size=16)
-
-                        # Model section: center of model_idx to end
-                        model_center_idx = (model_idx + len(distinct_times) - 1) / 2
-                        model_x = bar_left + int((model_center_idx / (len(distinct_times) - 1)) * bar_width)
-                        draw.text((model_x - 22, bar_y - 25), "Model", fill=text_color, font_size=16)
-                    else:
-                        # If no model times, label the rest as Nowcast
-                        nowcast_center_idx = (now_idx + len(distinct_times) - 1) / 2
-                        nowcast_x = bar_left + int((nowcast_center_idx / (len(distinct_times) - 1)) * bar_width)
-                        draw.text((nowcast_x - 30, bar_y - 25), "Nowcast", fill=text_color, font_size=16)
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()

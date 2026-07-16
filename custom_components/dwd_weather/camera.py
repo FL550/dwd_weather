@@ -96,3 +96,24 @@ class MyCamera(Camera):
     def translation_key(self):
         """Return the current condition."""
         return "weather_maps"
+
+    @property
+    def state(self) -> str:
+        """Return the custom state to show status below the card next to title."""
+        if not self._coordinator.last_update_success:
+            return "Loading..."
+
+        update_time = self._coordinator.last_update_success_time
+        if update_time is None:
+            return "Loading..."
+
+        from datetime import datetime, timezone
+        elapsed = datetime.now(timezone.utc) - update_time
+        elapsed_minutes = int(elapsed.total_seconds() / 60)
+
+        if elapsed_minutes < 1:
+            return "Up to date"
+        elif elapsed_minutes == 1:
+            return "Updated 1 min ago"
+        else:
+            return f"Updated {elapsed_minutes} min ago"
