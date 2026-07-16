@@ -208,7 +208,7 @@ class FutureImageLoop:
             layer_styles.append("")
         for _ in range(len(self._map_types)):
             if date in self._model_times:
-                layer_styles.append(CONF_MAP_DEFAULT_WMS_STYLE)
+                layer_styles.append("")
             else:
                 layer_styles.append("")
         for _ in other_layers:
