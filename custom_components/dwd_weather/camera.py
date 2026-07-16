@@ -63,7 +63,6 @@ class MyCamera(Camera):
     ) -> bytes | None:
         """Return bytes of camera image."""
         self._dwd_data.set_size(width if width else 520, height if height else 580)
-        await self._coordinator.async_request_refresh()
         image = self._dwd_data.get_image()
 
         current_state = getattr(self._dwd_data, "current_label", "Radar")
