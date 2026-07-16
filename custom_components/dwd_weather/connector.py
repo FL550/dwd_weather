@@ -1505,6 +1505,7 @@ class DWDMapData:
         self._cachedwidth = 0
         self._image_nr = 0
         self.last_update_time = None
+        self._cached_gif_bytes = None
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -1512,6 +1513,7 @@ class DWDMapData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
+        self._cached_gif_bytes = None
         if (
             self._configdata[CONF_MAP_FOREGROUND_TYPE]
             == CONF_MAP_FOREGROUND_PRECIPITATION
@@ -1925,6 +1927,46 @@ class DWDMapData:
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
+
+    def get_animated_gif(self):
+        """Generate and return cached animated GIF containing all frames."""
+        if hasattr(self, "_cached_gif_bytes") and self._cached_gif_bytes:
+            return self._cached_gif_bytes
+
+        if not self._images:
+            return None
+            
+        drawn_images = []
+        original_image_nr = self._image_nr
+        try:
+            for idx in range(len(self._images)):
+                self._image_nr = idx
+                img_bytes = self.get_image()
+                if img_bytes:
+                    img = PIL.Image.open(BytesIO(img_bytes))
+                    drawn_images.append(img.convert("RGB"))
+        finally:
+            self._image_nr = original_image_nr
+
+        if not drawn_images:
+            return None
+
+        buf = BytesIO()
+        speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
+        duration_ms = int(speed * 1000)
+
+        # Save as animated GIF
+        drawn_images[0].save(
+            buf,
+            format="GIF",
+            save_all=True,
+            append_images=drawn_images[1:],
+            duration=duration_ms,
+            loop=0,
+            optimize=True
+        )
+        self._cached_gif_bytes = buf.getvalue()
+        return self._cached_gif_bytes
 
     def map_maptype(
         self, map_type
