@@ -1760,12 +1760,6 @@ class DWDMapData:
             )
 
             loop_len = len(self._images) if self._images else 1
-            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
-            total_duration = loop_len * speed
-            
-            import time
-            time_in_cycle = time.time() % total_duration
-            self._image_nr = int(time_in_cycle / speed)
             if self._image_nr >= loop_len:
                 self._image_nr = loop_len - 1
             _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
@@ -1955,18 +1949,38 @@ class DWDMapData:
         speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
         duration_ms = int(speed * 1000)
 
+        # Convert to P mode with adaptive palette on the first image,
+        # and quantize append images using the first image's palette.
+        first_image_p = drawn_images[0].convert("P", palette=PIL.Image.Palette.ADAPTIVE)
+        append_images_p = [img.quantize(palette=first_image_p) for img in drawn_images[1:]]
+
         # Save as animated GIF
-        drawn_images[0].save(
+        first_image_p.save(
             buf,
             format="GIF",
             save_all=True,
-            append_images=drawn_images[1:],
+            append_images=append_images_p,
             duration=duration_ms,
-            loop=0,
-            optimize=True
+            loop=0
         )
         self._cached_gif_bytes = buf.getvalue()
         return self._cached_gif_bytes
+
+    def update_frame_nr(self):
+        """Update active frame index based on system clock."""
+        if (
+            self._configdata[CONF_MAP_FOREGROUND_TYPE]
+            == CONF_MAP_FOREGROUND_PRECIPITATION
+        ):
+            loop_len = len(self._images) if self._images else 1
+            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
+            total_duration = loop_len * speed
+            
+            import time
+            time_in_cycle = time.time() % total_duration
+            self._image_nr = int(time_in_cycle / speed)
+            if self._image_nr >= loop_len:
+                self._image_nr = loop_len - 1
 
     def map_maptype(
         self, map_type
