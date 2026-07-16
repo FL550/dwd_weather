@@ -96,8 +96,12 @@ class MyCamera(Camera):
 
     @property
     def frame_interval(self):
-        """Return the unique of the sensor."""
-        return self._frame_interval
+        """Return the camera frame interval."""
+        return (
+            self._dwd_data._configdata[CONF_MAP_LOOP_SPEED]
+            if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
+            else 0.5
+        )
 
     @property
     def translation_key(self):

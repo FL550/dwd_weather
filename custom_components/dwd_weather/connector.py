@@ -1758,10 +1758,14 @@ class DWDMapData:
             )
 
             loop_len = len(self._images) if self._images else 1
-            if self._image_nr >= loop_len - 1:
-                self._image_nr = 0
-            else:
-                self._image_nr += 1
+            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
+            total_duration = loop_len * speed
+            
+            import time
+            time_in_cycle = time.time() % total_duration
+            self._image_nr = int(time_in_cycle / speed)
+            if self._image_nr >= loop_len:
+                self._image_nr = loop_len - 1
             _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
             if self._images:
                 image = self._images[self._image_nr]  # type: ignore

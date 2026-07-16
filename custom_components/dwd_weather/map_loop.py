@@ -151,6 +151,13 @@ class FutureImageLoop:
                             break
                     if not fallback_found and t in self._cached_images:
                         new_images[t] = self._cached_images[t]
+                        fallback_found = True
+                    
+                    if not fallback_found:
+                        if new_images:
+                            new_images[t] = list(new_images.values())[-1]
+                        elif self._cached_images:
+                            new_images[t] = list(self._cached_images.values())[0]
 
         self._cached_images = new_images
         self._images = [
