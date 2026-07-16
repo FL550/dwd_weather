@@ -1498,8 +1498,8 @@ class DWDMapData:
         self._image = None
         self._images = None
 
-        self._width = None
-        self._height = None
+        self._width = 520
+        self._height = 580
         self._maploop = None
         self._cachedheight = 0
         self._cachedwidth = 0
