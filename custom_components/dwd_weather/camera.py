@@ -15,6 +15,7 @@ from .const import (
     NAME,
     CONF_MAP_FOREGROUND_TYPE,
     conversion_table_map_foreground,
+    CONF_MAP_FOREGROUND_PRECIPITATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
