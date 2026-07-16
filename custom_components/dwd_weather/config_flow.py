@@ -64,6 +64,8 @@ from .const import (
     CONF_MAP_LOOP_HOURS_FUTURE,
     CONF_MAP_LOOP_SPEED,
     CONF_MAP_LOOP_SPEED_FUTURE,
+    CONF_MAP_TIMESTAMP_FONT_SIZE,
+    CONF_MAP_SHOW_TIMELINE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE,
@@ -557,6 +559,22 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 default=False,  # type: ignore
             ): BooleanSelector({}),
             vol.Required(
+                CONF_MAP_TIMESTAMP_FONT_SIZE,
+                default=28,  # type: ignore
+            ): NumberSelector(
+                {
+                    "min": 10,
+                    "max": 50,
+                    "step": 1,
+                    "mode": "slider",
+                    "unit_of_measurement": "px",
+                }
+            ),
+            vol.Required(
+                CONF_MAP_SHOW_TIMELINE,
+                default=True,  # type: ignore
+            ): BooleanSelector({}),
+            vol.Required(
                 CONF_MAP_LOOP_COUNT,
                 default=30,  # type: ignore
             ): NumberSelector(
@@ -895,6 +913,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Required(
                             CONF_MAP_TIMESTAMP,
                             default=self.config_entry.data[CONF_MAP_TIMESTAMP],  # type: ignore
+                        ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_MAP_TIMESTAMP_FONT_SIZE,
+                            default=self.config_entry.data.get(CONF_MAP_TIMESTAMP_FONT_SIZE, 28),  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 10,
+                                "max": 50,
+                                "step": 1,
+                                "mode": "slider",
+                                "unit_of_measurement": "px",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_SHOW_TIMELINE,
+                            default=self.config_entry.data.get(CONF_MAP_SHOW_TIMELINE, True),  # type: ignore
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_MAP_LOOP_COUNT,

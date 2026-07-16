@@ -199,6 +199,8 @@
         "title": "Pętla opadów",
         "data": {
           "map_timestamp": "Czy na obrazie powinien być wyświetlany czas?",
+          "map_timestamp_font_size": "Rozmiar czcionki znacznika czasu",
+          "map_show_timeline": "Czy suwak osi czasu powinien być widoczny?",
           "map_loop_count": "Ile obrazów radarowych z przeszłości chciałbyś zobaczyć?",
           "map_loop_count_future": "Ile obrazów radarowych z przyszłości chciałbyś zobaczyć?",
           "map_loop_hours_future": "Ile dodatkowych godzin prognozy modelu pogodowego chciałbyś zobaczyć?",
@@ -210,7 +212,9 @@
           "map_loop_count_future": "DWD dostarcza prognozowane obrazy radarowe (nowcasting) do 120 minut (2 godziny) w przyszłość.",
           "map_loop_hours_future": "Spowoduje to dołączenie obrazów prognozy z modelu pogodowego (ICON-EU, rozdzielczość 1-godzinna) po 2-godzinnym radarowym nowcastingu.",
           "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego.",
-          "map_loop_speed_future": "Wartość ta określa, jak długo wyświetlany jest każdy obraz prognozy z modelu pogodowego przed przejściem do następnego."
+          "map_loop_speed_future": "Wartość ta określa, jak długo wyświetlany jest każdy obraz prognozy z modelu pogodowego przed przejściem do następnego.",
+          "map_timestamp_font_size": "Definiuje rozmiar czcionki dla nakładki znacznika czasu (domyślnie 28).",
+          "map_show_timeline": "Włącz lub wyłącz wizualny pasek postępu osi czasu."
         }
       },
       "select_map_homemarker": {
@@ -249,6 +253,8 @@
           "map_marker": "Czy środek mapy powinien być oznaczony?",
           "map_homemarker": "Czy na mapie należy umieścić znacznik domu?",
           "map_timestamp": "Czy na obrazie powinien być wyświetlany czas?",
+          "map_timestamp_font_size": "Rozmiar czcionki znacznika czasu",
+          "map_show_timeline": "Czy suwak osi czasu powinien być widoczny?",
           "map_loop_count": "Ile obrazów radarowych z przeszłości chciałbyś zobaczyć?",
           "map_loop_count_future": "Ile obrazów radarowych z przyszłości chciałbyś zobaczyć?",
           "map_loop_hours_future": "Ile dodatkowych godzin prognozy modelu pogodowego chciałbyś zobaczyć?",
@@ -274,6 +280,8 @@
           "map_loop_hours_future": "Spowoduje to dołączenie obrazów prognozy z modelu pogodowego (ICON-EU, rozdzielczość 1-godzinna) po 2-godzinnym radarowym nowcastingu.",
           "map_loop_speed": "Wartość ta określa, jak długo wyświetlany jest każdy obraz przed przejściem do następnego.",
           "map_loop_speed_future": "Wartość ta określa, jak długo wyświetlany jest każdy obraz prognozy z modelu pogodowego przed przejściem do następnego.",
+          "map_timestamp_font_size": "Definiuje rozmiar czcionki dla nakładki znacznika czasu (domyślnie 28).",
+          "map_show_timeline": "Włącz lub wyłącz wizualny pasek postępu osi czasu.",
           "sensor_forecast_steps": "Może to być przydatne, jeśli używasz tylko ograniczonej liczby kroków prognozowania i chcesz zwiększyć przejrzystość atrybutów czujnika.",
           "additional_forecast_attributes": "Spowoduje to dodanie do obiektu pogodowego dodatkowych atrybutów prognozy, takich jak prawdopodobieństwo wystąpienia mgły, parowania, czasu trwania nasłonecznienia itp.",
           "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych."

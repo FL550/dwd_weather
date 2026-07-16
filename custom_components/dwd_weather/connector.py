@@ -94,6 +94,8 @@ try:
         CONF_MAP_LOOP_HOURS_FUTURE,
         CONF_MAP_LOOP_SPEED,
         CONF_MAP_LOOP_SPEED_FUTURE,
+        CONF_MAP_TIMESTAMP_FONT_SIZE,
+        CONF_MAP_SHOW_TIMELINE,
         CONF_MAP_CENTERMARKER,
         CONF_MAP_HOMEMARKER,
         CONF_MAP_TIMESTAMP,
@@ -168,6 +170,8 @@ except ImportError:
         CONF_MAP_LOOP_HOURS_FUTURE,
         CONF_MAP_LOOP_SPEED,
         CONF_MAP_LOOP_SPEED_FUTURE,
+        CONF_MAP_TIMESTAMP_FONT_SIZE,
+        CONF_MAP_SHOW_TIMELINE,
         CONF_MAP_CENTERMARKER,
         CONF_MAP_HOMEMARKER,
         CONF_MAP_TIMESTAMP,
@@ -1815,11 +1819,7 @@ class DWDMapData:
                 self.current_label = label if label else "Radar"
 
                 if timestamp:
-                    is_future = label in ["Nowcast", "Model"]
-                    if (
-                        (CONF_MAP_TIMESTAMP in self._configdata and self._configdata[CONF_MAP_TIMESTAMP])
-                        or is_future
-                    ):
+                    if CONF_MAP_TIMESTAMP in self._configdata and self._configdata[CONF_MAP_TIMESTAMP]:
                         boxcolor = (0, 0, 0)
                         textcolor = (255, 255, 255)
                         if (
@@ -1832,24 +1832,35 @@ class DWDMapData:
                         time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
                         display_text = time_str
 
+                        font_size = (
+                            self._configdata[CONF_MAP_TIMESTAMP_FONT_SIZE]
+                            if CONF_MAP_TIMESTAMP_FONT_SIZE in self._configdata
+                            else 28
+                        )
+
                         try:
-                            bbox = draw.textbbox((0, 0), display_text, font_size=28)
+                            bbox = draw.textbbox((0, 0), display_text, font_size=font_size)
                             text_width = bbox[2] - bbox[0]
                         except Exception:
-                            text_width = len(display_text) * 15
+                            text_width = len(display_text) * int(font_size * 0.54)
 
                         x2 = image.size[0] - 8
                         x1 = x2 - text_width - 8
-                        draw.rectangle((x1, 10, x2, 44), fill=boxcolor)
+                        draw.rectangle((x1, 10, x2, 10 + int(font_size * 1.2)), fill=boxcolor)
                         draw.text(
                             (x1 + 4, 8),
                             display_text,
                             fill=textcolor,
-                            font_size=28,
+                            font_size=font_size,
                         )
 
             # Draw timeline progress bar
-            if hasattr(self, "_maploop") and self._maploop and hasattr(self._maploop, "_all_times") and self._maploop._all_times:
+            show_timeline = (
+                self._configdata[CONF_MAP_SHOW_TIMELINE]
+                if CONF_MAP_SHOW_TIMELINE in self._configdata
+                else True
+            )
+            if show_timeline and hasattr(self, "_maploop") and self._maploop and hasattr(self._maploop, "_all_times") and self._maploop._all_times:
                 distinct_times = []
                 for t in self._maploop._all_times:
                     if t not in distinct_times:

@@ -103,6 +103,8 @@ CONF_MAP_LOOP_COUNT_FUTURE = "map_loop_count_future"
 CONF_MAP_LOOP_HOURS_FUTURE = "map_loop_hours_future"
 CONF_MAP_LOOP_SPEED = "map_loop_speed"
 CONF_MAP_LOOP_SPEED_FUTURE = "map_loop_speed_future"
+CONF_MAP_TIMESTAMP_FONT_SIZE = "map_timestamp_font_size"
+CONF_MAP_SHOW_TIMELINE = "map_show_timeline"
 
 conversion_table_map_foreground = {
     CONF_MAP_FOREGROUND_PRECIPITATION: "Precipitation",
