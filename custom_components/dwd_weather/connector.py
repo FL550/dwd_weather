@@ -101,6 +101,8 @@ try:
         CONF_MAP_TYPE_GERMANY,
         CONF_MAP_WINDOW,
         CONF_SENSOR_FORECAST_STEPS,
+        CONF_STATION_ID,
+        CONF_STATION_NAME,
         CONF_WIND_DIRECTION_TYPE,
         CONF_HOURLY_UPDATE,
         DEFAULT_WIND_DIRECTION_TYPE,
@@ -173,6 +175,8 @@ except ImportError:
         CONF_MAP_TYPE_GERMANY,
         CONF_MAP_WINDOW,
         CONF_SENSOR_FORECAST_STEPS,
+        CONF_STATION_ID,
+        CONF_STATION_NAME,
         CONF_WIND_DIRECTION_TYPE,
         CONF_HOURLY_UPDATE,
         DEFAULT_WIND_DIRECTION_TYPE,
@@ -1496,6 +1500,7 @@ class DWDMapData:
         self._cachedheight = 0
         self._cachedwidth = 0
         self._image_nr = 0
+        self.last_update_time = None
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -1510,6 +1515,7 @@ class DWDMapData:
             self._update_loop()
         else:
             self._update_single()
+        self.last_update_time = datetime.now(timezone.utc)
 
     def _update_loop(self):
         _LOGGER.debug(
@@ -1806,6 +1812,8 @@ class DWDMapData:
                     else:
                         timestamp = None
 
+                self.current_label = label if label else "Radar"
+
                 if timestamp:
                     is_future = label in ["Nowcast", "Model"]
                     if (
@@ -1822,7 +1830,7 @@ class DWDMapData:
                             textcolor = (0, 0, 0)
 
                         time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
-                        display_text = f"{time_str} ({label})" if label else time_str
+                        display_text = time_str
 
                         try:
                             bbox = draw.textbbox((0, 0), display_text, font_size=28)

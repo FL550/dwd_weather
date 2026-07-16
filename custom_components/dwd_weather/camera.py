@@ -56,6 +56,7 @@ class MyCamera(Camera):
         )
 
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
+        self._attr_state = "Radar"
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -64,6 +65,12 @@ class MyCamera(Camera):
         self._dwd_data.set_size(width if width else 520, height if height else 580)
         await self._coordinator.async_request_refresh()
         image = self._dwd_data.get_image()
+
+        current_state = getattr(self._dwd_data, "current_label", "Radar")
+        if current_state != self._attr_state:
+            self._attr_state = current_state
+            self.async_write_ha_state()
+
         return image
 
     @property
@@ -99,21 +106,5 @@ class MyCamera(Camera):
 
     @property
     def state(self) -> str:
-        """Return the custom state to show status below the card next to title."""
-        if not self._coordinator.last_update_success:
-            return "Loading..."
-
-        update_time = self._coordinator.last_update_success_time
-        if update_time is None:
-            return "Loading..."
-
-        from datetime import datetime, timezone
-        elapsed = datetime.now(timezone.utc) - update_time
-        elapsed_minutes = int(elapsed.total_seconds() / 60)
-
-        if elapsed_minutes < 1:
-            return "Up to date"
-        elif elapsed_minutes == 1:
-            return "Updated 1 min ago"
-        else:
-            return f"Updated {elapsed_minutes} min ago"
+        """Return the current loop source (Radar, Nowcast, Model)."""
+        return self._attr_state
