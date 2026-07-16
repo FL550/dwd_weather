@@ -121,6 +121,11 @@ class MyCamera(Camera):
             return "image/gif"
         return "image/png"
 
+    @content_type.setter
+    def content_type(self, value):
+        """Set the content type of the image."""
+        pass
+
     @property
     def translation_key(self):
         """Return the current condition."""
