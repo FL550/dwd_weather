@@ -1927,16 +1927,9 @@ class DWDMapData:
         if hasattr(self, "_cached_gif_bytes") and self._cached_gif_bytes:
             return self._cached_gif_bytes
 
-        _LOGGER.warning("get_animated_gif: starting GIF generation")
-        if hasattr(self, "_cached_gif_bytes") and self._cached_gif_bytes:
-            _LOGGER.warning("get_animated_gif: returning cached GIF (size %d)", len(self._cached_gif_bytes))
-            return self._cached_gif_bytes
-
         if not self._images:
-            _LOGGER.warning("get_animated_gif: self._images is empty or None!")
             return None
             
-        _LOGGER.warning("get_animated_gif: self._images size is %d", len(self._images))
         drawn_images = []
         original_image_nr = self._image_nr
         try:
@@ -1946,15 +1939,11 @@ class DWDMapData:
                 if img_bytes:
                     img = PIL.Image.open(BytesIO(img_bytes))
                     drawn_images.append(img.convert("RGB"))
-                    _LOGGER.warning("get_animated_gif: added frame %d, mode RGB", idx)
-                else:
-                    _LOGGER.warning("get_animated_gif: get_image() returned None for frame %d!", idx)
         except Exception as e:
             _LOGGER.error("get_animated_gif: exception during frame generation: %s", e, exc_info=True)
         finally:
             self._image_nr = original_image_nr
 
-        _LOGGER.warning("get_animated_gif: total drawn_images count: %d", len(drawn_images))
         if not drawn_images:
             return None
 
@@ -1977,7 +1966,6 @@ class DWDMapData:
             loop=0
         )
         self._cached_gif_bytes = buf.getvalue()
-        _LOGGER.warning("get_animated_gif: GIF saved successfully. Size: %d bytes", len(self._cached_gif_bytes))
         return self._cached_gif_bytes
 
     def update_frame_nr(self):
