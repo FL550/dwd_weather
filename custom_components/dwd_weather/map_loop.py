@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 import logging
@@ -24,9 +25,26 @@ except (ImportError, ModuleNotFoundError):
 
 _LOGGER = logging.getLogger(__name__)
 
+# Number of parallel WMS fetch workers
+_FETCH_WORKERS = 5
+
+# WMS request timeout in seconds (reduced from 15s)
+_WMS_TIMEOUT = 8
+
+# How long to cache model images before re-fetching (model runs update every ~3-6h)
+_MODEL_CACHE_TTL = timedelta(hours=1)
+
 
 class FutureImageLoop:
-    """Radar loop generator capable of displaying past, nowcast, and model forecast images."""
+    """Radar loop generator capable of displaying past, nowcast, and model forecast images.
+
+    Caching strategy:
+    - Past images (t < now):   Immutable observed radar data — cached forever until evicted from window.
+    - Nowcast images (t > now, non-model): DWD recomputes with fresh radar every ~5 min — always re-fetched.
+    - Model images:            Only change on new ICON-EU model runs (~3-6h) — cached for _MODEL_CACHE_TTL.
+
+    WMS fetches are parallelized using ThreadPoolExecutor to keep update time under ~15 seconds.
+    """
 
     def __init__(
         self,
@@ -62,7 +80,13 @@ class FutureImageLoop:
         self.markers = markers
         self.dark_mode = dark_mode
 
-        self._cached_images: dict[datetime, ImageFile.ImageFile] = {}
+        # Cache for immutable past images (radar) — keyed by timestamp
+        self._past_cache: dict[datetime, ImageFile.ImageFile] = {}
+
+        # Cache for model forecast images — only valid for _MODEL_CACHE_TTL
+        self._model_cache: dict[datetime, ImageFile.ImageFile] = {}
+        self._model_cache_time: datetime | None = None
+
         self._images: list[ImageFile.ImageFile] = []
         self._last_now: datetime | None = None
         self._model_times: set[datetime] = set()
@@ -87,15 +111,17 @@ class FutureImageLoop:
 
         self._last_now = now
 
-        # Calculate all required timestamps
+        # --- Calculate all required timestamps ---
+        # Past: steps_past-1 frames before now (not including now itself)
         past_times = [
             now - timedelta(minutes=5 * i) for i in range(self._steps_past - 1, 0, -1)
         ]
+        # Nowcast: 5-min steps into the future
         nowcast_times = [
             now + timedelta(minutes=5 * i) for i in range(1, self._steps_future + 1)
         ]
 
-        # Calculate model times (starting at the next hour after the end of nowcast)
+        # Model times: starting at next full hour after end of nowcast
         last_nowcast = nowcast_times[-1] if nowcast_times else now
         start_model = last_nowcast.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
         model_times = [
@@ -104,13 +130,11 @@ class FutureImageLoop:
 
         self._model_times = set(model_times)
 
-        # Determine repeat count for model frames (base speed is self._speed)
-        radar_speed = self._speed
-        model_speed = self._speed_future
-        repeat_count = max(1, round(model_speed / radar_speed))
+        # Determine repeat count for model frames (slower display speed)
+        repeat_count = max(1, round(self._speed_future / self._speed))
 
-        # Build loop_times with repeated model times
-        loop_times = []
+        # Build the full loop timeline (model frames repeated for slower display)
+        loop_times: list[datetime] = []
         for t in past_times + [now] + nowcast_times:
             loop_times.append(t)
         for t in model_times:
@@ -119,53 +143,125 @@ class FutureImageLoop:
 
         self._all_times = loop_times
 
-        new_images: dict[datetime, ImageFile.ImageFile] = {}
+        # Unique timestamps that need an image (de-duplicated but ordered)
+        seen: set[datetime] = set()
+        unique_times: list[datetime] = []
         for t in loop_times:
-            # De-duplication: skip if this timestamp has already been fetched/resolved in this update run
-            if t in new_images:
-                continue
+            if t not in seen:
+                seen.add(t)
+                unique_times.append(t)
 
-            # Past and current times can be cached
-            if t <= now and t in self._cached_images:
-                new_images[t] = self._cached_images[t]
+        # --- Determine model cache validity ---
+        model_cache_expired = (
+            self._model_cache_time is None
+            or (now - self._model_cache_time) >= _MODEL_CACHE_TTL
+        )
+        if model_cache_expired:
+            _LOGGER.debug("Model image cache expired — will re-fetch all model frames")
+            self._model_cache.clear()
+            self._model_cache_time = now
+
+        # --- Classify each timestamp: cached or needs fetch ---
+        already_have: dict[datetime, ImageFile.ImageFile] = {}
+        to_fetch: list[datetime] = []
+
+        for t in unique_times:
+            if t < now and t in self._past_cache:
+                # Past radar images are immutable — reuse from cache
+                already_have[t] = self._past_cache[t]
+            elif t in self._model_times and t in self._model_cache:
+                # Model image cached and still valid
+                already_have[t] = self._model_cache[t]
             else:
-                try:
-                    # Fetch fresh (especially future times, which update dynamically)
-                    new_images[t] = self._get_image(t)
-                except Exception as e:
-                    _LOGGER.warning("Could not fetch weather image for time %s: %s", t, e)
-                    # Recursive lookback search: scan backwards to find any successfully loaded frame
-                    fallback_found = False
-                    curr_lookback = t
-                    step_delta = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
-                    # Scan up to 12 steps back (12 hours for model, or 1 hour for nowcast)
-                    for _ in range(12):
-                        curr_lookback -= step_delta
-                        if curr_lookback in new_images:
-                            new_images[t] = new_images[curr_lookback]
-                            fallback_found = True
-                            break
-                        elif curr_lookback in self._cached_images:
-                            new_images[t] = self._cached_images[curr_lookback]
-                            fallback_found = True
-                            break
-                    if not fallback_found and t in self._cached_images:
-                        new_images[t] = self._cached_images[t]
-                        fallback_found = True
-                    
-                    if not fallback_found:
-                        if new_images:
-                            new_images[t] = list(new_images.values())[-1]
-                        elif self._cached_images:
-                            new_images[t] = list(self._cached_images.values())[0]
+                # Must fetch: now, all nowcast (change every 5 min), new/expired model, new past
+                to_fetch.append(t)
 
-        self._cached_images = new_images
+        _LOGGER.debug(
+            "Map update: %d cached, %d to fetch (past cache size: %d, model cache size: %d)",
+            len(already_have), len(to_fetch), len(self._past_cache), len(self._model_cache),
+        )
+
+        # --- Fetch missing images in parallel ---
+        fetched: dict[datetime, ImageFile.ImageFile] = {}
+        if to_fetch:
+            with ThreadPoolExecutor(max_workers=_FETCH_WORKERS) as executor:
+                futures = {
+                    executor.submit(self._get_image_safe, t): t for t in to_fetch
+                }
+                for future in as_completed(futures):
+                    t = futures[future]
+                    result = future.result()
+                    if result is not None:
+                        fetched[t] = result
+
+        # --- Merge results ---
+        new_images: dict[datetime, ImageFile.ImageFile] = {}
+        new_images.update(already_have)
+        new_images.update(fetched)
+
+        # --- Fill any gaps with nearest-neighbor fallback ---
+        for t in unique_times:
+            if t not in new_images:
+                # Try to find nearest available image
+                fallback = self._find_fallback(t, new_images)
+                if fallback is not None:
+                    new_images[t] = fallback
+                    _LOGGER.debug("Using fallback image for timestamp %s", t)
+
+        # --- Update caches ---
+        # Past cache: store all past images (immutable)
+        for t in past_times:
+            if t in new_images:
+                self._past_cache[t] = new_images[t]
+        # Evict past cache entries that are no longer in the window
+        current_past_set = set(past_times)
+        stale_past = [t for t in self._past_cache if t not in current_past_set]
+        for t in stale_past:
+            del self._past_cache[t]
+
+        # Model cache: store all successfully fetched model images
+        for t in model_times:
+            if t in new_images:
+                self._model_cache[t] = new_images[t]
+        # Evict model cache entries that are no longer in the model window
+        current_model_set = set(model_times)
+        stale_model = [t for t in self._model_cache if t not in current_model_set]
+        for t in stale_model:
+            del self._model_cache[t]
+
+        # --- Build final image list (with repeated model frames) ---
         self._images = [
-            self._cached_images[t] for t in loop_times if t in self._cached_images
+            new_images[t] for t in loop_times if t in new_images
         ]
 
+    def _find_fallback(
+        self,
+        t: datetime,
+        available: dict[datetime, ImageFile.ImageFile],
+    ) -> ImageFile.ImageFile | None:
+        """Find the nearest available image to timestamp t."""
+        if not available:
+            return None
+        step = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
+        # Look backward up to 12 steps
+        curr = t
+        for _ in range(12):
+            curr -= step
+            if curr in available:
+                return available[curr]
+        # Fall back to last available
+        return list(available.values())[-1]
+
+    def _get_image_safe(self, date: datetime) -> ImageFile.ImageFile | None:
+        """Fetch a single WMS image, returning None on failure instead of raising."""
+        try:
+            return self._get_image(date)
+        except Exception as e:
+            _LOGGER.warning("Could not fetch weather image for %s: %s", date, e)
+            return None
+
     def _get_image(self, date: datetime) -> ImageFile.ImageFile:
-        # Determine if we should request the model forecast or radar nowcast layer
+        # Determine if we should request the model forecast or radar/nowcast layer
         if date in self._model_times:
             map_layers = "dwd:Icon-eu_reg00625_fd_sl_TOTPREC01H"
         else:
@@ -195,11 +291,11 @@ class FutureImageLoop:
                 WeatherBackgroundMapType.GEMEINDEN,
             ]
         ]
-        # Combine layers with special layers first, then map types, then other layers
+        # Combine layers: special first, then map type, then others
         layers = (
-            f"{','.join(special_layers)},{map_layers},{','.join(other_layers)}".lstrip(
-                ","
-            ).rstrip(",")
+            f"{','.join(special_layers)},{map_layers},{','.join(other_layers)}"
+            .lstrip(",")
+            .rstrip(",")
         )
 
         # Build style list matching the layers list exactly
@@ -208,7 +304,7 @@ class FutureImageLoop:
             layer_styles.append("")
         for _ in range(len(self._map_types)):
             if date in self._model_times:
-                layer_styles.append("icon-eu_reg00625_fd_sl_totprec01h_lawa")
+                layer_styles.append("niederschlagsradar")
             else:
                 layer_styles.append("")
         for _ in other_layers:
@@ -226,7 +322,8 @@ class FutureImageLoop:
             f"&TIME={date.strftime('%Y-%m-%dT%H:%M:00.0Z')}&bgcolor={bgcolor}"
         )
 
-        request = requests.get(url, timeout=15)
+        _LOGGER.debug("Requesting WMS URL: %s", url)
+        request = requests.get(url, timeout=_WMS_TIMEOUT)
         if request.status_code != 200:
             raise ConnectionError(
                 f"Error during image request from DWD servers (HTTP {request.status_code}): {url}"
