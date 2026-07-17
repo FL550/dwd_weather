@@ -15,7 +15,6 @@ from .const import (
     NAME,
     CONF_MAP_FOREGROUND_TYPE,
     conversion_table_map_foreground,
-    CONF_MAP_FOREGROUND_PRECIPITATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,13 +66,7 @@ class MyCamera(Camera):
         if not self._dwd_data._images:
             _LOGGER.debug("No cached weather loop images, forcing refresh on first render request")
             await self._coordinator.async_request_refresh()
-        if (
-            self._dwd_data._configdata[CONF_MAP_FOREGROUND_TYPE]
-            == CONF_MAP_FOREGROUND_PRECIPITATION
-        ):
-            image = self._dwd_data.get_animated_gif()
-        else:
-            image = self._dwd_data.get_image()
+        image = self._dwd_data.get_image()
 
         current_state = getattr(self._dwd_data, "current_label", "Radar")
         if current_state != self._attr_state:
@@ -111,21 +104,6 @@ class MyCamera(Camera):
             if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
             else 0.5
         )
-
-    @property
-    def content_type(self) -> str:
-        """Return the content type of the image."""
-        if (
-            self._dwd_data._configdata[CONF_MAP_FOREGROUND_TYPE]
-            == CONF_MAP_FOREGROUND_PRECIPITATION
-        ):
-            return "image/gif"
-        return "image/png"
-
-    @content_type.setter
-    def content_type(self, value):
-        """Set the content type of the image."""
-        pass
 
     @property
     def translation_key(self):

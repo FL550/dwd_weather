@@ -1505,7 +1505,6 @@ class DWDMapData:
         self._cachedwidth = 0
         self._image_nr = 0
         self.last_update_time = None
-        self._cached_gif_bytes = None
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -1513,7 +1512,6 @@ class DWDMapData:
         return await self._hass.async_add_executor_job(self._update)
 
     def _update(self):
-        self._cached_gif_bytes = None
         if (
             self._configdata[CONF_MAP_FOREGROUND_TYPE]
             == CONF_MAP_FOREGROUND_PRECIPITATION
@@ -1760,6 +1758,12 @@ class DWDMapData:
             )
 
             loop_len = len(self._images) if self._images else 1
+            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
+            total_duration = loop_len * speed
+
+            import time
+            time_in_cycle = time.time() % total_duration
+            self._image_nr = int(time_in_cycle / speed)
             if self._image_nr >= loop_len:
                 self._image_nr = loop_len - 1
             _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
@@ -1922,67 +1926,7 @@ class DWDMapData:
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
 
-    def get_animated_gif(self):
-        """Generate and return cached animated GIF containing all frames."""
-        if hasattr(self, "_cached_gif_bytes") and self._cached_gif_bytes:
-            return self._cached_gif_bytes
 
-        if not self._images:
-            return None
-            
-        drawn_images = []
-        original_image_nr = self._image_nr
-        try:
-            for idx in range(len(self._images)):
-                self._image_nr = idx
-                img_bytes = self.get_image()
-                if img_bytes:
-                    img = PIL.Image.open(BytesIO(img_bytes))
-                    drawn_images.append(img.convert("RGB"))
-        except Exception as e:
-            _LOGGER.error("get_animated_gif: exception during frame generation: %s", e, exc_info=True)
-        finally:
-            self._image_nr = original_image_nr
-
-        if not drawn_images:
-            return None
-
-        buf = BytesIO()
-        speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
-        duration_ms = int(speed * 1000)
-
-        # Convert to P mode with adaptive palette on the first image,
-        # and quantize append images using the first image's palette.
-        first_image_p = drawn_images[0].convert("P", palette=PIL.Image.Palette.ADAPTIVE)
-        append_images_p = [img.quantize(palette=first_image_p) for img in drawn_images[1:]]
-
-        # Save as animated GIF
-        first_image_p.save(
-            buf,
-            format="GIF",
-            save_all=True,
-            append_images=append_images_p,
-            duration=duration_ms,
-            loop=0
-        )
-        self._cached_gif_bytes = buf.getvalue()
-        return self._cached_gif_bytes
-
-    def update_frame_nr(self):
-        """Update active frame index based on system clock."""
-        if (
-            self._configdata[CONF_MAP_FOREGROUND_TYPE]
-            == CONF_MAP_FOREGROUND_PRECIPITATION
-        ):
-            loop_len = len(self._images) if self._images else 1
-            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
-            total_duration = loop_len * speed
-            
-            import time
-            time_in_cycle = time.time() % total_duration
-            self._image_nr = int(time_in_cycle / speed)
-            if self._image_nr >= loop_len:
-                self._image_nr = loop_len - 1
 
     def map_maptype(
         self, map_type
