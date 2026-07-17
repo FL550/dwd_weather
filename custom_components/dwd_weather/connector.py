@@ -1674,8 +1674,9 @@ class DWDMapData:
                         )
                 self._cachedheight = self._height
                 self._cachedwidth = self._width
-            if self._maploop:
-                self._images = self._maploop.get_images()
+        
+        if self._maploop:
+            self._images = self._maploop.get_images()
 
     def _update_single(self):
         # prevent distortion of map
