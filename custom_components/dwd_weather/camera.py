@@ -58,6 +58,15 @@ class MyCamera(Camera):
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._attr_state = "Radar"
 
+    async def async_added_to_hass(self) -> None:
+        """Register as a coordinator listener so periodic updates keep firing."""
+        await super().async_added_to_hass()
+        # Without a registered listener, DataUpdateCoordinator skips scheduled
+        # refreshes. This keeps the coordinator alive and updates running.
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
