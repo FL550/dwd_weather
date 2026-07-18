@@ -1677,6 +1677,13 @@ class DWDMapData:
         
         if self._maploop:
             self._images = self._maploop.get_images()
+            all_times = getattr(self._maploop, "_all_times", None)
+            _LOGGER.info(
+                "Map _update_loop done: %d images loaded, window=[%s -> %s]",
+                len(self._images) if self._images else 0,
+                all_times[0].strftime("%H:%M") if all_times else "?",
+                all_times[-1].strftime("%H:%M") if all_times else "?",
+            )
 
     def _update_single(self):
         # prevent distortion of map

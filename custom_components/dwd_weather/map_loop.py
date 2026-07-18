@@ -107,6 +107,10 @@ class FutureImageLoop:
         if self._last_now == now:
             # We don't need to rebuild if now hasn't advanced, unless our cache is empty
             if self._images:
+                _LOGGER.info(
+                    "Map update skipped: now=%s unchanged, %d images in loop",
+                    now, len(self._images),
+                )
                 return
 
         self._last_now = now
@@ -176,8 +180,11 @@ class FutureImageLoop:
                 # Must fetch: now, all nowcast (change every 5 min), new/expired model, new past
                 to_fetch.append(t)
 
-        _LOGGER.debug(
-            "Map update: %d cached, %d to fetch (past cache size: %d, model cache size: %d)",
+        _LOGGER.info(
+            "Map update: now=%s, window=[%s -> %s], %d cached, %d to fetch (past cache: %d, model cache: %d)",
+            now,
+            unique_times[0].strftime("%H:%M") if unique_times else "?",
+            unique_times[-1].strftime("%H:%M") if unique_times else "?",
             len(already_have), len(to_fetch), len(self._past_cache), len(self._model_cache),
         )
 
