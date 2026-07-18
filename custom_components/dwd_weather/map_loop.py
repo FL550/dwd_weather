@@ -92,7 +92,9 @@ class FutureImageLoop:
         self._model_times: set[datetime] = set()
         self._all_times: list[datetime] = []
 
-        self.update()
+        # NOTE: Do NOT call self.update() here.
+        # WMS fetching is deferred to the first explicit update() call,
+        # which runs on a background executor thread and does not block HA startup.
 
     def __getitem__(self, key):
         return self._images[key]

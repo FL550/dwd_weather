@@ -120,8 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         }
 
-        # Fetch initial map data/images on startup
-        await dwdweather_coordinator.async_refresh()
+        # Schedule initial map fetch in the background — does NOT block HA startup.
+        # The first coordinator update will run within the update_interval.
+        dwdweather_coordinator.async_request_refresh()
 
         await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
 

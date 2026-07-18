@@ -1607,8 +1607,11 @@ class DWDMapData:
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                         )
+                        # Trigger the first fetch (deferred from __init__)
+                        self._maploop.update()
                     except Exception as e:
                         _LOGGER.error("Map update germany failed: {}.".format(e))
+                        self._maploop = None
                 else:
                     _LOGGER.debug(
                         "map async_update get_from_location lat: {}, lon:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
@@ -1664,8 +1667,11 @@ class DWDMapData:
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                         )
+                        # Trigger the first fetch (deferred from __init__)
+                        self._maploop.update()
                     except Exception as e:
                         _LOGGER.error("Map update failed: {}.".format(e))
+                        self._maploop = None
                     if self._maploop:
                         _LOGGER.debug(
                             "map async_update maploop: {}".format(
