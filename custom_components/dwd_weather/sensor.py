@@ -24,8 +24,7 @@ from homeassistant.components.weather import (
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    UnitOfDensity,
     DEGREE,
     PERCENTAGE,
     UnitOfIrradiance,
@@ -260,7 +259,7 @@ SENSOR_TYPES = {
     "humidity_absolute": [
         "Absolute Humidity",
         SensorDeviceClass.ABSOLUTE_HUMIDITY,
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
         "mdi:water",
         False,
         SensorStateClass.MEASUREMENT,
@@ -305,7 +304,7 @@ SENSOR_TYPES = {
     "airquality_stickstoffdioxid": [
         "Air Quality Stickstoffdioxid",
         SensorDeviceClass.NITROGEN_DIOXIDE,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -314,7 +313,7 @@ SENSOR_TYPES = {
     "airquality_ozon": [
         "Air Quality Ozon",
         SensorDeviceClass.OZONE,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -323,7 +322,7 @@ SENSOR_TYPES = {
     "airquality_pm2_5": [
         "Air Quality PM2.5",
         SensorDeviceClass.PM25,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -332,7 +331,7 @@ SENSOR_TYPES = {
     "airquality_pm10": [
         "Air Quality PM10",
         SensorDeviceClass.PM10,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
