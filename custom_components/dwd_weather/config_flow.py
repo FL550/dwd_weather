@@ -255,6 +255,9 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_STATION_ID]
             ):
                 user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
+            # Air quality endpoint is currently unavailable upstream.
+            # Keep this config key forced off until the endpoint returns.
+            user_input[CONF_DOWNLOAD_AIRQUALITY] = False
             station_id = (
                 f"{self.config_data[CONF_STATION_ID]}: {user_input[CONF_STATION_NAME]}"
             )
@@ -304,10 +307,12 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_HOURLY_UPDATE,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
-                vol.Required(
-                    CONF_DOWNLOAD_AIRQUALITY,
-                    default=False,  # type: ignore
-                ): BooleanSelector({}),
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this UI field commented for quick reactivation later.
+                # vol.Required(
+                #     CONF_DOWNLOAD_AIRQUALITY,
+                #     default=False,  # type: ignore
+                # ): BooleanSelector({}),
                 vol.Required(
                     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                     default=False,  # type: ignore
@@ -665,6 +670,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 if not supports_apparent_temperature:
                     user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this config key forced off until the endpoint returns.
+                user_input[CONF_DOWNLOAD_AIRQUALITY] = False
 
                 user_input[CONF_ENTITY_TYPE] = self.config_entry.data[CONF_ENTITY_TYPE]
                 user_input[CONF_STATION_ID] = self.config_entry.data[CONF_STATION_ID]
@@ -726,13 +734,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_HOURLY_UPDATE,
                     default=self.config_entry.data[CONF_HOURLY_UPDATE],
                 ): BooleanSelector({}),
-                vol.Required(
-                    CONF_DOWNLOAD_AIRQUALITY,
-                    default=self.config_entry.data.get(
-                        CONF_DOWNLOAD_AIRQUALITY,
-                        False,
-                    ),
-                ): BooleanSelector({}),
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this UI field commented for quick reactivation later.
+                # vol.Required(
+                #     CONF_DOWNLOAD_AIRQUALITY,
+                #     default=self.config_entry.data.get(
+                #         CONF_DOWNLOAD_AIRQUALITY,
+                #         False,
+                #     ),
+                # ): BooleanSelector({}),
                 vol.Required(
                     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                     default=self.config_entry.data.get(

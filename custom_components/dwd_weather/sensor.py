@@ -375,10 +375,13 @@ async def async_setup_entry(
                 k == "apparent_temperature"
                 and not hass_data[DWDWEATHER_DATA].supports_apparent_temperature()
             )
-            and not (
-                k.startswith("airquality")
-                and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
-            )
+            # Air quality endpoint is currently unavailable upstream.
+            # Keep old config gate commented so it can be re-enabled later.
+            # and not k.startswith("airquality")
+            # and not (
+            #     k.startswith("airquality")
+            #     and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
+            # )
             and not (
                 k.startswith("radar_")
                 and not hass_data[DWDWEATHER_DATA]._config.get(

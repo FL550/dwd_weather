@@ -39,9 +39,9 @@ from homeassistant.components.weather.const import (
 from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
-from simple_dwd_weatherforecast.dwdairquality import (
-    AirQuality,
-)
+# from simple_dwd_weatherforecast.dwdairquality import (
+#     AirQuality,
+# )
 
 from .const import (
     ATTR_FORECAST_APPARENT_TEMP,
@@ -173,26 +173,28 @@ class DWDWeatherData:
 
     async def async_update(self):
         """Async wrapper for update method."""
-        if (
-            self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
-            and self.dwd_weather.station
-            and self._airquality_hourly is None
-            and self._airquality_daily is None
-        ):
-            try:
-                self._airquality_hourly = await AirQuality.get_station_from_location(
-                    self.dwd_weather.station["lat"],
-                    self.dwd_weather.station["lon"],
-                    "hourly",
-                )
-                self._airquality_station_id = self._airquality_hourly.station_id
-                if self._airquality_station_id is not None:
-                    self._airquality_daily = await AirQuality.create(
-                        self._airquality_station_id,
-                        "daily",
-                    )
-            except Exception as error:
-                _LOGGER.warning("Failed to initialize air quality data: %s", error)
+        # Air quality endpoint is currently unavailable upstream.
+        # Keep this block commented so it can be re-enabled later.
+        # if (
+        #     self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
+        #     and self.dwd_weather.station
+        #     and self._airquality_hourly is None
+        #     and self._airquality_daily is None
+        # ):
+        #     try:
+        #         self._airquality_hourly = await AirQuality.get_station_from_location(
+        #             self.dwd_weather.station["lat"],
+        #             self.dwd_weather.station["lon"],
+        #             "hourly",
+        #         )
+        #         self._airquality_station_id = self._airquality_hourly.station_id
+        #         if self._airquality_station_id is not None:
+        #             self._airquality_daily = await AirQuality.create(
+        #                 self._airquality_station_id,
+        #                 "daily",
+        #             )
+        #     except Exception as error:
+        #         _LOGGER.warning("Failed to initialize air quality data: %s", error)
         if await self._hass.async_add_executor_job(self._update):
             for entity in self.entities:
                 await entity.async_update_listeners(("daily", "hourly"))
@@ -230,11 +232,13 @@ class DWDWeatherData:
             with_apparent_temperature=self.supports_apparent_temperature(),
         )
 
-        if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
-            if self._airquality_hourly is not None:
-                self._airquality_hourly.update()
-            if self._airquality_daily is not None:
-                self._airquality_daily.update(with_current_day=True)
+        # Air quality endpoint is currently unavailable upstream.
+        # Keep this block commented so it can be re-enabled later.
+        # if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
+        #     if self._airquality_hourly is not None:
+        #         self._airquality_hourly.update()
+        #     if self._airquality_daily is not None:
+        #         self._airquality_daily.update(with_current_day=True)
 
         if self._config[CONF_HOURLY_UPDATE] and not self.dwd_weather.is_in_timerange(
             timestamp

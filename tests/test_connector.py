@@ -111,10 +111,10 @@ def test_mock_config_contains_required_keys():
 
 
 @pytest.mark.asyncio
-async def test_connector_initializes_airquality_clients_when_enabled(
+async def test_connector_does_not_initialize_airquality_clients_while_disabled(
     hass: HomeAssistant, mock_dwd_weather_object
 ):
-    """Air quality clients should be created during async_update when enabled."""
+    """Air quality clients stay uninitialized while upstream endpoint is unavailable."""
     entry = MagicMock()
     entry.data = {**MOCK_CONFIG, "download_airquality": True}
 
@@ -123,24 +123,13 @@ async def test_connector_initializes_airquality_clients_when_enabled(
             "custom_components.dwd_weather.connector.dwdforecast.Weather",
             return_value=mock_dwd_weather_object,
         ),
-        patch("custom_components.dwd_weather.connector.AirQuality") as mock_airquality,
     ):
-        hourly_client = MagicMock()
-        hourly_client.station_id = "station-1"
-        daily_client = MagicMock()
-        mock_airquality.get_station_from_location = AsyncMock(
-            return_value=hourly_client
-        )
-        mock_airquality.create = AsyncMock(return_value=daily_client)
-
         data = DWDWeatherData(hass, entry)
         data._update = MagicMock(return_value=False)
         await data.async_update()
 
-    assert data._airquality_hourly is hourly_client
-    assert data._airquality_daily is daily_client
-    mock_airquality.get_station_from_location.assert_awaited_once()
-    mock_airquality.create.assert_awaited_once_with("station-1", "daily")
+    assert data._airquality_hourly is None
+    assert data._airquality_daily is None
 
 
 def test_get_airquality_uses_hourly_when_requested(mock_dwd_data):
@@ -181,8 +170,10 @@ def test_update_does_not_download_airquality_when_disabled(mock_dwd_data):
     mock_dwd_data._airquality_daily.update.assert_not_called()
 
 
-def test_update_downloads_airquality_when_enabled(mock_dwd_data):
-    """Air quality clients should be updated during _update when enabled."""
+def test_update_does_not_download_airquality_when_enabled_temporarily_disabled(
+    mock_dwd_data,
+):
+    """Air quality clients should not be updated while endpoint is unavailable."""
     mock_dwd_data._config["download_airquality"] = True
     mock_dwd_data.latest_update = None
     hourly_client = MagicMock()
@@ -192,8 +183,8 @@ def test_update_downloads_airquality_when_enabled(mock_dwd_data):
 
     assert mock_dwd_data._update() is True
 
-    hourly_client.update.assert_called_once_with()
-    daily_client.update.assert_called_once_with(with_current_day=True)
+    hourly_client.update.assert_not_called()
+    daily_client.update.assert_not_called()
 
 
 def _setup_forecast_weather_mocks(mock_dwd_data):
