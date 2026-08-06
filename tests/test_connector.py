@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.components.weather import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
+from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
 from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.const import CONF_STATION_ID
@@ -227,6 +228,42 @@ def test_hourly_forecast_includes_airquality_when_both_options_enabled(mock_dwd_
     assert result[0]["airquality_ozon"] == 34.0
     assert result[0]["airquality_pm2_5"] == 12.0
     assert result[0]["airquality_pm10"] == 19.0
+
+
+def test_hourly_forecast_converts_sun_irradiance_to_watts_per_square_meter(
+    mock_dwd_data,
+):
+    """Hourly forecast sun irradiance should be exposed as W/m²."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["additional_forecast_attributes"] = True
+    mock_dwd_data.dwd_weather.get_timeframe_sum = MagicMock(
+        side_effect=lambda weather_type, *_args, **_kwargs: (
+            360.0 if weather_type == WeatherDataType.SUN_IRRADIANCE else 1.0
+        )
+    )
+
+    result = mock_dwd_data.get_forecast_hourly()
+
+    assert result is not None
+    assert result[0]["sun_irradiance"] == 100.0
+
+
+def test_daily_forecast_converts_sun_irradiance_to_watts_per_square_meter(
+    mock_dwd_data,
+):
+    """Daily forecast sun irradiance should be exposed as W/m²."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["additional_forecast_attributes"] = True
+    mock_dwd_data.dwd_weather.get_daily_sum = MagicMock(
+        side_effect=lambda weather_type, *_args, **_kwargs: (
+            8640.0 if weather_type == WeatherDataType.SUN_IRRADIANCE else 1.0
+        )
+    )
+
+    result = mock_dwd_data.get_forecast_daily()
+
+    assert result is not None
+    assert result[0]["sun_irradiance"] == 100.0
 
 
 def test_hourly_forecast_does_not_include_airquality_when_additional_attrs_disabled(

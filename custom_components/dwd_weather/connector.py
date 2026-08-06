@@ -160,6 +160,17 @@ class DWDWeatherData:
     def register_entity(self, entity):
         self.entities.append(entity)
 
+    @staticmethod
+    def _convert_sun_irradiance_to_watts_per_square_meter(
+        value_kj_per_square_meter: float | None,
+        hours: int,
+    ):
+        """Convert irradiance energy from kJ/m² over a period to average W/m²."""
+        if value_kj_per_square_meter is None:
+            return None
+
+        return round(value_kj_per_square_meter / (3.6 * hours), 0)
+
     def supports_apparent_temperature(self) -> bool:
         """Return whether apparent temperature data can be requested."""
         if not self._config.get(CONF_DOWNLOAD_APPARENT_TEMPERATURE, False):
@@ -623,6 +634,12 @@ class DWDWeatherData:
                                 ATTR_FORECAST_HUMIDITY_ABSOLUTE: humidity_absolute,
                             }
                         )
+                        data_item[ATTR_FORECAST_SUN_IRRADIANCE] = (
+                            self._convert_sun_irradiance_to_watts_per_square_meter(
+                                data_item.get(ATTR_FORECAST_SUN_IRRADIANCE),
+                                weather_interval,
+                            )
+                        )
                         if (
                             self._config[CONF_DOWNLOAD_AIRQUALITY]
                             and self._airquality_hourly is not None
@@ -822,6 +839,12 @@ class DWDWeatherData:
                             ),
                         }
                     )
+                    data_item[ATTR_FORECAST_SUN_IRRADIANCE] = (
+                        self._convert_sun_irradiance_to_watts_per_square_meter(
+                            data_item.get(ATTR_FORECAST_SUN_IRRADIANCE),
+                            weather_interval,
+                        )
+                    )
                     data_item.update(
                         self._get_airquality_forecast_values(
                             WeatherEntityFeature.FORECAST_DAILY,
@@ -930,7 +953,10 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda x: round(x, 0),
             WeatherDataType.VISIBILITY: lambda x: round(x / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda x: round(x, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda x: round(x / 3.6, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda x: self._convert_sun_irradiance_to_watts_per_square_meter(
+                x,
+                1,
+            ),
             WeatherDataType.FOG_PROBABILITY: lambda x: round(x, 0),
             WeatherDataType.HUMIDITY: lambda x: round(x, 1),
         }
@@ -1228,7 +1254,10 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda value: round(value, 0),
             WeatherDataType.VISIBILITY: lambda value: round(value / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda value: round(value, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda value: round(value / 3.6, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda value: self._convert_sun_irradiance_to_watts_per_square_meter(
+                value,
+                1,
+            ),
             WeatherDataType.FOG_PROBABILITY: lambda value: round(value, 0),
             WeatherDataType.HUMIDITY: lambda value: round(value, 1),
         }
