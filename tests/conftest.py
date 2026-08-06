@@ -154,6 +154,7 @@ def mock_dwd_weather_object_fixture(mock_forecast_data):
 def mock_dwd_data_fixture(hass, mock_dwd_weather_object):
     """Create a mock DWDWeatherData instance."""
     mock_config_entry = MagicMock()
+    mock_config_entry.entry_id = "test_entry"
     mock_config_entry.data = {
         CONF_STATION_ID: "L732",
         "station_name": "Test Station",

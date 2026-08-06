@@ -1,10 +1,12 @@
 """Tests for connector data object."""
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+from collections import OrderedDict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.weather import WeatherEntityFeature
+from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
@@ -65,6 +67,12 @@ async def test_async_update_does_not_notify_when_update_returns_false(mock_dwd_d
     entity = MagicMock()
     entity.async_update_listeners = AsyncMock()
     mock_dwd_data.register_entity(entity)
+    mock_dwd_data._sunshine_state["current_day_key"] = (
+        mock_dwd_data._get_local_today_key()
+    )
+    mock_dwd_data._sunshine_state["source_station_id"] = mock_dwd_data._config[
+        CONF_STATION_ID
+    ]
     mock_dwd_data._update = MagicMock(return_value=False)
 
     await mock_dwd_data.async_update()
@@ -266,6 +274,213 @@ def test_daily_forecast_converts_sun_irradiance_to_watts_per_square_meter(
     assert result[0]["sun_irradiance"] == 100.0
 
 
+def _make_forecast_snapshot(values_by_hour: dict[str, object]) -> OrderedDict:
+    """Build forecast data with only sunshine duration populated."""
+    return OrderedDict(
+        (hour_key, {WeatherDataType.SUN_DURATION.value[0]: value})
+        for hour_key, value in values_by_hour.items()
+    )
+
+
+@pytest.mark.asyncio
+async def test_sunshine_accumulator_keeps_processed_hours_when_window_moves(
+    mock_dwd_data,
+):
+    """Earlier hours stay counted when later forecast updates drop them."""
+    local_now = datetime(2026, 6, 1, 12, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+
+    with (
+        patch("custom_components.dwd_weather.connector.dt.now", return_value=local_now),
+        patch(
+            "custom_components.dwd_weather.connector.dt.as_local",
+            side_effect=lambda value: value.astimezone(local_now.tzinfo),
+        ),
+    ):
+        mock_dwd_data._reset_sunshine_accumulator_if_new_day()
+        mock_dwd_data.dwd_weather.forecast_data = _make_forecast_snapshot(
+            {
+                "2026-06-01T04:00:00.000Z": 300,
+                "2026-06-01T05:00:00.000Z": 600,
+                "2026-06-01T06:00:00.000Z": 900,
+            }
+        )
+        mock_dwd_data.latest_update = datetime(2026, 6, 1, 8, 0, tzinfo=timezone.utc)
+        await mock_dwd_data._async_process_sunshine_accumulator()
+
+        mock_dwd_data.dwd_weather.forecast_data = _make_forecast_snapshot(
+            {
+                "2026-06-01T06:00:00.000Z": 900,
+                "2026-06-01T07:00:00.000Z": 1200,
+                "2026-06-01T08:00:00.000Z": 1500,
+            }
+        )
+        mock_dwd_data.latest_update = datetime(2026, 6, 1, 10, 0, tzinfo=timezone.utc)
+        await mock_dwd_data._async_process_sunshine_accumulator()
+
+    assert mock_dwd_data.get_sun_duration_today() == 4500
+    assert mock_dwd_data._processed_sunshine_hour_keys == {
+        "2026-06-01T04:00:00.000Z",
+        "2026-06-01T05:00:00.000Z",
+        "2026-06-01T06:00:00.000Z",
+        "2026-06-01T07:00:00.000Z",
+        "2026-06-01T08:00:00.000Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_sunshine_accumulator_is_idempotent_for_duplicate_snapshot(mock_dwd_data):
+    """Reprocessing the same forecast payload must not change the total."""
+    local_now = datetime(2026, 6, 1, 12, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+    snapshot = _make_forecast_snapshot(
+        {
+            "2026-06-01T04:00:00.000Z": 300,
+            "2026-06-01T05:00:00.000Z": 600,
+        }
+    )
+
+    with (
+        patch("custom_components.dwd_weather.connector.dt.now", return_value=local_now),
+        patch(
+            "custom_components.dwd_weather.connector.dt.as_local",
+            side_effect=lambda value: value.astimezone(local_now.tzinfo),
+        ),
+    ):
+        mock_dwd_data._reset_sunshine_accumulator_if_new_day()
+        mock_dwd_data.dwd_weather.forecast_data = snapshot
+        await mock_dwd_data._async_process_sunshine_accumulator()
+        first_total = mock_dwd_data.get_sun_duration_today()
+
+        mock_dwd_data.dwd_weather.forecast_data = snapshot
+        await mock_dwd_data._async_process_sunshine_accumulator()
+
+    assert first_total == 900
+    assert mock_dwd_data.get_sun_duration_today() == first_total
+
+
+@pytest.mark.asyncio
+async def test_sunshine_accumulator_resets_at_local_midnight(mock_dwd_data):
+    """Crossing into a new local day resets accumulated sunshine cleanly."""
+    tzinfo = ZoneInfo("Europe/Berlin")
+    before_midnight = datetime(2026, 6, 1, 23, 59, tzinfo=tzinfo)
+    after_midnight = datetime(2026, 6, 2, 0, 1, tzinfo=tzinfo)
+
+    with (
+        patch(
+            "custom_components.dwd_weather.connector.dt.as_local",
+            side_effect=lambda value: value.astimezone(tzinfo),
+        ),
+        patch(
+            "custom_components.dwd_weather.connector.dt.now",
+            return_value=before_midnight,
+        ),
+    ):
+        mock_dwd_data._reset_sunshine_accumulator_if_new_day()
+        mock_dwd_data.dwd_weather.forecast_data = _make_forecast_snapshot(
+            {"2026-06-01T20:00:00.000Z": 600}
+        )
+        await mock_dwd_data._async_process_sunshine_accumulator()
+
+    assert mock_dwd_data.get_sun_duration_today() == 600
+
+    with patch(
+        "custom_components.dwd_weather.connector.dt.now", return_value=after_midnight
+    ):
+        changed = mock_dwd_data._reset_sunshine_accumulator_if_new_day()
+
+    assert changed is True
+    assert mock_dwd_data.get_sun_duration_today() == 0
+    assert mock_dwd_data._sunshine_state["current_day_key"] == "2026-06-02"
+
+
+@pytest.mark.asyncio
+async def test_sunshine_accumulator_restores_state_across_restart(
+    hass, mock_dwd_weather_object
+):
+    """Restored state must prevent re-counting already processed hours after restart."""
+    local_now = datetime(2026, 6, 1, 12, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+    entry = MagicMock()
+    entry.entry_id = "restore-entry"
+    entry.data = MOCK_CONFIG
+
+    with patch(
+        "custom_components.dwd_weather.connector.dwdforecast.Weather",
+        return_value=mock_dwd_weather_object,
+    ):
+        first_connector = DWDWeatherData(hass, entry)
+        with (
+            patch(
+                "custom_components.dwd_weather.connector.dt.now", return_value=local_now
+            ),
+            patch(
+                "custom_components.dwd_weather.connector.dt.as_local",
+                side_effect=lambda value: value.astimezone(local_now.tzinfo),
+            ),
+        ):
+            await first_connector.async_initialize()
+            first_connector.dwd_weather.forecast_data = _make_forecast_snapshot(
+                {
+                    "2026-06-01T04:00:00.000Z": 300,
+                    "2026-06-01T05:00:00.000Z": 600,
+                }
+            )
+            first_connector.latest_update = datetime(
+                2026, 6, 1, 8, 0, tzinfo=timezone.utc
+            )
+            await first_connector._async_process_sunshine_accumulator()
+
+        second_connector = DWDWeatherData(hass, entry)
+        with (
+            patch(
+                "custom_components.dwd_weather.connector.dt.now", return_value=local_now
+            ),
+            patch(
+                "custom_components.dwd_weather.connector.dt.as_local",
+                side_effect=lambda value: value.astimezone(local_now.tzinfo),
+            ),
+        ):
+            await second_connector.async_initialize()
+            assert second_connector.get_sun_duration_today() == 900
+
+            second_connector.dwd_weather.forecast_data = _make_forecast_snapshot(
+                {
+                    "2026-06-01T05:00:00.000Z": 600,
+                    "2026-06-01T06:00:00.000Z": 900,
+                }
+            )
+            second_connector.latest_update = datetime(
+                2026, 6, 1, 9, 0, tzinfo=timezone.utc
+            )
+            await second_connector._async_process_sunshine_accumulator()
+
+    assert second_connector.get_sun_duration_today() == 1800
+
+
+@pytest.mark.asyncio
+async def test_sunshine_accumulator_handles_dst_transition_day(mock_dwd_data):
+    """DST transition days should accumulate every local-today hour exactly once."""
+    tzinfo = ZoneInfo("Europe/Berlin")
+    local_now = datetime(2026, 3, 29, 12, 0, tzinfo=tzinfo)
+    snapshot = _make_forecast_snapshot(
+        {
+            f"2026-03-{day}T{hour:02d}:00:00.000Z": 60
+            for day, hour in ([(28, 23)] + [(29, hour) for hour in range(0, 22)])
+        }
+    )
+
+    with (
+        patch("custom_components.dwd_weather.connector.dt.now", return_value=local_now),
+        patch(
+            "custom_components.dwd_weather.connector.dt.as_local",
+            side_effect=lambda value: value.astimezone(tzinfo),
+        ),
+    ):
+        mock_dwd_data._reset_sunshine_accumulator_if_new_day()
+        mock_dwd_data.dwd_weather.forecast_data = snapshot
+        await mock_dwd_data._async_process_sunshine_accumulator()
+
+    assert mock_dwd_data.get_sun_duration_today() == 23 * 60
+
+
 def test_hourly_forecast_does_not_include_airquality_when_additional_attrs_disabled(
     mock_dwd_data,
 ):
@@ -405,8 +620,6 @@ def test_get_radar_precipitation_hourly_respects_forecast_steps(mock_dwd_data):
 
 def test_get_airquality_hourly_respects_forecast_steps(mock_dwd_data):
     """get_airquality_hourly should limit results based on CONF_SENSOR_FORECAST_STEPS."""
-    from homeassistant.components.weather import WeatherEntityFeature
-
     # Create mock airquality data with 5 items
     mock_airquality_data = [
         {"PM2_5": 10.0, "PM10": 20.0},
@@ -457,8 +670,6 @@ def test_get_radar_precipitation_hourly_with_integer_forecast_steps(mock_dwd_dat
 
 def test_get_airquality_hourly_with_integer_forecast_steps(mock_dwd_data):
     """get_airquality_hourly should convert forecast_steps to int for comparisons."""
-    from homeassistant.components.weather import WeatherEntityFeature
-
     # Create mock airquality data with 3 items
     mock_airquality_data = [
         {"PM2_5": 10.0, "PM10": 20.0},

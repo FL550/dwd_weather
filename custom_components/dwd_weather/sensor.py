@@ -56,7 +56,6 @@ from .const import (
     ATTRIBUTION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
-    CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
@@ -227,6 +226,15 @@ SENSOR_TYPES = {
         "mdi:weather-sunset",
         False,
         SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "sun_duration_today": [
+        "Sun Duration Today",
+        SensorDeviceClass.DURATION,
+        UnitOfTime.SECONDS,
+        "mdi:weather-sunny-alert",
+        False,
+        SensorStateClass.TOTAL,
         True,
     ],
     "sun_irradiance": [
@@ -476,6 +484,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_visibility()
         elif self._type == "sun_duration":
             result = self._connector.get_sun_duration()
+        elif self._type == "sun_duration_today":
+            result = self._connector.get_sun_duration_today()
         elif self._type == "sun_irradiance":
             result = self._connector.get_sun_irradiance()
         elif self._type == "fog_probability":
@@ -577,6 +587,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_visibility_hourly()
         elif self._type == "sun_duration":
             attributes["data"] = self._connector.get_sun_duration_hourly()
+        elif self._type == "sun_duration_today":
+            attributes.update(self._connector.get_sun_duration_today_attributes())
         elif self._type == "sun_irradiance":
             attributes["data"] = self._connector.get_sun_irradiance_hourly()
         elif self._type == "fog_probability":

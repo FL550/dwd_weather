@@ -56,6 +56,7 @@ async def test_setup_entry_station_success(hass: HomeAssistant):
         ) as mock_forward,
     ):
         mock_data = MagicMock()
+        mock_data.async_initialize = AsyncMock()
         mock_data.async_update = AsyncMock()
         mock_data.dwd_weather.forecast_data = {"ok": {}}
         mock_data_cls.return_value = mock_data
@@ -77,6 +78,7 @@ async def test_setup_entry_station_raises_not_ready(hass: HomeAssistant):
 
     with patch("custom_components.dwd_weather.DWDWeatherData") as mock_data_cls:
         mock_data = MagicMock()
+        mock_data.async_initialize = AsyncMock()
         mock_data.async_update = AsyncMock()
         mock_data.dwd_weather.forecast_data = None
         mock_data.dwd_weather.issue_time = None
