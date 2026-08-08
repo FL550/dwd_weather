@@ -57,6 +57,9 @@
       "sun_duration": {
         "name": "Czas trwania nasłonecznienia"
       },
+      "sun_duration_today": {
+        "name": "Czas trwania nasłonecznienia dziś"
+      },
       "sun_irradiance": {
         "name": "Natężenie promieniowania słonecznego"
       },

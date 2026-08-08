@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     random_delay = random.randint(1, 59)
     if entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
         dwd_weather_data = DWDWeatherData(hass, entry)
+        await dwd_weather_data.async_initialize()
 
         # Coordinator checks for new updates
         dwdweather_coordinator = DataUpdateCoordinator(

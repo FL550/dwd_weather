@@ -87,6 +87,35 @@ def test_sensor_extra_attributes(sensor_entity):
     assert ATTR_ISSUE_TIME in attrs
 
 
+def test_sun_duration_today_sensor_state_and_attributes(hass_data):
+    """Daily sunshine sensor should expose accumulated value and accumulator metadata."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector.get_sun_duration_today = MagicMock(return_value=1800)
+    connector.get_sun_duration_today_attributes = MagicMock(
+        return_value={
+            "current_day_key": "2026-06-01",
+            "processed_hours": 3,
+            "last_update_utc": "2026-06-01T10:00:00+00:00",
+            "source_station_id": "L732",
+            "forecast_issue_time": "2026-06-01T09:00:00+00:00",
+        }
+    )
+    connector.infos = {
+        ATTR_ISSUE_TIME: "2026-01-01T00:00:00+00:00",
+        ATTR_LATEST_UPDATE: "2026-01-01T00:01:00+00:00",
+        ATTR_STATION_ID: "L732",
+        ATTR_STATION_NAME: "Test Station",
+    }
+    connector.latest_update = "2026-01-01T00:01:00+00:00"
+
+    entity = DWDWeatherForecastSensor(MOCK_CONFIG, hass_data, "sun_duration_today")
+
+    assert entity.state == 1800
+    attrs = entity.extra_state_attributes
+    assert attrs["current_day_key"] == "2026-06-01"
+    assert attrs["processed_hours"] == 3
+
+
 def test_apparent_temperature_sensor_state_and_attributes(hass_data):
     """Apparent temperature sensor should expose value and hourly data."""
     connector = hass_data[DWDWEATHER_DATA]

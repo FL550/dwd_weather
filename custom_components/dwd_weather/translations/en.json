@@ -57,6 +57,9 @@
       "sun_duration": {
         "name": "Sun duration"
       },
+      "sun_duration_today": {
+        "name": "Sun duration today"
+      },
       "sun_irradiance": {
         "name": "Sun irradiance"
       },

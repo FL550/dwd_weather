@@ -5,10 +5,12 @@ from datetime import datetime, timedelta, timezone
 import math
 import re
 import time
+from typing import Any
 import PIL
 import PIL.ImageDraw
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt
 from io import BytesIO
 import warnings
@@ -39,9 +41,9 @@ from homeassistant.components.weather.const import (
 from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
-from simple_dwd_weatherforecast.dwdairquality import (
-    AirQuality,
-)
+# from simple_dwd_weatherforecast.dwdairquality import (
+#     AirQuality,
+# )
 try:
     from .map_loop import FutureImageLoop
 except ImportError:
@@ -122,6 +124,7 @@ try:
         CONF_MAP_BACKGROUND_KREISE,
         CONF_MAP_BACKGROUND_GEMEINDEN,
         CONF_MAP_BACKGROUND_SATELLIT,
+        DOMAIN,
     )
 except ImportError:
     from const import (
@@ -198,6 +201,7 @@ except ImportError:
         CONF_MAP_BACKGROUND_KREISE,
         CONF_MAP_BACKGROUND_GEMEINDEN,
         CONF_MAP_BACKGROUND_SATELLIT,
+        DOMAIN,
     )
 
 conversion_table_map_homemarker_shape = {
@@ -208,12 +212,15 @@ conversion_table_map_homemarker_shape = {
 
 _LOGGER = logging.getLogger(__name__)
 
+SUNSHINE_STORAGE_VERSION = 1
+
 
 class DWDWeatherData:
     def __init__(self, hass, config_entry: ConfigEntry):
         """Initialize the data object."""
         self._config = config_entry.data
         self._hass = hass
+        self._config_entry_id = config_entry.entry_id
         self.forecast = None
         self._report = None
         self.latest_update = None
@@ -243,9 +250,179 @@ class DWDWeatherData:
         self._airquality_daily = None
         self._radar_precipitation_forecast = None
         self._radar_next_precipitation = None
+        self._sunshine_store = Store(
+            hass,
+            SUNSHINE_STORAGE_VERSION,
+            f"{DOMAIN}_sunshine_{self._config_entry_id}_{self._config[CONF_STATION_ID]}",
+        )
+        self._sunshine_state = self._default_sunshine_state()
+        self._processed_sunshine_hour_keys: set[str] = set()
+
+    def _default_sunshine_state(self) -> dict[str, Any]:
+        """Return a fresh sunshine accumulator state."""
+        return {
+            "current_day_key": "",
+            "accumulated_seconds_today": 0.0,
+            "processed_hour_keys": [],
+            "last_update_utc": None,
+            "source_station_id": self._config[CONF_STATION_ID],
+            "forecast_issue_time": None,
+        }
+
+    async def async_initialize(self) -> None:
+        """Restore persistent state before the first refresh."""
+        await self._async_restore_sunshine_state()
+        if self._reset_sunshine_accumulator_if_new_day():
+            await self._async_save_sunshine_state()
+
+    async def _async_restore_sunshine_state(self) -> None:
+        """Restore the persisted sunshine accumulator state."""
+        restored_state = await self._sunshine_store.async_load()
+        self._sunshine_state = self._default_sunshine_state()
+        self._processed_sunshine_hour_keys = set()
+
+        if not isinstance(restored_state, dict):
+            return
+
+        current_day_key = restored_state.get("current_day_key")
+        if isinstance(current_day_key, str):
+            self._sunshine_state["current_day_key"] = current_day_key
+
+        accumulated_seconds = restored_state.get("accumulated_seconds_today")
+        if (
+            isinstance(accumulated_seconds, (int, float))
+            and accumulated_seconds >= 0
+            and math.isfinite(accumulated_seconds)
+        ):
+            self._sunshine_state["accumulated_seconds_today"] = float(
+                accumulated_seconds
+            )
+
+        processed_hour_keys = restored_state.get("processed_hour_keys")
+        if isinstance(processed_hour_keys, list):
+            valid_hour_keys = [
+                hour_key
+                for hour_key in processed_hour_keys
+                if isinstance(hour_key, str)
+            ]
+            self._processed_sunshine_hour_keys = set(valid_hour_keys)
+            self._sunshine_state["processed_hour_keys"] = sorted(
+                self._processed_sunshine_hour_keys
+            )
+
+        for key in ("last_update_utc", "forecast_issue_time"):
+            value = restored_state.get(key)
+            if isinstance(value, str):
+                self._sunshine_state[key] = value
+
+        self._sunshine_state["source_station_id"] = self._config[CONF_STATION_ID]
+
+    async def _async_save_sunshine_state(self) -> None:
+        """Persist the sunshine accumulator state."""
+        self._sunshine_state["processed_hour_keys"] = sorted(
+            self._processed_sunshine_hour_keys
+        )
+        await self._sunshine_store.async_save(self._sunshine_state)
+
+    def _get_local_today_key(self) -> str:
+        """Return the current local date key for Home Assistant's timezone."""
+        return dt.now().date().isoformat()
+
+    def _get_local_day_key(self, timestamp: datetime) -> str:
+        """Return the local date key for a UTC timestamp."""
+        return dt.as_local(timestamp).date().isoformat()
+
+    def _reset_sunshine_accumulator(self, day_key: str) -> None:
+        """Reset the sunshine accumulator for a new local day."""
+        self._sunshine_state = self._default_sunshine_state()
+        self._sunshine_state["current_day_key"] = day_key
+        self._processed_sunshine_hour_keys = set()
+
+    def _reset_sunshine_accumulator_if_new_day(self) -> bool:
+        """Reset accumulated sunshine when the local day or station changes."""
+        today_key = self._get_local_today_key()
+        if (
+            self._sunshine_state.get("current_day_key") == today_key
+            and self._sunshine_state.get("source_station_id")
+            == self._config[CONF_STATION_ID]
+        ):
+            return False
+
+        self._reset_sunshine_accumulator(today_key)
+        return True
+
+    @staticmethod
+    def _normalize_sunshine_seconds(value: Any) -> float | None:
+        """Return a valid sunshine duration value or None."""
+        if not isinstance(value, (int, float)):
+            return None
+        if value < 0 or not math.isfinite(value):
+            return None
+        return float(value)
+
+    @staticmethod
+    def _serialize_timestamp(value: Any) -> str | None:
+        """Serialize timestamps for storage metadata."""
+        if isinstance(value, datetime):
+            return value.astimezone(timezone.utc).isoformat()
+        if isinstance(value, str):
+            return value
+        return None
+
+    async def _async_process_sunshine_accumulator(self) -> None:
+        """Accumulate today's sunshine values exactly once per forecast hour."""
+        self._reset_sunshine_accumulator_if_new_day()
+        current_day_key = self._sunshine_state["current_day_key"]
+        forecast_data = self.dwd_weather.forecast_data
+
+        if isinstance(forecast_data, dict):
+            for hour_key, hour_data in forecast_data.items():
+                if not isinstance(hour_key, str):
+                    continue
+                if hour_key in self._processed_sunshine_hour_keys:
+                    continue
+
+                try:
+                    hour_timestamp = self._get_forecast_timestamp(hour_key)
+                except ValueError:
+                    continue
+
+                if self._get_local_day_key(hour_timestamp) != current_day_key:
+                    continue
+                if not isinstance(hour_data, dict):
+                    continue
+
+                sunshine_seconds = self._normalize_sunshine_seconds(
+                    hour_data.get(WeatherDataType.SUN_DURATION.value[0])
+                )
+                if sunshine_seconds is None:
+                    continue
+
+                self._sunshine_state["accumulated_seconds_today"] += sunshine_seconds
+                self._processed_sunshine_hour_keys.add(hour_key)
+
+        self._sunshine_state["last_update_utc"] = self._serialize_timestamp(
+            self.latest_update
+        )
+        self._sunshine_state["source_station_id"] = self._config[CONF_STATION_ID]
+        self._sunshine_state["forecast_issue_time"] = self._serialize_timestamp(
+            self.dwd_weather.issue_time
+        )
+        await self._async_save_sunshine_state()
 
     def register_entity(self, entity):
         self.entities.append(entity)
+
+    @staticmethod
+    def _convert_sun_irradiance_to_watts_per_square_meter(
+        value_kj_per_square_meter: float | None,
+        hours: int,
+    ):
+        """Convert irradiance energy from kJ/m² over a period to average W/m²."""
+        if value_kj_per_square_meter is None:
+            return None
+
+        return round(value_kj_per_square_meter / (3.6 * hours), 0)
 
     def supports_apparent_temperature(self) -> bool:
         """Return whether apparent temperature data can be requested."""
@@ -260,27 +437,38 @@ class DWDWeatherData:
 
     async def async_update(self):
         """Async wrapper for update method."""
-        if (
-            self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
-            and self.dwd_weather.station
-            and self._airquality_hourly is None
-            and self._airquality_daily is None
-        ):
-            try:
-                self._airquality_hourly = await AirQuality.get_station_from_location(
-                    self.dwd_weather.station["lat"],
-                    self.dwd_weather.station["lon"],
-                    "hourly",
-                )
-                self._airquality_station_id = self._airquality_hourly.station_id
-                if self._airquality_station_id is not None:
-                    self._airquality_daily = await AirQuality.create(
-                        self._airquality_station_id,
-                        "daily",
-                    )
-            except Exception as error:
-                _LOGGER.warning("Failed to initialize air quality data: %s", error)
+        day_changed = False
+        if self._reset_sunshine_accumulator_if_new_day():
+            await self._async_save_sunshine_state()
+            day_changed = True
+
+        # Air quality endpoint is currently unavailable upstream.
+        # Keep this block commented so it can be re-enabled later.
+        # if (
+        #     self._config.get(CONF_DOWNLOAD_AIRQUALITY, False)
+        #     and self.dwd_weather.station
+        #     and self._airquality_hourly is None
+        #     and self._airquality_daily is None
+        # ):
+        #     try:
+        #         self._airquality_hourly = await AirQuality.get_station_from_location(
+        #             self.dwd_weather.station["lat"],
+        #             self.dwd_weather.station["lon"],
+        #             "hourly",
+        #         )
+        #         self._airquality_station_id = self._airquality_hourly.station_id
+        #         if self._airquality_station_id is not None:
+        #             self._airquality_daily = await AirQuality.create(
+        #                 self._airquality_station_id,
+        #                 "daily",
+        #             )
+        #     except Exception as error:
+        #         _LOGGER.warning("Failed to initialize air quality data: %s", error)
         if await self._hass.async_add_executor_job(self._update):
+            await self._async_process_sunshine_accumulator()
+            for entity in self.entities:
+                await entity.async_update_listeners(("daily", "hourly"))
+        elif day_changed:
             for entity in self.entities:
                 await entity.async_update_listeners(("daily", "hourly"))
 
@@ -317,11 +505,13 @@ class DWDWeatherData:
             with_apparent_temperature=self.supports_apparent_temperature(),
         )
 
-        if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
-            if self._airquality_hourly is not None:
-                self._airquality_hourly.update()
-            if self._airquality_daily is not None:
-                self._airquality_daily.update(with_current_day=True)
+        # Air quality endpoint is currently unavailable upstream.
+        # Keep this block commented so it can be re-enabled later.
+        # if self._config.get(CONF_DOWNLOAD_AIRQUALITY, False):
+        #     if self._airquality_hourly is not None:
+        #         self._airquality_hourly.update()
+        #     if self._airquality_daily is not None:
+        #         self._airquality_daily.update(with_current_day=True)
 
         if self._config[CONF_HOURLY_UPDATE] and not self.dwd_weather.is_in_timerange(
             timestamp
@@ -706,6 +896,12 @@ class DWDWeatherData:
                                 ATTR_FORECAST_HUMIDITY_ABSOLUTE: humidity_absolute,
                             }
                         )
+                        data_item[ATTR_FORECAST_SUN_IRRADIANCE] = (
+                            self._convert_sun_irradiance_to_watts_per_square_meter(
+                                data_item.get(ATTR_FORECAST_SUN_IRRADIANCE),
+                                weather_interval,
+                            )
+                        )
                         if (
                             self._config[CONF_DOWNLOAD_AIRQUALITY]
                             and self._airquality_hourly is not None
@@ -905,6 +1101,12 @@ class DWDWeatherData:
                             ),
                         }
                     )
+                    data_item[ATTR_FORECAST_SUN_IRRADIANCE] = (
+                        self._convert_sun_irradiance_to_watts_per_square_meter(
+                            data_item.get(ATTR_FORECAST_SUN_IRRADIANCE),
+                            weather_interval,
+                        )
+                    )
                     data_item.update(
                         self._get_airquality_forecast_values(
                             WeatherEntityFeature.FORECAST_DAILY,
@@ -1013,7 +1215,10 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda x: round(x, 0),
             WeatherDataType.VISIBILITY: lambda x: round(x / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda x: round(x, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda x: round(x / 3.6, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda x: self._convert_sun_irradiance_to_watts_per_square_meter(
+                x,
+                1,
+            ),
             WeatherDataType.FOG_PROBABILITY: lambda x: round(x, 0),
             WeatherDataType.HUMIDITY: lambda x: round(x, 1),
         }
@@ -1069,6 +1274,21 @@ class DWDWeatherData:
 
     def get_sun_duration(self):
         return self.get_weather_value(WeatherDataType.SUN_DURATION)
+
+    def get_sun_duration_today(self):
+        """Return the accumulated sunshine seconds for the local day."""
+        value = self._sunshine_state["accumulated_seconds_today"]
+        return int(value) if float(value).is_integer() else round(value, 1)
+
+    def get_sun_duration_today_attributes(self):
+        """Return metadata for the sunshine accumulator."""
+        return {
+            "current_day_key": self._sunshine_state["current_day_key"],
+            "processed_hours": len(self._processed_sunshine_hour_keys),
+            "last_update_utc": self._sunshine_state["last_update_utc"],
+            "source_station_id": self._sunshine_state["source_station_id"],
+            "forecast_issue_time": self._sunshine_state["forecast_issue_time"],
+        }
 
     def get_sun_irradiance(self):
         return self.get_weather_value(WeatherDataType.SUN_IRRADIANCE)
@@ -1311,7 +1531,10 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda value: round(value, 0),
             WeatherDataType.VISIBILITY: lambda value: round(value / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda value: round(value, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda value: round(value / 3.6, 0),
+            WeatherDataType.SUN_IRRADIANCE: lambda value: self._convert_sun_irradiance_to_watts_per_square_meter(
+                value,
+                1,
+            ),
             WeatherDataType.FOG_PROBABILITY: lambda value: round(value, 0),
             WeatherDataType.HUMIDITY: lambda value: round(value, 1),
         }

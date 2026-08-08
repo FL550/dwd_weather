@@ -57,6 +57,9 @@
       "sun_duration": {
         "name": "Sonnenscheindauer"
       },
+      "sun_duration_today": {
+        "name": "Sonnenscheindauer heute"
+      },
       "sun_irradiance": {
         "name": "Sonneneinstrahlung"
       },
