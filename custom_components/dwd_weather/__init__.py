@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     random_delay = random.randint(1, 59)
     if entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_STATION:
         dwd_weather_data = DWDWeatherData(hass, entry)
+        await dwd_weather_data.async_initialize()
 
         # Coordinator checks for new updates
         dwdweather_coordinator = DataUpdateCoordinator(
@@ -119,6 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             DWDWEATHER_DATA: dwd_weather_data,
             DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         }
+
+        # Fetch initial map data/images on startup
+        await dwdweather_coordinator.async_refresh()
 
         await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
 

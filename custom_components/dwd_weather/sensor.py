@@ -24,8 +24,7 @@ from homeassistant.components.weather import (
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    UnitOfDensity,
     DEGREE,
     PERCENTAGE,
     UnitOfIrradiance,
@@ -57,7 +56,6 @@ from .const import (
     ATTRIBUTION,
     CONF_DATA_TYPE,
     CONF_DATA_TYPE_FORECAST,
-    CONF_DOWNLOAD_AIRQUALITY,
     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
     CONF_HOURLY_UPDATE,
     CONF_STATION_ID,
@@ -230,6 +228,15 @@ SENSOR_TYPES = {
         SensorStateClass.MEASUREMENT,
         True,
     ],
+    "sun_duration_today": [
+        "Sun Duration Today",
+        SensorDeviceClass.DURATION,
+        UnitOfTime.SECONDS,
+        "mdi:weather-sunny-alert",
+        False,
+        SensorStateClass.TOTAL,
+        True,
+    ],
     "sun_irradiance": [
         "Sun Irradiance",
         SensorDeviceClass.IRRADIANCE,
@@ -260,7 +267,7 @@ SENSOR_TYPES = {
     "humidity_absolute": [
         "Absolute Humidity",
         SensorDeviceClass.ABSOLUTE_HUMIDITY,
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
         "mdi:water",
         False,
         SensorStateClass.MEASUREMENT,
@@ -305,7 +312,7 @@ SENSOR_TYPES = {
     "airquality_stickstoffdioxid": [
         "Air Quality Stickstoffdioxid",
         SensorDeviceClass.NITROGEN_DIOXIDE,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -314,7 +321,7 @@ SENSOR_TYPES = {
     "airquality_ozon": [
         "Air Quality Ozon",
         SensorDeviceClass.OZONE,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -323,7 +330,7 @@ SENSOR_TYPES = {
     "airquality_pm2_5": [
         "Air Quality PM2.5",
         SensorDeviceClass.PM25,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -332,7 +339,7 @@ SENSOR_TYPES = {
     "airquality_pm10": [
         "Air Quality PM10",
         SensorDeviceClass.PM10,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         "mdi:molecule-co2",
         False,
         SensorStateClass.MEASUREMENT,
@@ -376,10 +383,13 @@ async def async_setup_entry(
                 k == "apparent_temperature"
                 and not hass_data[DWDWEATHER_DATA].supports_apparent_temperature()
             )
-            and not (
-                k.startswith("airquality")
-                and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
-            )
+            # Air quality endpoint is currently unavailable upstream.
+            # Keep old config gate commented so it can be re-enabled later.
+            # and not k.startswith("airquality")
+            # and not (
+            #     k.startswith("airquality")
+            #     and not hass_data[DWDWEATHER_DATA]._config[CONF_DOWNLOAD_AIRQUALITY]
+            # )
             and not (
                 k.startswith("radar_")
                 and not hass_data[DWDWEATHER_DATA]._config.get(
@@ -474,6 +484,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_visibility()
         elif self._type == "sun_duration":
             result = self._connector.get_sun_duration()
+        elif self._type == "sun_duration_today":
+            result = self._connector.get_sun_duration_today()
         elif self._type == "sun_irradiance":
             result = self._connector.get_sun_irradiance()
         elif self._type == "fog_probability":
@@ -575,6 +587,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_visibility_hourly()
         elif self._type == "sun_duration":
             attributes["data"] = self._connector.get_sun_duration_hourly()
+        elif self._type == "sun_duration_today":
+            attributes.update(self._connector.get_sun_duration_today_attributes())
         elif self._type == "sun_irradiance":
             attributes["data"] = self._connector.get_sun_irradiance_hourly()
         elif self._type == "fog_probability":

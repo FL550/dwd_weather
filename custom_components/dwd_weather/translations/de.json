@@ -57,6 +57,9 @@
       "sun_duration": {
         "name": "Sonnenscheindauer"
       },
+      "sun_duration_today": {
+        "name": "Sonnenscheindauer heute"
+      },
       "sun_irradiance": {
         "name": "Sonneneinstrahlung"
       },
@@ -199,12 +202,22 @@
         "title": "Niederschlagsradar Animation",
         "data": {
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
+          "map_timestamp_font_size": "Schriftgröße des Zeitstempels",
+          "map_show_timeline": "Soll die Zeitleiste angezeigt werden?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
-          "map_loop_speed": "Wie schnell soll die Animation ablaufen?"
+          "map_loop_count_future": "Wie viele zukünftige Radarbilder (Vorhersage) sollen angezeigt werden?",
+          "map_loop_hours_future": "Wie viele zusätzliche Stunden Wettermodell-Vorhersage sollen angezeigt werden?",
+          "map_loop_speed": "Wie schnell soll die Animation ablaufen?",
+          "map_loop_speed_future": "Wie schnell soll die Wettermodell-Vorhersage ablaufen?"
         },
         "data_description": {
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
-          "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird."
+          "map_loop_count_future": "Der DWD stellt Vorhersage-Radarbilder (Nowcasting) für bis zu 120 minutes (2 Stunden) in die Zukunft bereit.",
+          "map_loop_hours_future": "Dies hängt Vorhersagebilder aus dem Wettermodell (ICON-EU, stündliche Auflösung) an das 2-stündige Radar-Nowcast an.",
+          "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",
+          "map_loop_speed_future": "Der Wert bestimmt, wie lange ein einzelnes Bild der Wettermodell-Vorhersage angezeigt wird, bevor das nächste Bild folgt.",
+          "map_timestamp_font_size": "Schriftgröße für das Zeitstempel-Overlay (Standard ist 28).",
+          "map_show_timeline": "Aktiviert oder deaktiviert die Zeitleisten-Fortschrittsanzeige am oberen Bildrand."
         }
       },
       "select_map_homemarker": {
@@ -241,8 +254,13 @@
           "map_marker": "Soll die Mitte der Karte markiert werden?",
           "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
+          "map_timestamp_font_size": "Schriftgröße des Zeitstempels",
+          "map_show_timeline": "Soll die Zeitleiste angezeigt werden?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
+          "map_loop_count_future": "Wie viele zukünftige Radarbilder (Vorhersage) sollen angezeigt werden?",
+          "map_loop_hours_future": "Wie viele zusätzliche Stunden Wettermodell-Vorhersage sollen angezeigt werden?",
           "map_loop_speed": "Wie schnell soll die Animation ablaufen?",
+          "map_loop_speed_future": "Wie schnell soll die Wettermodell-Vorhersage ablaufen?",
           "sensor_forecast_steps": "Begrenze verfügbare Vorhersageschritte in Sensorattributen",
           "additional_forecast_attributes": "Aktiviere zusätzliche Vorhersageattribute",
           "map_dark_mode": "Soll die Karte als Dark Mode angezeigt werden?",
@@ -260,7 +278,12 @@
           "radar_location_coordinates": "Verschiebe den Marker auf den Ort, für den die Radar-Niederschlagsdaten abgerufen werden sollen.",
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "Ein neues Radarbild ist alle 5 Minuten verfügbar. Für 30 Minuten gibt es also 6 anzuzeigende Bilder. Der Wert bezieht sich auf das letzte verfügbare Radarbild.",
+          "map_loop_count_future": "Der DWD stellt Vorhersage-Radarbilder (Nowcasting) für bis zu 120 Minuten (2 Stunden) in die Zukunft bereit.",
+          "map_loop_hours_future": "Dies hängt Vorhersagebilder aus dem Wettermodell (ICON-EU, stündliche Auflösung) an das 2-stündige Radar-Nowcast an.",
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",
+          "map_loop_speed_future": "Der Wert bestimmt, wie lange ein einzelnes Bild der Wettermodell-Vorhersage angezeigt wird, bevor das nächste Bild folgt.",
+          "map_timestamp_font_size": "Schriftgröße für das Zeitstempel-Overlay (Standard ist 28).",
+          "map_show_timeline": "Aktiviert oder deaktiviert die Zeitleisten-Fortschrittsanzeige am oberen Bildrand.",
           "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu.",
           "daily_temp_high_precision": "Die Vorhersage der täglichen Höchst- und Tiefsttemperatur wird auf eine Kommastelle genau angezeigt."

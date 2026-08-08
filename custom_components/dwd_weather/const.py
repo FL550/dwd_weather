@@ -99,7 +99,12 @@ CONF_MAP_HOMEMARKER_SIZE = "map_homemarker_size"
 CONF_MAP_HOMEMARKER_COLOR = "map_homemarker_color"
 CONF_MAP_TIMESTAMP = "map_timestamp"
 CONF_MAP_LOOP_COUNT = "map_loop_count"
+CONF_MAP_LOOP_COUNT_FUTURE = "map_loop_count_future"
+CONF_MAP_LOOP_HOURS_FUTURE = "map_loop_hours_future"
 CONF_MAP_LOOP_SPEED = "map_loop_speed"
+CONF_MAP_LOOP_SPEED_FUTURE = "map_loop_speed_future"
+CONF_MAP_TIMESTAMP_FONT_SIZE = "map_timestamp_font_size"
+CONF_MAP_SHOW_TIMELINE = "map_show_timeline"
 
 conversion_table_map_foreground = {
     CONF_MAP_FOREGROUND_PRECIPITATION: "Precipitation",
@@ -117,3 +122,5 @@ CONF_MAP_HOMEMARKER_SHAPE_CROSS = "map_homemarker_shape_cross"
 CONF_MAP_HOMEMARKER_SHAPE_SQUARE = "map_homemarker_shape_square"
 
 CONF_OPTION_MAP_MESSAGE = "map_options_message"
+
+CONF_MAP_DEFAULT_WMS_STYLE = "niederschlagsradar"

@@ -60,7 +60,12 @@ from .const import (
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_ID,
     CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_COUNT_FUTURE,
+    CONF_MAP_LOOP_HOURS_FUTURE,
     CONF_MAP_LOOP_SPEED,
+    CONF_MAP_LOOP_SPEED_FUTURE,
+    CONF_MAP_TIMESTAMP_FONT_SIZE,
+    CONF_MAP_SHOW_TIMELINE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_TIMESTAMP,
     CONF_MAP_TYPE,
@@ -255,6 +260,9 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_STATION_ID]
             ):
                 user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
+            # Air quality endpoint is currently unavailable upstream.
+            # Keep this config key forced off until the endpoint returns.
+            user_input[CONF_DOWNLOAD_AIRQUALITY] = False
             station_id = (
                 f"{self.config_data[CONF_STATION_ID]}: {user_input[CONF_STATION_NAME]}"
             )
@@ -304,10 +312,12 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_HOURLY_UPDATE,
                     default=False,  # type: ignore
                 ): BooleanSelector({}),
-                vol.Required(
-                    CONF_DOWNLOAD_AIRQUALITY,
-                    default=False,  # type: ignore
-                ): BooleanSelector({}),
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this UI field commented for quick reactivation later.
+                # vol.Required(
+                #     CONF_DOWNLOAD_AIRQUALITY,
+                #     default=False,  # type: ignore
+                # ): BooleanSelector({}),
                 vol.Required(
                     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                     default=False,  # type: ignore
@@ -526,6 +536,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Map_loop:user_input: {}".format(user_input))
         if user_input is not None:
             user_input[CONF_MAP_LOOP_COUNT] = int(user_input[CONF_MAP_LOOP_COUNT] / 5)
+            if CONF_MAP_LOOP_COUNT_FUTURE in user_input:
+                user_input[CONF_MAP_LOOP_COUNT_FUTURE] = int(
+                    user_input[CONF_MAP_LOOP_COUNT_FUTURE] / 5
+                )
             self.config_data.update(user_input)
 
             if (
@@ -539,24 +553,90 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=self.config_data,
                 )
 
-        data_schema = vol.Schema(
+        is_precip = (
+            self.config_data.get(CONF_MAP_FOREGROUND_TYPE)
+            == CONF_MAP_FOREGROUND_PRECIPITATION
+        )
+
+        schema_dict = {
+            vol.Required(
+                CONF_MAP_TIMESTAMP,
+                default=False,  # type: ignore
+            ): BooleanSelector({}),
+            vol.Required(
+                CONF_MAP_TIMESTAMP_FONT_SIZE,
+                default=28,  # type: ignore
+            ): NumberSelector(
+                {
+                    "min": 10,
+                    "max": 50,
+                    "step": 1,
+                    "mode": "slider",
+                    "unit_of_measurement": "px",
+                }
+            ),
+            vol.Required(
+                CONF_MAP_SHOW_TIMELINE,
+                default=True,  # type: ignore
+            ): BooleanSelector({}),
+            vol.Required(
+                CONF_MAP_LOOP_COUNT,
+                default=30,  # type: ignore
+            ): NumberSelector(
+                {
+                    "min": 5,
+                    "max": 60,
+                    "step": "5",
+                    "mode": "slider",
+                    "unit_of_measurement": "min",
+                }
+            ),
+        }
+
+        if is_precip:
+            schema_dict.update(
+                {
+                    vol.Required(
+                        CONF_MAP_LOOP_COUNT_FUTURE,
+                        default=0,  # type: ignore
+                    ): NumberSelector(
+                        {
+                            "min": 0,
+                            "max": 120,
+                            "step": "5",
+                            "mode": "slider",
+                            "unit_of_measurement": "min",
+                        }
+                    ),
+                    vol.Required(
+                        CONF_MAP_LOOP_HOURS_FUTURE,
+                        default=0,  # type: ignore
+                    ): NumberSelector(
+                        {
+                            "min": 0,
+                            "max": 24,
+                            "step": "1",
+                            "mode": "slider",
+                            "unit_of_measurement": "h",
+                        }
+                    ),
+                    vol.Required(
+                        CONF_MAP_LOOP_SPEED_FUTURE,
+                        default=2.0,  # type: ignore
+                    ): NumberSelector(
+                        {
+                            "min": 0.5,
+                            "max": 5.0,
+                            "step": "0.1",
+                            "mode": "slider",
+                            "unit_of_measurement": "s",
+                        }
+                    ),
+                }
+            )
+
+        schema_dict.update(
             {
-                vol.Required(
-                    CONF_MAP_TIMESTAMP,
-                    default=False,  # type: ignore
-                ): BooleanSelector({}),
-                vol.Required(
-                    CONF_MAP_LOOP_COUNT,
-                    default=30,  # type: ignore
-                ): NumberSelector(
-                    {
-                        "min": 5,
-                        "max": 60,
-                        "step": "5",
-                        "mode": "slider",
-                        "unit_of_measurement": "min",
-                    }
-                ),
                 vol.Required(
                     CONF_MAP_LOOP_SPEED,
                     default=0.5,  # type: ignore
@@ -571,6 +651,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
+
+        data_schema = vol.Schema(schema_dict)
 
         return self.async_show_form(
             step_id="select_map_loop", data_schema=data_schema, errors=errors
@@ -665,6 +747,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 if not supports_apparent_temperature:
                     user_input[CONF_DOWNLOAD_APPARENT_TEMPERATURE] = False
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this config key forced off until the endpoint returns.
+                user_input[CONF_DOWNLOAD_AIRQUALITY] = False
 
                 user_input[CONF_ENTITY_TYPE] = self.config_entry.data[CONF_ENTITY_TYPE]
                 user_input[CONF_STATION_ID] = self.config_entry.data[CONF_STATION_ID]
@@ -726,13 +811,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_HOURLY_UPDATE,
                     default=self.config_entry.data[CONF_HOURLY_UPDATE],
                 ): BooleanSelector({}),
-                vol.Required(
-                    CONF_DOWNLOAD_AIRQUALITY,
-                    default=self.config_entry.data.get(
-                        CONF_DOWNLOAD_AIRQUALITY,
-                        False,
-                    ),
-                ): BooleanSelector({}),
+                # Air quality endpoint is currently unavailable upstream.
+                # Keep this UI field commented for quick reactivation later.
+                # vol.Required(
+                #     CONF_DOWNLOAD_AIRQUALITY,
+                #     default=self.config_entry.data.get(
+                #         CONF_DOWNLOAD_AIRQUALITY,
+                #         False,
+                #     ),
+                # ): BooleanSelector({}),
                 vol.Required(
                     CONF_DOWNLOAD_PRECIPITATION_SENSORS,
                     default=self.config_entry.data.get(
@@ -790,6 +877,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input[CONF_MAP_LOOP_COUNT] = int(
                         user_input[CONF_MAP_LOOP_COUNT] / 5
                     )
+                if CONF_MAP_LOOP_COUNT_FUTURE in user_input:
+                    user_input[CONF_MAP_LOOP_COUNT_FUTURE] = int(
+                        user_input[CONF_MAP_LOOP_COUNT_FUTURE] / 5
+                    )
                 if user_input[CONF_MAP_HOMEMARKER]:
                     self.config_data.update(user_input)
                     return await self.async_step_homemarker()
@@ -834,6 +925,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=self.config_entry.data[CONF_MAP_TIMESTAMP],  # type: ignore
                         ): BooleanSelector({}),
                         vol.Required(
+                            CONF_MAP_TIMESTAMP_FONT_SIZE,
+                            default=self.config_entry.data.get(CONF_MAP_TIMESTAMP_FONT_SIZE, 28),  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 10,
+                                "max": 50,
+                                "step": 1,
+                                "mode": "slider",
+                                "unit_of_measurement": "px",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_SHOW_TIMELINE,
+                            default=self.config_entry.data.get(CONF_MAP_SHOW_TIMELINE, True),  # type: ignore
+                        ): BooleanSelector({}),
+                        vol.Required(
                             CONF_MAP_LOOP_COUNT,
                             default=self.config_entry.data[CONF_MAP_LOOP_COUNT] * 5,  # type: ignore
                         ): NumberSelector(
@@ -843,6 +950,42 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                 "step": "5",
                                 "mode": "slider",
                                 "unit_of_measurement": "min",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_LOOP_COUNT_FUTURE,
+                            default=self.config_entry.data.get(CONF_MAP_LOOP_COUNT_FUTURE, 0) * 5,  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 0,
+                                "max": 120,
+                                "step": "5",
+                                "mode": "slider",
+                                "unit_of_measurement": "min",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_LOOP_HOURS_FUTURE,
+                            default=self.config_entry.data.get(CONF_MAP_LOOP_HOURS_FUTURE, 0),  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 0,
+                                "max": 24,
+                                "step": "1",
+                                "mode": "slider",
+                                "unit_of_measurement": "h",
+                            }
+                        ),
+                        vol.Required(
+                            CONF_MAP_LOOP_SPEED_FUTURE,
+                            default=self.config_entry.data.get(CONF_MAP_LOOP_SPEED_FUTURE, 2.0),  # type: ignore
+                        ): NumberSelector(
+                            {
+                                "min": 0.5,
+                                "max": 5.0,
+                                "step": "0.1",
+                                "mode": "slider",
+                                "unit_of_measurement": "s",
                             }
                         ),
                         vol.Required(
