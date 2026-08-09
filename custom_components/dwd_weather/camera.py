@@ -49,12 +49,6 @@ class MyCamera(Camera):
         )
         self._name = f"{self._map_type}"
 
-        self._frame_interval = (
-            self._dwd_data._configdata[CONF_MAP_LOOP_SPEED]
-            if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
-            else 5
-        )
-
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
         self._attr_state = "Radar"
 

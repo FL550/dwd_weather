@@ -9,6 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.dwd_weather import (
+    async_migrate_entry,
     async_setup,
     async_setup_entry,
     async_unload_entry,
@@ -137,3 +138,24 @@ async def test_unload_entry_station_success(hass: HomeAssistant):
 
     assert result is True
     assert DOMAIN not in hass.data
+
+
+@pytest.mark.asyncio
+async def test_async_migrate_entry_v14_to_v15(hass: HomeAssistant):
+    """Migrating a version 14 map entry should add future loop defaults and set version 15."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=14,
+        data={**MOCK_CONFIG_MAP, CONF_ENTITY_TYPE: CONF_ENTITY_TYPE_MAP},
+        entry_id=TEST_ENTRY_ID,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, entry) is True
+    assert entry.version == 15
+    assert entry.data["map_loop_count_future"] == 0
+    assert entry.data["map_loop_hours_future"] == 0
+    assert entry.data["map_loop_speed_future"] == 2.0
+    assert entry.data["map_show_timeline"] is True
+    assert entry.data["map_timestamp_font_size"] == 28
+
