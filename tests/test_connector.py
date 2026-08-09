@@ -756,3 +756,36 @@ def test_update_radar_precipitation_falls_back_to_station_when_coords_missing(
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False
     )
+
+
+def test_map_data_get_image_returns_weather_loop_image():
+    """DWDMapData.get_image should select the current loop frame when foreground type is precipitation."""
+    from PIL import Image
+    from custom_components.dwd_weather.connector import DWDMapData
+    from custom_components.dwd_weather.const import (
+        CONF_MAP_CENTERMARKER,
+        CONF_MAP_FOREGROUND_PRECIPITATION,
+        CONF_MAP_FOREGROUND_TYPE,
+        CONF_MAP_LOOP_COUNT,
+        CONF_MAP_LOOP_SPEED,
+    )
+
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    configdata = {
+        CONF_MAP_FOREGROUND_TYPE: CONF_MAP_FOREGROUND_PRECIPITATION,
+        CONF_MAP_LOOP_COUNT: 6,
+        CONF_MAP_LOOP_SPEED: 0.5,
+        CONF_MAP_CENTERMARKER: False,
+    }
+
+    entry = MockConfigEntry(data=configdata)
+    map_data = DWDMapData(MagicMock(), entry)
+    test_img = Image.new("RGB", (100, 100))
+    map_data._images = [test_img]
+
+    retrieved = map_data.get_image()
+    assert retrieved is not None
+    assert isinstance(retrieved, bytes)
+    assert len(retrieved) > 0
+
