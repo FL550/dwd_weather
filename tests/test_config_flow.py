@@ -24,13 +24,24 @@ from custom_components.dwd_weather.const import (
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_CUSTOM,
     CONF_MAP_TYPE_GERMANY,
+    CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_COUNT_FUTURE,
+    CONF_MAP_LOOP_HOURS_FUTURE,
+    CONF_MAP_LOOP_SPEED,
+    CONF_MAP_LOOP_SPEED_FUTURE,
+    CONF_MAP_SHOW_TIMELINE,
+    CONF_MAP_TIMESTAMP_FONT_SIZE,
+    CONF_MAP_CENTERMARKER,
+    CONF_MAP_HOMEMARKER,
+    CONF_MAP_TIMESTAMP,
+    CONF_MAP_DARK_MODE,
     CONF_RADAR_CUSTOM_LOCATION,
     CONF_RADAR_LOCATION_COORDINATES,
     CONF_SENSOR_FORECAST_STEPS,
     CONF_STATION_ID,
     CONF_STATION_NAME,
 )
-from .const import MOCK_CONFIG, MOCK_CONFIG_FORECAST
+from .const import MOCK_CONFIG, MOCK_CONFIG_FORECAST, MOCK_CONFIG_MAP
 
 
 def _schema_has_field(schema, key_name: str) -> bool:
@@ -585,3 +596,51 @@ async def test_options_flow_station_radar_location_updates_entry():
         "latitude": 48.1,
         "longitude": 11.6,
     }
+
+
+@pytest.mark.asyncio
+async def test_options_flow_map_options_updates_future_loop_params():
+    """Map options flow step should update entry with future loop and timeline parameters."""
+    flow = OptionsFlowHandler()
+    flow.hass = MagicMock()
+    flow.hass.config_entries = MagicMock()
+    config_entry = MagicMock()
+    config_entry.data = {
+        **dict(MOCK_CONFIG_MAP),
+        "map_id": "germany_precip",
+        "map_foreground_type": "map_foreground_precipitation",
+        "map_background_type": "map_background_bundeslaender",
+        CONF_MAP_LOOP_COUNT: 6,
+        CONF_MAP_LOOP_SPEED: 0.5,
+    }
+    config_entry.options = {}
+
+    with patch.object(
+        OptionsFlowHandler,
+        "config_entry",
+        new_callable=PropertyMock,
+        return_value=config_entry,
+    ):
+        result = await flow.async_step_init(
+            {
+                CONF_MAP_TIMESTAMP_FONT_SIZE: 32,
+                CONF_MAP_SHOW_TIMELINE: True,
+                CONF_MAP_LOOP_COUNT: 30,  # 30 minutes -> 6 steps
+                CONF_MAP_LOOP_COUNT_FUTURE: 60,  # 60 minutes -> 12 steps
+                CONF_MAP_LOOP_HOURS_FUTURE: 6,
+                CONF_MAP_LOOP_SPEED_FUTURE: 3.0,
+                CONF_MAP_LOOP_SPEED: 0.5,
+                CONF_MAP_CENTERMARKER: True,
+                CONF_MAP_HOMEMARKER: False,
+                CONF_MAP_TIMESTAMP: True,
+                CONF_MAP_DARK_MODE: False,
+            }
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["map_loop_count_future"] == 12
+    assert result["data"]["map_loop_hours_future"] == 6
+    assert result["data"]["map_loop_speed_future"] == 3.0
+    assert result["data"]["map_show_timeline"] is True
+    assert result["data"]["map_timestamp_font_size"] == 32
+

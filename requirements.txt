@@ -6,3 +6,4 @@ pytest-cov
 pytest-asyncio
 pytest-homeassistant-custom-component
 pytest-xdist
+PyTurboJPEG

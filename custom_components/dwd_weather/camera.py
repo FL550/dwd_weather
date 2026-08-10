@@ -49,21 +49,33 @@ class MyCamera(Camera):
         )
         self._name = f"{self._map_type}"
 
-        self._frame_interval = (
-            self._dwd_data._configdata[CONF_MAP_LOOP_SPEED]
-            if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
-            else 5
-        )
-
         self._coordinator = hass_data[DWDWEATHER_COORDINATOR]
+        self._attr_state = "Radar"
+
+    async def async_added_to_hass(self) -> None:
+        """Register as a coordinator listener so periodic updates keep firing."""
+        await super().async_added_to_hass()
+        # Without a registered listener, DataUpdateCoordinator skips scheduled
+        # refreshes. This keeps the coordinator alive and updates running.
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
         self._dwd_data.set_size(width if width else 520, height if height else 580)
-        await self._coordinator.async_request_refresh()
+        if not self._dwd_data._images:
+            _LOGGER.debug("No cached weather loop images, forcing refresh on first render request")
+            await self._coordinator.async_request_refresh()
         image = self._dwd_data.get_image()
+
+        current_state = getattr(self._dwd_data, "current_label", "Radar")
+        if current_state != self._attr_state:
+            self._attr_state = current_state
+            self.async_write_ha_state()
+
         return image
 
     @property
@@ -89,10 +101,19 @@ class MyCamera(Camera):
 
     @property
     def frame_interval(self):
-        """Return the unique of the sensor."""
-        return self._frame_interval
+        """Return the camera frame interval."""
+        return (
+            self._dwd_data._configdata[CONF_MAP_LOOP_SPEED]
+            if CONF_MAP_LOOP_SPEED in self._dwd_data._configdata
+            else 0.5
+        )
 
     @property
     def translation_key(self):
         """Return the current condition."""
         return "weather_maps"
+
+    @property
+    def state(self) -> str:
+        """Return the current loop source (Radar, Nowcast, Model)."""
+        return self._attr_state

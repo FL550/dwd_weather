@@ -44,6 +44,7 @@ from simple_dwd_weatherforecast.dwdmap import MarkerShape
 # from simple_dwd_weatherforecast.dwdairquality import (
 #     AirQuality,
 # )
+from .map_loop import FutureImageLoop
 
 from .const import (
     ATTR_FORECAST_APPARENT_TEMP,
@@ -87,6 +88,12 @@ from .const import (
     CONF_MAP_HOMEMARKER_SHAPE_SQUARE,
     CONF_MAP_HOMEMARKER_SIZE,
     CONF_MAP_LOOP_COUNT,
+    CONF_MAP_LOOP_COUNT_FUTURE,
+    CONF_MAP_LOOP_HOURS_FUTURE,
+    CONF_MAP_LOOP_SPEED,
+    CONF_MAP_LOOP_SPEED_FUTURE,
+    CONF_MAP_TIMESTAMP_FONT_SIZE,
+    CONF_MAP_SHOW_TIMELINE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
@@ -1633,12 +1640,13 @@ class DWDMapData:
         self._image = None
         self._images = None
 
-        self._width = None
-        self._height = None
+        self._width = 520
+        self._height = 580
         self._maploop = None
         self._cachedheight = 0
         self._cachedwidth = 0
         self._image_nr = 0
+        self.last_update_time = None
 
     async def async_update(self):
         """Async wrapper for update method."""
@@ -1653,6 +1661,7 @@ class DWDMapData:
             self._update_loop()
         else:
             self._update_single()
+        self.last_update_time = datetime.now(timezone.utc)
 
     def _update_loop(self):
         _LOGGER.debug(
@@ -1707,7 +1716,7 @@ class DWDMapData:
                         )
                     )
                     try:
-                        self._maploop = dwdmap.ImageLoop(
+                        self._maploop = FutureImageLoop(
                             dwdmap.germany_boundaries.minx,
                             dwdmap.germany_boundaries.miny,
                             dwdmap.germany_boundaries.maxx,
@@ -1722,14 +1731,29 @@ class DWDMapData:
                                     self._configdata[CONF_MAP_BACKGROUND_TYPE]  # type: ignore
                                 )
                             ],
-                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_past=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_future=self._configdata.get(
+                                CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            ),
+                            hours_future=self._configdata.get(
+                                CONF_MAP_LOOP_HOURS_FUTURE, 0
+                            ),
+                            speed=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED, 0.5
+                            ),
+                            speed_future=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED_FUTURE, 2.0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                         )
+                        # Trigger the first fetch (deferred from __init__)
+                        self._maploop.update()
                     except Exception as e:
                         _LOGGER.error("Map update germany failed: {}.".format(e))
+                        self._maploop = None
                 else:
                     _LOGGER.debug(
                         "map async_update get_from_location lat: {}, lon:{}, radius:{}, map_type:{} background_type:{} width:{} height:{} markers:{}".format(
@@ -1752,7 +1776,7 @@ class DWDMapData:
                         )  # type: ignore
                     )
                     try:
-                        self._maploop = dwdmap.ImageLoop(
+                        self._maploop = FutureImageLoop(
                             self._configdata[CONF_MAP_WINDOW]["longitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["latitude"] - radius,  # type: ignore
                             self._configdata[CONF_MAP_WINDOW]["longitude"] + radius,  # type: ignore
@@ -1767,14 +1791,29 @@ class DWDMapData:
                                     self._configdata[CONF_MAP_BACKGROUND_TYPE]
                                 )  # type: ignore
                             ],
-                            steps=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_past=self._configdata[CONF_MAP_LOOP_COUNT],
+                            steps_future=self._configdata.get(
+                                CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            ),
+                            hours_future=self._configdata.get(
+                                CONF_MAP_LOOP_HOURS_FUTURE, 0
+                            ),
+                            speed=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED, 0.5
+                            ),
+                            speed_future=self._configdata.get(
+                                CONF_MAP_LOOP_SPEED_FUTURE, 2.0
+                            ),
                             image_width=width,
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
                         )
+                        # Trigger the first fetch (deferred from __init__)
+                        self._maploop.update()
                     except Exception as e:
                         _LOGGER.error("Map update failed: {}.".format(e))
+                        self._maploop = None
                     if self._maploop:
                         _LOGGER.debug(
                             "map async_update maploop: {}".format(
@@ -1783,8 +1822,16 @@ class DWDMapData:
                         )
                 self._cachedheight = self._height
                 self._cachedwidth = self._width
-            if self._maploop:
-                self._images = self._maploop.get_images()
+        
+        if self._maploop:
+            self._images = self._maploop.get_images()
+            all_times = getattr(self._maploop, "_all_times", None)
+            _LOGGER.info(
+                "Map _update_loop done: %d images loaded, window=[%s -> %s]",
+                len(self._images) if self._images else 0,
+                all_times[0].strftime("%H:%M") if all_times else "?",
+                all_times[-1].strftime("%H:%M") if all_times else "?",
+            )
 
     def _update_single(self):
         # prevent distortion of map
@@ -1866,10 +1913,13 @@ class DWDMapData:
                 )
             )
 
-            if self._image_nr == self._configdata[CONF_MAP_LOOP_COUNT] - 1:
-                self._image_nr = 0
-            else:
-                self._image_nr += 1
+            loop_len = len(self._images) if self._images else 1
+            speed = self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5)
+            total_duration = loop_len * speed
+            time_in_cycle = time.time() % total_duration
+            self._image_nr = int(time_in_cycle / speed)
+            if self._image_nr >= loop_len:
+                self._image_nr = loop_len - 1
             _LOGGER.debug(" Map get_image: _image_nr {}".format(self._image_nr))
             if self._images:
                 image = self._images[self._image_nr]  # type: ignore
@@ -1877,6 +1927,7 @@ class DWDMapData:
             image = self._image
 
         if image:
+            image = image.copy()
             draw = PIL.ImageDraw.ImageDraw(image)
             if self._configdata[CONF_MAP_CENTERMARKER]:
                 center = (image.size[0] / 2, image.size[1] / 2)
@@ -1889,33 +1940,147 @@ class DWDMapData:
                     [center[0], center[1] - length, center[0], center[1] + length],
                     fill=(255, 0, 0),
                 )
-            if (
-                CONF_MAP_TIMESTAMP in self._configdata
-                and self._configdata[CONF_MAP_TIMESTAMP]
-                and self._maploop
-            ):
-                timestamp = self._maploop._last_update - timedelta(minutes=5) * (
-                    self._configdata[CONF_MAP_LOOP_COUNT] - self._image_nr - 1
+            if self._maploop:
+                ref_time = getattr(self._maploop, "_last_now", None) or getattr(
+                    self._maploop, "_last_update", None
                 )
-                boxcolor = (0, 0, 0)
-                textcolor = (255, 255, 255)
-                if (
-                    CONF_MAP_DARK_MODE in self._configdata
-                    and self._configdata[CONF_MAP_DARK_MODE]
-                ):
-                    boxcolor = (225, 225, 225)
-                    textcolor = (0, 0, 0)
+                
+                label = ""
+                if hasattr(self._maploop, "_all_times") and self._maploop._all_times:
+                    if self._image_nr < len(self._maploop._all_times):
+                        timestamp = self._maploop._all_times[self._image_nr]
+                    else:
+                        timestamp = self._maploop._all_times[-1]
+                    
+                    if ref_time:
+                        last_nowcast = ref_time + timedelta(minutes=5) * getattr(self._maploop, "_steps_future", 0)
+                        if timestamp <= ref_time:
+                            label = "Radar"
+                        elif timestamp <= last_nowcast:
+                            label = "Nowcast"
+                        else:
+                            label = "Model"
+                else:
+                    if ref_time:
+                        if hasattr(self._maploop, "_steps_past"):
+                            steps_past = self._maploop._steps_past
+                            timestamp = ref_time - timedelta(minutes=5) * (
+                                steps_past - 1 - self._image_nr
+                            )
+                        else:
+                            timestamp = ref_time - timedelta(minutes=5) * (
+                                self._configdata[CONF_MAP_LOOP_COUNT] - 1 - self._image_nr
+                            )
+                    else:
+                        timestamp = None
 
-                draw.rectangle((8, 13, 175, 32), fill=boxcolor)
-                draw.text(
-                    (10, 10),
-                    timestamp.astimezone().strftime("%d.%m.%Y %H:%M"),
-                    fill=textcolor,
-                    font_size=20,
-                )
+                self.current_label = label if label else "Radar"
+
+                if timestamp:
+                    if CONF_MAP_TIMESTAMP in self._configdata and self._configdata[CONF_MAP_TIMESTAMP]:
+                        boxcolor = (0, 0, 0)
+                        textcolor = (255, 255, 255)
+                        if (
+                            CONF_MAP_DARK_MODE in self._configdata
+                            and self._configdata[CONF_MAP_DARK_MODE]
+                        ):
+                            boxcolor = (225, 225, 225)
+                            textcolor = (0, 0, 0)
+
+                        time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
+                        display_text = time_str
+
+                        font_size = (
+                            self._configdata[CONF_MAP_TIMESTAMP_FONT_SIZE]
+                            if CONF_MAP_TIMESTAMP_FONT_SIZE in self._configdata
+                            else 28
+                        )
+
+                        try:
+                            bbox = draw.textbbox((0, 0), display_text, font_size=font_size)
+                            text_width = bbox[2] - bbox[0]
+                        except Exception:
+                            text_width = len(display_text) * int(font_size * 0.54)
+
+                        x2 = image.size[0] - 8
+                        x1 = x2 - text_width - 8
+                        draw.rectangle((x1, 10, x2, 10 + int(font_size * 1.2)), fill=boxcolor)
+                        draw.text(
+                            (x1 + 4, 8),
+                            display_text,
+                            fill=textcolor,
+                            font_size=font_size,
+                        )
+
+            # Draw timeline progress bar
+            show_timeline = (
+                self._configdata[CONF_MAP_SHOW_TIMELINE]
+                if CONF_MAP_SHOW_TIMELINE in self._configdata
+                else True
+            )
+            if show_timeline and hasattr(self, "_maploop") and self._maploop and hasattr(self._maploop, "_all_times") and self._maploop._all_times:
+                distinct_times = []
+                for t in self._maploop._all_times:
+                    if t not in distinct_times:
+                        distinct_times.append(t)
+
+                if len(distinct_times) > 1:
+                    # Coordinates
+                    bar_y = 75
+                    bar_left = 20
+                    bar_right = image.size[0] - 20
+                    bar_width = bar_right - bar_left
+
+                    # Colors
+                    is_dark = (
+                        CONF_MAP_DARK_MODE in self._configdata
+                        and self._configdata[CONF_MAP_DARK_MODE]
+                    )
+                    bg_color = (200, 200, 200) if is_dark else (80, 80, 80)
+                    accent_color = (0, 180, 216) if is_dark else (255, 110, 0)
+                    tick_color = (150, 150, 150) if is_dark else (100, 100, 100)
+
+                    # Draw base line
+                    draw.rectangle((bar_left, bar_y - 2, bar_right, bar_y + 2), fill=bg_color)
+
+                    # Find "NOW" time (closest distinct time to now)
+                    now_utc = datetime.now(timezone.utc)
+                    now_time = distinct_times[0]
+                    min_now_diff = None
+                    for t in distinct_times:
+                        diff = abs((t - now_utc).total_seconds())
+                        if min_now_diff is None or diff < min_now_diff:
+                            min_now_diff = diff
+                            now_time = t
+
+                    # Calculate positions linearly based on time difference from start to end of loop
+                    start_time = distinct_times[0]
+                    end_time = distinct_times[-1]
+                    total_duration = (end_time - start_time).total_seconds()
+
+                    # Draw ticks representing the distinct frames
+                    for t in distinct_times:
+                        time_diff = (t - start_time).total_seconds()
+                        x = bar_left + int((time_diff / total_duration) * bar_width)
+                        
+                        if t == now_time:
+                            # NOW tick is larger
+                            draw.line((x, bar_y - 8, x, bar_y + 8), fill=accent_color, width=3)
+                            # Draw "NOW" label under the tick
+                            draw.text((x - 14, bar_y + 10), "NOW", fill=accent_color, font_size=18)
+                        else:
+                            # Normal tick
+                            draw.line((x, bar_y - 4, x, bar_y + 4), fill=tick_color, width=1)
+
+                    # Draw active frame slider handle (large circle)
+                    active_diff = (timestamp - start_time).total_seconds()
+                    active_x = bar_left + int((active_diff / total_duration) * bar_width)
+                    draw.ellipse((active_x - 7, bar_y - 7, active_x + 7, bar_y + 7), fill=accent_color)
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
+
+
 
     def map_maptype(
         self, map_type

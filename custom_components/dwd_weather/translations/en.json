@@ -202,12 +202,22 @@
         "title": "Precipitation loop",
         "data": {
           "map_timestamp": "Should the time of the image be visible on the image?",
+          "map_timestamp_font_size": "Font size of the timestamp",
+          "map_show_timeline": "Should the timeline slider be visible?",
           "map_loop_count": "How many radar images from the past you would like to see?",
-          "map_loop_speed": "How quick should the animation play?"
+          "map_loop_count_future": "How many radar images from the future you would like to see?",
+          "map_loop_hours_future": "How many additional hours of weather model forecast would you like to see?",
+          "map_loop_speed": "How quick should the animation play?",
+          "map_loop_speed_future": "How quick should the weather model forecast play?"
         },
         "data_description": {
           "map_loop_count": "A radar image is provided every 5 minutes. So for 30 minutes there will be 6 images shown in the loop. This value refers to the last available image",
-          "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one."
+          "map_loop_count_future": "DWD provides forecast radar images (nowcasting) for up to 120 minutes (2 hours) into the future.",
+          "map_loop_hours_future": "This appends weather model forecast images (ICON-EU, 1-hour resolution) after the 2-hour radar nowcast.",
+          "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one.",
+          "map_loop_speed_future": "The value defines, how long every single forecast image from the weather model is shown before switching to the next one.",
+          "map_timestamp_font_size": "Define the font size of the timestamp overlay (default is 28).",
+          "map_show_timeline": "Enable or disable the visual timeline progress bar overlay."
         }
       },
       "select_map_homemarker": {
@@ -246,8 +256,13 @@
           "map_marker": "Should the middle of the map be marked?",
           "map_homemarker": "Should a home-marker be displayed on the map?",
           "map_timestamp": "Should the time of the image be visible on the image?",
+          "map_timestamp_font_size": "Font size of the timestamp",
+          "map_show_timeline": "Should the timeline slider be visible?",
           "map_loop_count": "How many radar images from the past you would like to see?",
+          "map_loop_count_future": "How many radar images from the future you would like to see?",
+          "map_loop_hours_future": "How many additional hours of weather model forecast would you like to see?",
           "map_loop_speed": "How quick should the animation play?",
+          "map_loop_speed_future": "How quick should the weather model forecast play?",
           "additional_forecast_attributes": "Activate additional forecast attributes",
           "map_dark_mode": "Should the map be displayed in dark mode?",
           "daily_temp_high_precision": "Use higher display precision for daily temperatures"
@@ -264,7 +279,12 @@
           "radar_location_coordinates": "Drag the marker to the location for which radar precipitation should be fetched.",
           "map_options_message": "At the moment it is not possible to configure a chart. Please remove this element and re-add it with your desired settings.",
           "map_loop_count": "A radar image is provided every 5 minutes. So for 30 minutes there will be 6 images shown in the loop. This value refers to the last available image",
+          "map_loop_count_future": "DWD provides forecast radar images (nowcasting) for up to 120 minutes (2 hours) into the future.",
+          "map_loop_hours_future": "This appends weather model forecast images (ICON-EU, 1-hour resolution) after the 2-hour radar nowcast.",
           "map_loop_speed": "The value defines, how long every single image is shown before switching to the next one.",
+          "map_loop_speed_future": "The value defines, how long every single forecast image from the weather model is shown before switching to the next one.",
+          "map_timestamp_font_size": "Define the font size of the timestamp overlay (default is 28).",
+          "map_show_timeline": "Enable or disable the visual timeline progress bar overlay.",
           "sensor_forecast_steps": "This can be useful if you only use a limited amount of forecast steps and want to increase the clarity of the sensor attributes.",
           "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object.",
           "daily_temp_high_precision": "This will increase the display precision of the daily maximum and minimum temperature values to a decimal place."
