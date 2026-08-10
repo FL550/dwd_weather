@@ -106,15 +106,6 @@ class FutureImageLoop:
         """Update and rebuild the radar/nowcast/forecast loop image lists."""
         now = get_time_last_5_min(datetime.now(timezone.utc))
 
-        if self._last_now == now:
-            # We don't need to rebuild if now hasn't advanced, unless our cache is empty
-            if self._images:
-                _LOGGER.info(
-                    "Map update skipped: now=%s unchanged, %d images in loop",
-                    now, len(self._images),
-                )
-                return
-
         self._last_now = now
 
         # --- Calculate all required timestamps ---
@@ -129,7 +120,9 @@ class FutureImageLoop:
 
         # Model times: starting at next full hour after end of nowcast
         last_nowcast = nowcast_times[-1] if nowcast_times else now
-        start_model = last_nowcast.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        start_model = last_nowcast.replace(
+            minute=0, second=0, microsecond=0
+        ) + timedelta(hours=1)
         model_times = [
             start_model + timedelta(hours=i) for i in range(self._hours_future)
         ]
@@ -187,7 +180,10 @@ class FutureImageLoop:
             now,
             unique_times[0].strftime("%H:%M") if unique_times else "?",
             unique_times[-1].strftime("%H:%M") if unique_times else "?",
-            len(already_have), len(to_fetch), len(self._past_cache), len(self._model_cache),
+            len(already_have),
+            len(to_fetch),
+            len(self._past_cache),
+            len(self._model_cache),
         )
 
         # --- Fetch missing images in parallel ---
@@ -208,11 +204,28 @@ class FutureImageLoop:
         new_images.update(already_have)
         new_images.update(fetched)
 
+        # If now and previous observed radar frame are identical, keep only the
+        # previous one when future playback is enabled. This avoids a visual
+        # duplicate at the past/future boundary when DWD has not published a
+        # distinct "now" radar raster yet.
+        if self._steps_future > 0:
+            previous_observed = now - timedelta(minutes=5)
+            if now in new_images and previous_observed in new_images:
+                if self._images_equal(new_images[now], new_images[previous_observed]):
+                    del new_images[now]
+                    _LOGGER.debug(
+                        "Dropping duplicate now frame at %s (same as %s)",
+                        now,
+                        previous_observed,
+                    )
+
         # --- Fill any gaps with nearest-neighbor fallback ---
         for t in unique_times:
             if t not in new_images:
-                # Try to find nearest available image
-                fallback = self._find_fallback(t, new_images)
+                # Try to find nearest available image for past timestamps only.
+                # Current and future times should remain absent rather than showing
+                # a stale image from a different moment.
+                fallback = self._find_fallback(t, new_images, now)
                 if fallback is not None:
                     new_images[t] = fallback
                     _LOGGER.debug("Using fallback image for timestamp %s", t)
@@ -238,18 +251,36 @@ class FutureImageLoop:
         for t in stale_model:
             del self._model_cache[t]
 
-        # --- Build final image list (with repeated model frames) ---
-        self._images = [
-            new_images[t] for t in loop_times if t in new_images
-        ]
+        # --- Build final image list and matching timeline (with repeated model frames) ---
+        available_times = [t for t in loop_times if t in new_images]
+        self._all_times = available_times
+        self._images = [new_images[t] for t in available_times]
+
+    def _images_equal(
+        self,
+        first: ImageFile.ImageFile,
+        second: ImageFile.ImageFile,
+    ) -> bool:
+        """Return True when two rendered frames are pixel-identical."""
+        try:
+            return (
+                first.mode == second.mode
+                and first.size == second.size
+                and first.tobytes() == second.tobytes()
+            )
+        except Exception:
+            return False
 
     def _find_fallback(
         self,
         t: datetime,
         available: dict[datetime, ImageFile.ImageFile],
+        now: datetime | None = None,
     ) -> ImageFile.ImageFile | None:
-        """Find the nearest available image to timestamp t."""
+        """Find the nearest available image to timestamp t for past frames only."""
         if not available:
+            return None
+        if now is not None and t >= now:
             return None
         step = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
         # Look backward up to 12 steps
@@ -302,9 +333,9 @@ class FutureImageLoop:
         ]
         # Combine layers: special first, then map type, then others
         layers = (
-            f"{','.join(special_layers)},{map_layers},{','.join(other_layers)}"
-            .lstrip(",")
-            .rstrip(",")
+            f"{','.join(special_layers)},{map_layers},{','.join(other_layers)}".lstrip(
+                ","
+            ).rstrip(",")
         )
 
         # Build style list matching the layers list exactly
