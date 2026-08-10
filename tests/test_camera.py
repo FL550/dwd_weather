@@ -1,6 +1,11 @@
-"""Tests for camera entity platform."""
-
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
+
+if "turbojpeg" not in sys.modules:
+    try:
+        import turbojpeg  # noqa: F401
+    except ImportError:
+        sys.modules["turbojpeg"] = MagicMock()
 
 import pytest
 from homeassistant.core import HomeAssistant
