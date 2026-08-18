@@ -6,7 +6,12 @@ from unittest.mock import MagicMock, patch
 from PIL import Image
 import pytest
 
-from custom_components.dwd_weather.map_loop import FutureImageLoop
+from custom_components.dwd_weather.map_loop import (
+    _FRAME_NOT_PUBLISHED,
+    _WMS_TIMEOUT,
+    FrameNotPublished,
+    FutureImageLoop,
+)
 from simple_dwd_weatherforecast.dwdmap import WeatherBackgroundMapType, WeatherMapType
 
 
@@ -120,6 +125,106 @@ def test_future_image_loop_update():
         images = loop.get_images()
         assert len(images) > 0
         assert mock_fetch.called
+
+
+def test_future_image_loop_skips_refetch_for_complete_unchanged_slot():
+    """A complete loop should be reused until the 5-minute slot changes."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        steps_past=1,
+        steps_future=1,
+        hours_future=0,
+    )
+
+    now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    img = Image.new("RGB", (10, 10))
+
+    with patch(
+        "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+        return_value=now,
+    ):
+        with patch.object(loop, "_get_image_safe", return_value=img) as mock_fetch:
+            loop.update()
+            loop.update()
+
+    assert mock_fetch.call_count == 2
+    assert loop._last_complete is True
+
+
+def test_future_image_loop_retries_incomplete_unchanged_slot():
+    """An incomplete loop should retry within the same 5-minute slot."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        steps_past=1,
+        steps_future=1,
+        hours_future=0,
+    )
+
+    now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    now_img = Image.new("RGB", (10, 10))
+    future_img = Image.new("RGB", (10, 10), color=(4, 4, 4))
+
+    def _first_fetch(date):
+        if date == now:
+            return now_img
+        return None
+
+    with patch(
+        "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+        return_value=now,
+    ):
+        with patch.object(loop, "_get_image_safe", side_effect=_first_fetch):
+            loop.update()
+        with patch.object(loop, "_get_image_safe", return_value=future_img) as mock_retry:
+            loop.update()
+
+    assert mock_retry.call_count == 2
+    assert loop._last_complete is True
+
+
+def test_future_image_loop_skips_unpublished_frame_retries_within_slot():
+    """Unpublished edge frames should not prevent same-slot loop reuse."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        steps_past=1,
+        steps_future=1,
+        hours_future=0,
+    )
+
+    now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    now_img = Image.new("RGB", (10, 10))
+
+    def _fetch(date):
+        if date == now:
+            return now_img
+        return _FRAME_NOT_PUBLISHED
+
+    with patch(
+        "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+        return_value=now,
+    ):
+        with patch.object(loop, "_get_image_safe", side_effect=_fetch):
+            loop.update()
+        with patch.object(loop, "_get_image_safe") as mock_retry:
+            loop.update()
+
+    assert mock_retry.call_count == 0
+    assert loop._last_complete is True
 
 
 def test_future_image_loop_keeps_timestamps_aligned_with_available_images():
@@ -315,6 +420,7 @@ def test_future_image_loop_get_image_builds_model_layer_url_and_dark_mode_bg():
 
     assert result.size == (4, 4)
     request_url = mock_get.call_args[0][0]
+    assert mock_get.call_args.kwargs["timeout"] == _WMS_TIMEOUT
     assert (
         "layers=dwd:bluemarble,dwd:Icon-eu_reg00625_fd_sl_TOTPREC01H,dwd:Laender"
         in request_url
@@ -355,6 +461,30 @@ def test_future_image_loop_get_image_raises_for_invalid_response(
         "custom_components.dwd_weather.map_loop.requests.get", return_value=response
     ):
         with pytest.raises(error_type):
+            loop._get_image(date)
+
+
+def test_future_image_loop_get_image_raises_frame_not_published_for_service_exception():
+    """ServiceException XML should be treated as an unpublished frame."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=[WeatherMapType.NIEDERSCHLAGSRADAR],
+        background_types=[],
+    )
+
+    date = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    response = MagicMock()
+    response.status_code = 200
+    response.headers = {"content-type": "text/xml"}
+    response.content = b"<ServiceExceptionReport><ServiceException/></ServiceExceptionReport>"
+
+    with patch(
+        "custom_components.dwd_weather.map_loop.requests.get", return_value=response
+    ):
+        with pytest.raises(FrameNotPublished):
             loop._get_image(date)
 
 
