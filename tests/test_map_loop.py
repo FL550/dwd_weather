@@ -150,9 +150,11 @@ def test_future_image_loop_skips_refetch_for_complete_unchanged_slot():
     ):
         with patch.object(loop, "_get_image_safe", return_value=img) as mock_fetch:
             loop.update()
+            first_update_calls = mock_fetch.call_count
             loop.update()
 
-    assert mock_fetch.call_count == 2
+    assert first_update_calls == 2
+    assert mock_fetch.call_count == first_update_calls
     assert loop._last_complete is True
 
 
@@ -188,7 +190,8 @@ def test_future_image_loop_retries_incomplete_unchanged_slot():
         with patch.object(loop, "_get_image_safe", return_value=future_img) as mock_retry:
             loop.update()
 
-    assert mock_retry.call_count == 2
+    retried_times = sorted(call.args[0] for call in mock_retry.call_args_list)
+    assert retried_times == [now, now + timedelta(minutes=5)]
     assert loop._last_complete is True
 
 

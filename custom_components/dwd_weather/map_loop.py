@@ -398,8 +398,9 @@ class FutureImageLoop:
         content_type = request.headers.get("content-type")
         if content_type != "image/png":
             if (
-                content_type == "text/xml"
-                and b"ServiceException" in request.content
+                content_type is not None
+                and content_type.startswith("text/xml")
+                and b"<ServiceException" in request.content
             ):
                 raise FrameNotPublished(
                     f"Frame not published for {date.strftime('%Y-%m-%dT%H:%M:00.0Z')}"
