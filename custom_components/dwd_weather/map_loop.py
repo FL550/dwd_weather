@@ -28,11 +28,17 @@ _LOGGER = logging.getLogger(__name__)
 # Number of parallel WMS fetch workers
 _FETCH_WORKERS = 5
 
-# WMS request timeout in seconds (reduced from 15s)
-_WMS_TIMEOUT = 8
+# WMS request timeout in seconds
+_WMS_TIMEOUT = 25
 
 # How long to cache model images before re-fetching (model runs update every ~3-6h)
 _MODEL_CACHE_TTL = timedelta(hours=1)
+
+_FRAME_NOT_PUBLISHED = object()
+
+
+class FrameNotPublished(Exception):
+    """Raised when the requested frame is not yet published by the WMS service."""
 
 
 class FutureImageLoop:
@@ -89,8 +95,10 @@ class FutureImageLoop:
 
         self._images: list[ImageFile.ImageFile] = []
         self._last_now: datetime | None = None
+        self._last_complete = False
         self._model_times: set[datetime] = set()
         self._all_times: list[datetime] = []
+        self._not_published_times: dict[datetime, set[datetime]] = {}
 
         # NOTE: Do NOT call self.update() here.
         # WMS fetching is deferred to the first explicit update() call,
@@ -106,7 +114,15 @@ class FutureImageLoop:
         """Update and rebuild the radar/nowcast/forecast loop image lists."""
         now = get_time_last_5_min(datetime.now(timezone.utc))
 
+        if self._last_now == now and self._last_complete:
+            _LOGGER.debug("Skipping map loop rebuild for unchanged slot %s", now)
+            return
+
+        previous_now = self._last_now
         self._last_now = now
+        if previous_now != now:
+            self._not_published_times = {}
+        not_published_times = set(self._not_published_times.get(now, set()))
 
         # --- Calculate all required timestamps ---
         # Past: steps_past-1 frames before now (not including now itself)
@@ -171,6 +187,8 @@ class FutureImageLoop:
             elif t in self._model_times and t in self._model_cache:
                 # Model image cached and still valid
                 already_have[t] = self._model_cache[t]
+            elif t in not_published_times:
+                continue
             else:
                 # Must fetch: now, all nowcast (change every 5 min), new/expired model, new past
                 to_fetch.append(t)
@@ -196,13 +214,18 @@ class FutureImageLoop:
                 for future in as_completed(futures):
                     t = futures[future]
                     result = future.result()
-                    if result is not None:
+                    if result is _FRAME_NOT_PUBLISHED:
+                        not_published_times.add(t)
+                    elif result is not None:
                         fetched[t] = result
 
         # --- Merge results ---
         new_images: dict[datetime, ImageFile.ImageFile] = {}
         new_images.update(already_have)
         new_images.update(fetched)
+        self._last_complete = all(
+            t in new_images or t in not_published_times for t in unique_times
+        )
 
         # If now and previous observed radar frame are identical, keep only the
         # previous one when future playback is enabled. This avoids a visual
@@ -250,6 +273,7 @@ class FutureImageLoop:
         stale_model = [t for t in self._model_cache if t not in current_model_set]
         for t in stale_model:
             del self._model_cache[t]
+        self._not_published_times[now] = not_published_times
 
         # --- Build final image list and matching timeline (with repeated model frames) ---
         available_times = [t for t in loop_times if t in new_images]
@@ -296,6 +320,9 @@ class FutureImageLoop:
         """Fetch a single WMS image, returning None on failure instead of raising."""
         try:
             return self._get_image(date)
+        except FrameNotPublished:
+            _LOGGER.debug("Weather image for %s is not published yet", date)
+            return _FRAME_NOT_PUBLISHED
         except Exception as e:
             _LOGGER.warning("Could not fetch weather image for %s: %s", date, e)
             return None
@@ -368,9 +395,18 @@ class FutureImageLoop:
             raise ConnectionError(
                 f"Error during image request from DWD servers (HTTP {request.status_code}): {url}"
             )
-        elif request.headers.get("content-type") != "image/png":
+        content_type = request.headers.get("content-type")
+        if content_type != "image/png":
+            if (
+                content_type is not None
+                and content_type.startswith("text/xml")
+                and b"<ServiceException" in request.content
+            ):
+                raise FrameNotPublished(
+                    f"Frame not published for {date.strftime('%Y-%m-%dT%H:%M:00.0Z')}"
+                )
             raise TypeError(
-                f"Unexpected content type: {request.headers.get('content-type')}"
+                f"Unexpected content type: {content_type}"
             )
         try:
             image = Image.open(BytesIO(request.content))
