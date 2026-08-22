@@ -71,6 +71,7 @@ from .const import (
     CONF_MAP_TYPE,
     CONF_MAP_TYPE_CUSTOM,
     CONF_MAP_TYPE_GERMANY,
+    CONF_MAP_UPDATE_STATE,
     CONF_MAP_WINDOW,
     CONF_STATION_ID,
     CONF_STATION_NAME,
@@ -580,6 +581,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 default=True,  # type: ignore
             ): BooleanSelector({}),
             vol.Required(
+                CONF_MAP_UPDATE_STATE,
+                default=False,  # type: ignore
+            ): BooleanSelector({}),
+            vol.Required(
                 CONF_MAP_LOOP_COUNT,
                 default=30,  # type: ignore
             ): NumberSelector(
@@ -926,7 +931,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_MAP_TIMESTAMP_FONT_SIZE,
-                            default=self.config_entry.data.get(CONF_MAP_TIMESTAMP_FONT_SIZE, 28),  # type: ignore
+                            default=self.config_entry.data.get(
+                                CONF_MAP_TIMESTAMP_FONT_SIZE, 28
+                            ),  # type: ignore
                         ): NumberSelector(
                             {
                                 "min": 10,
@@ -938,7 +945,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_MAP_SHOW_TIMELINE,
-                            default=self.config_entry.data.get(CONF_MAP_SHOW_TIMELINE, True),  # type: ignore
+                            default=self.config_entry.data.get(
+                                CONF_MAP_SHOW_TIMELINE, True
+                            ),  # type: ignore
+                        ): BooleanSelector({}),
+                        vol.Required(
+                            CONF_MAP_UPDATE_STATE,
+                            default=self.config_entry.data.get(
+                                CONF_MAP_UPDATE_STATE, False
+                            ),  # type: ignore
                         ): BooleanSelector({}),
                         vol.Required(
                             CONF_MAP_LOOP_COUNT,
@@ -954,7 +969,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_MAP_LOOP_COUNT_FUTURE,
-                            default=self.config_entry.data.get(CONF_MAP_LOOP_COUNT_FUTURE, 0) * 5,  # type: ignore
+                            default=self.config_entry.data.get(
+                                CONF_MAP_LOOP_COUNT_FUTURE, 0
+                            )
+                            * 5,  # type: ignore
                         ): NumberSelector(
                             {
                                 "min": 0,
@@ -966,7 +984,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_MAP_LOOP_HOURS_FUTURE,
-                            default=self.config_entry.data.get(CONF_MAP_LOOP_HOURS_FUTURE, 0),  # type: ignore
+                            default=self.config_entry.data.get(
+                                CONF_MAP_LOOP_HOURS_FUTURE, 0
+                            ),  # type: ignore
                         ): NumberSelector(
                             {
                                 "min": 0,
@@ -978,7 +998,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                         vol.Required(
                             CONF_MAP_LOOP_SPEED_FUTURE,
-                            default=self.config_entry.data.get(CONF_MAP_LOOP_SPEED_FUTURE, 2.0),  # type: ignore
+                            default=self.config_entry.data.get(
+                                CONF_MAP_LOOP_SPEED_FUTURE, 2.0
+                            ),  # type: ignore
                         ): NumberSelector(
                             {
                                 "min": 0.5,

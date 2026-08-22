@@ -38,6 +38,7 @@ from .const import (
     CONF_MAP_LOOP_SPEED_FUTURE,
     CONF_MAP_SHOW_TIMELINE,
     CONF_MAP_TIMESTAMP_FONT_SIZE,
+    CONF_MAP_UPDATE_STATE,
     CONF_MAP_CENTERMARKER,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_TIMESTAMP,
@@ -233,6 +234,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             new.setdefault(CONF_MAP_SHOW_TIMELINE, True)
             new.setdefault(CONF_MAP_TIMESTAMP_FONT_SIZE, 28)
         hass.config_entries.async_update_entry(config_entry, data=new, version=15)
+    elif config_entry.version == 15:
+        new = {**config_entry.data}
+        if new.get(CONF_ENTITY_TYPE) == CONF_ENTITY_TYPE_MAP:
+            new.setdefault(CONF_MAP_UPDATE_STATE, False)
+        hass.config_entries.async_update_entry(config_entry, data=new, version=16)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

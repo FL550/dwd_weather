@@ -8,7 +8,6 @@ if "turbojpeg" not in sys.modules:
         sys.modules["turbojpeg"] = MagicMock()
 
 import pytest
-from homeassistant.core import HomeAssistant
 
 from custom_components.dwd_weather.camera import MyCamera
 from custom_components.dwd_weather.const import (
@@ -16,7 +15,7 @@ from custom_components.dwd_weather.const import (
     CONF_MAP_FOREGROUND_TYPE,
     CONF_MAP_ID,
     CONF_MAP_LOOP_SPEED,
-    DOMAIN,
+    CONF_MAP_UPDATE_STATE,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
 )
@@ -30,6 +29,7 @@ def mock_hass_data():
         CONF_MAP_FOREGROUND_TYPE: CONF_MAP_FOREGROUND_PRECIPITATION,
         CONF_MAP_ID: "germany_precip",
         CONF_MAP_LOOP_SPEED: 1.5,
+        CONF_MAP_UPDATE_STATE: True,
     }
     dwd_data._images = [b"image_bytes_1", b"image_bytes_2"]
     dwd_data.get_image.return_value = b"test_camera_image"
@@ -64,7 +64,9 @@ async def test_camera_added_to_hass(mock_hass_data):
     camera.hass = MagicMock()
     camera.async_on_remove = MagicMock()
 
-    with patch("homeassistant.components.camera.Camera.async_added_to_hass", AsyncMock()):
+    with patch(
+        "homeassistant.components.camera.Camera.async_added_to_hass", AsyncMock()
+    ):
         await camera.async_added_to_hass()
 
     coordinator = mock_hass_data[DWDWEATHER_COORDINATOR]
@@ -86,3 +88,17 @@ async def test_async_camera_image(mock_hass_data):
     dwd_data.set_size.assert_called_once_with(600, 400)
     assert camera.state == "Nowcast (+30m)"
     assert camera.async_write_ha_state.called
+
+
+@pytest.mark.asyncio
+async def test_async_camera_image_state_update_disabled(mock_hass_data):
+    """Test camera state stays static when map_update_state option is disabled."""
+    mock_hass_data[DWDWEATHER_DATA]._configdata[CONF_MAP_UPDATE_STATE] = False
+    camera = MyCamera(mock_hass_data)
+    camera.hass = MagicMock()
+    camera.async_write_ha_state = MagicMock()
+
+    await camera.async_camera_image(600, 400)
+
+    assert camera.state == "Radar"
+    assert not camera.async_write_ha_state.called

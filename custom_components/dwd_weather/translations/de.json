@@ -204,6 +204,7 @@
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
           "map_timestamp_font_size": "Schriftgröße des Zeitstempels",
           "map_show_timeline": "Soll die Zeitleiste angezeigt werden?",
+          "map_update_state": "Soll der Kamera-Status den aktuell angezeigten Bildtyp widerspiegeln (Radar/Nowcast/Modell)?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
           "map_loop_count_future": "Wie viele zukünftige Radarbilder (Vorhersage) sollen angezeigt werden?",
           "map_loop_hours_future": "Wie viele zusätzliche Stunden Wettermodell-Vorhersage sollen angezeigt werden?",
@@ -217,7 +218,8 @@
           "map_loop_speed": "Der Wert definiert, wie lange ein einzelnes Bild angezeigt wird bevor zum naechsten gewechselt wird.",
           "map_loop_speed_future": "Der Wert bestimmt, wie lange ein einzelnes Bild der Wettermodell-Vorhersage angezeigt wird, bevor das nächste Bild folgt.",
           "map_timestamp_font_size": "Schriftgröße für das Zeitstempel-Overlay (Standard ist 28).",
-          "map_show_timeline": "Aktiviert oder deaktiviert die Zeitleisten-Fortschrittsanzeige am oberen Bildrand."
+          "map_show_timeline": "Aktiviert oder deaktiviert die Zeitleisten-Fortschrittsanzeige am oberen Bildrand.",
+          "map_update_state": "Wenn aktiviert, wird der Kamera-Status bei jedem Wechsel des angezeigten Bildtyps aktualisiert, was zu häufigen Statusänderungs-Logeinträgen führt."
         }
       },
       "select_map_homemarker": {
@@ -256,6 +258,7 @@
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
           "map_timestamp_font_size": "Schriftgröße des Zeitstempels",
           "map_show_timeline": "Soll die Zeitleiste angezeigt werden?",
+          "map_update_state": "Soll der Kamera-Status den aktuell angezeigten Bildtyp widerspiegeln (Radar/Nowcast/Modell)?",
           "map_loop_count": "Wie viele alte Radarbilder sollen angezeigt werden?",
           "map_loop_count_future": "Wie viele zukünftige Radarbilder (Vorhersage) sollen angezeigt werden?",
           "map_loop_hours_future": "Wie viele zusätzliche Stunden Wettermodell-Vorhersage sollen angezeigt werden?",
@@ -284,6 +287,7 @@
           "map_loop_speed_future": "Der Wert bestimmt, wie lange ein einzelnes Bild der Wettermodell-Vorhersage angezeigt wird, bevor das nächste Bild folgt.",
           "map_timestamp_font_size": "Schriftgröße für das Zeitstempel-Overlay (Standard ist 28).",
           "map_show_timeline": "Aktiviert oder deaktiviert die Zeitleisten-Fortschrittsanzeige am oberen Bildrand.",
+          "map_update_state": "Wenn aktiviert, wird der Kamera-Status bei jedem Wechsel des angezeigten Bildtyps aktualisiert, was zu häufigen Statusänderungs-Logeinträgen führt.",
           "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu.",
           "daily_temp_high_precision": "Die Vorhersage der täglichen Höchst- und Tiefsttemperatur wird auf eine Kommastelle genau angezeigt."

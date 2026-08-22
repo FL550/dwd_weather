@@ -9,6 +9,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from .const import (
     CONF_MAP_ID,
     CONF_MAP_LOOP_SPEED,
+    CONF_MAP_UPDATE_STATE,
     DOMAIN,
     DWDWEATHER_COORDINATOR,
     DWDWEATHER_DATA,
@@ -67,14 +68,17 @@ class MyCamera(Camera):
         """Return bytes of camera image."""
         self._dwd_data.set_size(width if width else 520, height if height else 580)
         if not self._dwd_data._images:
-            _LOGGER.debug("No cached weather loop images, forcing refresh on first render request")
+            _LOGGER.debug(
+                "No cached weather loop images, forcing refresh on first render request"
+            )
             await self._coordinator.async_request_refresh()
         image = self._dwd_data.get_image()
 
-        current_state = getattr(self._dwd_data, "current_label", "Radar")
-        if current_state != self._attr_state:
-            self._attr_state = current_state
-            self.async_write_ha_state()
+        if self._dwd_data._configdata.get(CONF_MAP_UPDATE_STATE, False):
+            current_state = getattr(self._dwd_data, "current_label", "Radar")
+            if current_state != self._attr_state:
+                self._attr_state = current_state
+                self.async_write_ha_state()
 
         return image
 
