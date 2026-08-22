@@ -98,6 +98,10 @@ class FutureImageLoop:
         self._last_complete = False
         self._model_times: set[datetime] = set()
         self._all_times: list[datetime] = []
+        # Actual valid-time of the image data shown at each slot in _all_times.
+        # Differs from _all_times when a fallback/stale image is used because the
+        # real frame for that slot has not been published by DWD yet.
+        self._display_times: list[datetime] = []
         self._not_published_times: dict[datetime, set[datetime]] = {}
 
         # NOTE: Do NOT call self.update() here.
@@ -243,6 +247,13 @@ class FutureImageLoop:
                     )
 
         # --- Fill any gaps with nearest-neighbor fallback ---
+        # actual_time_for tracks the real valid-time of the image data used for
+        # each slot, which can differ from the slot's nominal time when a
+        # fallback/stale image had to be used (e.g. DWD hasn't published the
+        # current frame yet).
+        actual_time_for: dict[datetime, datetime] = {
+            t: t for t in new_images
+        }
         for t in unique_times:
             if t not in new_images:
                 # Try to find nearest available image for past timestamps only.
@@ -250,8 +261,14 @@ class FutureImageLoop:
                 # a stale image from a different moment.
                 fallback = self._find_fallback(t, new_images, now)
                 if fallback is not None:
-                    new_images[t] = fallback
-                    _LOGGER.debug("Using fallback image for timestamp %s", t)
+                    fallback_image, fallback_time = fallback
+                    new_images[t] = fallback_image
+                    actual_time_for[t] = fallback_time
+                    _LOGGER.debug(
+                        "Using fallback image from %s for timestamp %s",
+                        fallback_time,
+                        t,
+                    )
 
         # --- Update caches ---
         # Past cache: store all past images (immutable)
@@ -279,6 +296,9 @@ class FutureImageLoop:
         available_times = [t for t in loop_times if t in new_images]
         self._all_times = available_times
         self._images = [new_images[t] for t in available_times]
+        self._display_times = [
+            actual_time_for.get(t, t) for t in available_times
+        ]
 
     def _images_equal(
         self,
@@ -300,8 +320,13 @@ class FutureImageLoop:
         t: datetime,
         available: dict[datetime, ImageFile.ImageFile],
         now: datetime | None = None,
-    ) -> ImageFile.ImageFile | None:
-        """Find the nearest available image to timestamp t for past frames only."""
+    ) -> tuple[ImageFile.ImageFile, datetime] | None:
+        """Find the nearest available image to timestamp t for past frames only.
+
+        Returns the fallback image together with the timestamp it actually
+        represents, so callers can display the real valid-time of the data
+        instead of the (unpublished) nominal slot time.
+        """
         if not available:
             return None
         if now is not None and t >= now:
@@ -312,9 +337,10 @@ class FutureImageLoop:
         for _ in range(12):
             curr -= step
             if curr in available:
-                return available[curr]
+                return available[curr], curr
         # Fall back to last available
-        return list(available.values())[-1]
+        last_time = list(available.keys())[-1]
+        return available[last_time], last_time
 
     def _get_image_safe(self, date: datetime) -> ImageFile.ImageFile | None:
         """Fetch a single WMS image, returning None on failure instead of raising."""

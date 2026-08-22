@@ -41,6 +41,7 @@ from homeassistant.components.weather.const import (
 from simple_dwd_weatherforecast import dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
+
 # from simple_dwd_weatherforecast.dwdairquality import (
 #     AirQuality,
 # )
@@ -1134,9 +1135,11 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda x: round(x, 0),
             WeatherDataType.VISIBILITY: lambda x: round(x / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda x: round(x, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda x: self._convert_sun_irradiance_to_watts_per_square_meter(
-                x,
-                1,
+            WeatherDataType.SUN_IRRADIANCE: lambda x: (
+                self._convert_sun_irradiance_to_watts_per_square_meter(
+                    x,
+                    1,
+                )
             ),
             WeatherDataType.FOG_PROBABILITY: lambda x: round(x, 0),
             WeatherDataType.HUMIDITY: lambda x: round(x, 1),
@@ -1450,9 +1453,11 @@ class DWDWeatherData:
             WeatherDataType.CLOUD_COVERAGE: lambda value: round(value, 0),
             WeatherDataType.VISIBILITY: lambda value: round(value / 1000, 1),
             WeatherDataType.SUN_DURATION: lambda value: round(value, 0),
-            WeatherDataType.SUN_IRRADIANCE: lambda value: self._convert_sun_irradiance_to_watts_per_square_meter(
-                value,
-                1,
+            WeatherDataType.SUN_IRRADIANCE: lambda value: (
+                self._convert_sun_irradiance_to_watts_per_square_meter(
+                    value,
+                    1,
+                )
             ),
             WeatherDataType.FOG_PROBABILITY: lambda value: round(value, 0),
             WeatherDataType.HUMIDITY: lambda value: round(value, 1),
@@ -1738,9 +1743,7 @@ class DWDMapData:
                             hours_future=self._configdata.get(
                                 CONF_MAP_LOOP_HOURS_FUTURE, 0
                             ),
-                            speed=self._configdata.get(
-                                CONF_MAP_LOOP_SPEED, 0.5
-                            ),
+                            speed=self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5),
                             speed_future=self._configdata.get(
                                 CONF_MAP_LOOP_SPEED_FUTURE, 2.0
                             ),
@@ -1798,9 +1801,7 @@ class DWDMapData:
                             hours_future=self._configdata.get(
                                 CONF_MAP_LOOP_HOURS_FUTURE, 0
                             ),
-                            speed=self._configdata.get(
-                                CONF_MAP_LOOP_SPEED, 0.5
-                            ),
+                            speed=self._configdata.get(CONF_MAP_LOOP_SPEED, 0.5),
                             speed_future=self._configdata.get(
                                 CONF_MAP_LOOP_SPEED_FUTURE, 2.0
                             ),
@@ -1822,7 +1823,7 @@ class DWDMapData:
                         )
                 self._cachedheight = self._height
                 self._cachedwidth = self._width
-        
+
         if self._maploop:
             self._images = self._maploop.get_images()
             all_times = getattr(self._maploop, "_all_times", None)
@@ -1944,16 +1945,29 @@ class DWDMapData:
                 ref_time = getattr(self._maploop, "_last_now", None) or getattr(
                     self._maploop, "_last_update", None
                 )
-                
+
                 label = ""
+                display_timestamp = None
                 if hasattr(self._maploop, "_all_times") and self._maploop._all_times:
                     if self._image_nr < len(self._maploop._all_times):
                         timestamp = self._maploop._all_times[self._image_nr]
                     else:
                         timestamp = self._maploop._all_times[-1]
-                    
+
+                    # The displayed image can be a fallback/stale frame when DWD
+                    # has not published the frame for `timestamp` yet. Show the
+                    # actual valid-time of the image data, not the nominal slot
+                    # time, so the on-image timestamp always matches the content.
+                    display_times = getattr(self._maploop, "_display_times", None)
+                    if display_times and self._image_nr < len(display_times):
+                        display_timestamp = display_times[self._image_nr]
+                    else:
+                        display_timestamp = timestamp
+
                     if ref_time:
-                        last_nowcast = ref_time + timedelta(minutes=5) * getattr(self._maploop, "_steps_future", 0)
+                        last_nowcast = ref_time + timedelta(minutes=5) * getattr(
+                            self._maploop, "_steps_future", 0
+                        )
                         if timestamp <= ref_time:
                             label = "Radar"
                         elif timestamp <= last_nowcast:
@@ -1969,15 +1983,21 @@ class DWDMapData:
                             )
                         else:
                             timestamp = ref_time - timedelta(minutes=5) * (
-                                self._configdata[CONF_MAP_LOOP_COUNT] - 1 - self._image_nr
+                                self._configdata[CONF_MAP_LOOP_COUNT]
+                                - 1
+                                - self._image_nr
                             )
                     else:
                         timestamp = None
+                    display_timestamp = timestamp
 
                 self.current_label = label if label else "Radar"
 
-                if timestamp:
-                    if CONF_MAP_TIMESTAMP in self._configdata and self._configdata[CONF_MAP_TIMESTAMP]:
+                if display_timestamp:
+                    if (
+                        CONF_MAP_TIMESTAMP in self._configdata
+                        and self._configdata[CONF_MAP_TIMESTAMP]
+                    ):
                         boxcolor = (0, 0, 0)
                         textcolor = (255, 255, 255)
                         if (
@@ -1987,7 +2007,9 @@ class DWDMapData:
                             boxcolor = (225, 225, 225)
                             textcolor = (0, 0, 0)
 
-                        time_str = timestamp.astimezone().strftime("%d.%m.%Y %H:%M")
+                        time_str = display_timestamp.astimezone().strftime(
+                            "%d.%m.%Y %H:%M"
+                        )
                         display_text = time_str
 
                         font_size = (
@@ -1997,14 +2019,18 @@ class DWDMapData:
                         )
 
                         try:
-                            bbox = draw.textbbox((0, 0), display_text, font_size=font_size)
+                            bbox = draw.textbbox(
+                                (0, 0), display_text, font_size=font_size
+                            )
                             text_width = bbox[2] - bbox[0]
                         except Exception:
                             text_width = len(display_text) * int(font_size * 0.54)
 
                         x2 = image.size[0] - 8
                         x1 = x2 - text_width - 8
-                        draw.rectangle((x1, 10, x2, 10 + int(font_size * 1.2)), fill=boxcolor)
+                        draw.rectangle(
+                            (x1, 10, x2, 10 + int(font_size * 1.2)), fill=boxcolor
+                        )
                         draw.text(
                             (x1 + 4, 8),
                             display_text,
@@ -2018,7 +2044,13 @@ class DWDMapData:
                 if CONF_MAP_SHOW_TIMELINE in self._configdata
                 else True
             )
-            if show_timeline and hasattr(self, "_maploop") and self._maploop and hasattr(self._maploop, "_all_times") and self._maploop._all_times:
+            if (
+                show_timeline
+                and hasattr(self, "_maploop")
+                and self._maploop
+                and hasattr(self._maploop, "_all_times")
+                and self._maploop._all_times
+            ):
                 distinct_times = []
                 for t in self._maploop._all_times:
                     if t not in distinct_times:
@@ -2041,7 +2073,9 @@ class DWDMapData:
                     tick_color = (150, 150, 150) if is_dark else (100, 100, 100)
 
                     # Draw base line
-                    draw.rectangle((bar_left, bar_y - 2, bar_right, bar_y + 2), fill=bg_color)
+                    draw.rectangle(
+                        (bar_left, bar_y - 2, bar_right, bar_y + 2), fill=bg_color
+                    )
 
                     # Find "NOW" time (closest distinct time to now)
                     now_utc = datetime.now(timezone.utc)
@@ -2062,25 +2096,37 @@ class DWDMapData:
                     for t in distinct_times:
                         time_diff = (t - start_time).total_seconds()
                         x = bar_left + int((time_diff / total_duration) * bar_width)
-                        
+
                         if t == now_time:
                             # NOW tick is larger
-                            draw.line((x, bar_y - 8, x, bar_y + 8), fill=accent_color, width=3)
+                            draw.line(
+                                (x, bar_y - 8, x, bar_y + 8), fill=accent_color, width=3
+                            )
                             # Draw "NOW" label under the tick
-                            draw.text((x - 14, bar_y + 10), "NOW", fill=accent_color, font_size=18)
+                            draw.text(
+                                (x - 14, bar_y + 10),
+                                "NOW",
+                                fill=accent_color,
+                                font_size=18,
+                            )
                         else:
                             # Normal tick
-                            draw.line((x, bar_y - 4, x, bar_y + 4), fill=tick_color, width=1)
+                            draw.line(
+                                (x, bar_y - 4, x, bar_y + 4), fill=tick_color, width=1
+                            )
 
                     # Draw active frame slider handle (large circle)
                     active_diff = (timestamp - start_time).total_seconds()
-                    active_x = bar_left + int((active_diff / total_duration) * bar_width)
-                    draw.ellipse((active_x - 7, bar_y - 7, active_x + 7, bar_y + 7), fill=accent_color)
+                    active_x = bar_left + int(
+                        (active_diff / total_duration) * bar_width
+                    )
+                    draw.ellipse(
+                        (active_x - 7, bar_y - 7, active_x + 7, bar_y + 7),
+                        fill=accent_color,
+                    )
 
             image.save(buf, format="PNG")  # type: ignore()
         return buf.getvalue()
-
-
 
     def map_maptype(
         self, map_type

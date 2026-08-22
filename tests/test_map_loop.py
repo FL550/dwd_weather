@@ -63,10 +63,10 @@ def test_future_image_loop_find_fallback():
         now - timedelta(minutes=10): img_sample,
     }
 
-    # Timestamp with available image should find nearest
+    # Timestamp with available image should find nearest, along with its actual time
     target = now - timedelta(minutes=5)
     fallback = loop._find_fallback(target, available, now)
-    assert fallback == img_sample
+    assert fallback == (img_sample, now - timedelta(minutes=10))
 
     # Current or future timestamps should not get a fallback image
     assert loop._find_fallback(now, available, now) is None
@@ -77,7 +77,10 @@ def test_future_image_loop_find_fallback():
 
     # Far-away timestamps eventually fall back to last available image
     far_past = now - timedelta(hours=3)
-    assert loop._find_fallback(far_past, available, now) == img_sample
+    assert loop._find_fallback(far_past, available, now) == (
+        img_sample,
+        now - timedelta(minutes=10),
+    )
 
 
 def test_future_image_loop_skips_now_frame_when_no_image_is_available():
