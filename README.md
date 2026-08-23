@@ -51,10 +51,15 @@ Everything can be configured via the Homeassistant UI. See below for images.
 Please see the [Wiki](https://github.com/FL550/dwd_weather/wiki)
 
 ---
+### Homeassistant Weather Forecast Card
 
 ![Screenshot Weather Card](./Weather-Card.png)
 
+### Homeassistant Details Tab
+
 ![Screenshot Weather Details](./Weather-Details.png)
+
+### Precipitation map as Camera Entity
 
 ![Screenshot Precipitation Chart](./Precipitation.png)
 
