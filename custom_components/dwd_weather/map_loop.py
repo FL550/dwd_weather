@@ -34,6 +34,9 @@ _WMS_TIMEOUT = 25
 # How long to cache model images before re-fetching (model runs update every ~3-6h)
 _MODEL_CACHE_TTL = timedelta(hours=1)
 
+# How long to cache nowcast images before re-fetching (DWD regenerates every ~5 min)
+_NOWCAST_CACHE_TTL = timedelta(minutes=5)
+
 _FRAME_NOT_PUBLISHED = object()
 
 
@@ -46,7 +49,8 @@ class FutureImageLoop:
 
     Caching strategy:
     - Past images (t < now):   Immutable observed radar data — cached forever until evicted from window.
-    - Nowcast images (t > now, non-model): DWD recomputes with fresh radar every ~5 min — always re-fetched.
+    - Nowcast images (t > now, non-model): DWD recomputes with fresh radar every ~5 min —
+      cached for _NOWCAST_CACHE_TTL and only re-fetched after the 5-min slot rolls over.
     - Model images:            Only change on new ICON-EU model runs (~3-6h) — cached for _MODEL_CACHE_TTL.
 
     WMS fetches are parallelized using ThreadPoolExecutor to keep update time under ~15 seconds.
@@ -88,6 +92,10 @@ class FutureImageLoop:
 
         # Cache for immutable past images (radar) — keyed by timestamp
         self._past_cache: dict[datetime, ImageFile.ImageFile] = {}
+
+        # Cache for nowcast images — valid for _NOWCAST_CACHE_TTL (DWD updates ~every 5 min)
+        self._nowcast_cache: dict[datetime, ImageFile.ImageFile] = {}
+        self._nowcast_cache_time: datetime | None = None
 
         # Cache for model forecast images — only valid for _MODEL_CACHE_TTL
         self._model_cache: dict[datetime, ImageFile.ImageFile] = {}
@@ -180,6 +188,16 @@ class FutureImageLoop:
             self._model_cache.clear()
             self._model_cache_time = now
 
+        # --- Determine nowcast cache validity ---
+        nowcast_cache_expired = (
+            self._nowcast_cache_time is None
+            or (now - self._nowcast_cache_time) >= _NOWCAST_CACHE_TTL
+        )
+        if nowcast_cache_expired:
+            _LOGGER.debug("Nowcast image cache expired — will re-fetch all nowcast frames")
+            self._nowcast_cache.clear()
+            self._nowcast_cache_time = now
+
         # --- Classify each timestamp: cached or needs fetch ---
         already_have: dict[datetime, ImageFile.ImageFile] = {}
         to_fetch: list[datetime] = []
@@ -191,25 +209,30 @@ class FutureImageLoop:
             elif t in self._model_times and t in self._model_cache:
                 # Model image cached and still valid
                 already_have[t] = self._model_cache[t]
+            elif t > now and t not in self._model_times and t in self._nowcast_cache:
+                # Nowcast image cached and still valid (DWD updates every ~5 min)
+                already_have[t] = self._nowcast_cache[t]
             elif t in not_published_times:
                 continue
             else:
-                # Must fetch: now, all nowcast (change every 5 min), new/expired model, new past
+                # Must fetch: now, expired/missing nowcast, new/expired model, new past
                 to_fetch.append(t)
 
         _LOGGER.info(
-            "Map update: now=%s, window=[%s -> %s], %d cached, %d to fetch (past cache: %d, model cache: %d)",
+            "Map update: now=%s, window=[%s -> %s], %d cached, %d to fetch (past cache: %d, nowcast cache: %d, model cache: %d)",
             now,
             unique_times[0].strftime("%H:%M") if unique_times else "?",
             unique_times[-1].strftime("%H:%M") if unique_times else "?",
             len(already_have),
             len(to_fetch),
             len(self._past_cache),
+            len(self._nowcast_cache),
             len(self._model_cache),
         )
 
         # --- Fetch missing images in parallel ---
         fetched: dict[datetime, ImageFile.ImageFile] = {}
+        failed_count = 0
         if to_fetch:
             with ThreadPoolExecutor(max_workers=_FETCH_WORKERS) as executor:
                 futures = {
@@ -222,6 +245,15 @@ class FutureImageLoop:
                         not_published_times.add(t)
                     elif result is not None:
                         fetched[t] = result
+                    else:
+                        failed_count += 1
+
+        if failed_count:
+            _LOGGER.warning(
+                "%d of %d WMS frame(s) could not be fetched (transient errors logged at DEBUG level)",
+                failed_count,
+                len(to_fetch),
+            )
 
         # --- Merge results ---
         new_images: dict[datetime, ImageFile.ImageFile] = {}
@@ -280,6 +312,16 @@ class FutureImageLoop:
         stale_past = [t for t in self._past_cache if t not in current_past_set]
         for t in stale_past:
             del self._past_cache[t]
+
+        # Nowcast cache: store successfully fetched nowcast images
+        for t in nowcast_times:
+            if t in new_images:
+                self._nowcast_cache[t] = new_images[t]
+        # Evict nowcast cache entries that are no longer in the nowcast window
+        current_nowcast_set = set(nowcast_times)
+        stale_nowcast = [t for t in self._nowcast_cache if t not in current_nowcast_set]
+        for t in stale_nowcast:
+            del self._nowcast_cache[t]
 
         # Model cache: store all successfully fetched model images
         for t in model_times:
@@ -350,7 +392,7 @@ class FutureImageLoop:
             _LOGGER.debug("Weather image for %s is not published yet", date)
             return _FRAME_NOT_PUBLISHED
         except Exception as e:
-            _LOGGER.warning("Could not fetch weather image for %s: %s", date, e)
+            _LOGGER.debug("Could not fetch weather image for %s: %s", date, e)
             return None
 
     def _get_image(self, date: datetime) -> ImageFile.ImageFile:
