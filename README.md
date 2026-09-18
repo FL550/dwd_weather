@@ -190,6 +190,9 @@ The chart can be adjusted to every region you like, however as most data is only
 
 ![Screenshot Alerts Chart](./warnungen_custom.png)
 
+## AI usage
+LLM-assisted coding tools are used across parts of this codebase. Nothing ships, that me, the maintainer, has not read and understood: every change is reviewed and tested. "The AI wrote that" is not an answer which is an acceptable answer regarding code changes.
+
 ## Help and Contribution
 
 Feel free to open an issue if you find one and I will do my best to help you. If you want to contribute, your help is appreciated! If you want to add a new feature, add a pull request first so we can chat about the details.
