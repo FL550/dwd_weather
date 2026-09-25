@@ -96,6 +96,12 @@ def test_future_image_loop_find_fallback():
         now - timedelta(minutes=15),
     )
 
+    # Very stale older frames outside the bounded lookback window are ignored
+    stale_available = {
+        now - timedelta(hours=2): img_sample,
+    }
+    assert loop._find_fallback(target, stale_available, now) is None
+
 
 def test_future_image_loop_skips_now_frame_when_no_image_is_available():
     """Missing current radar images should not be replaced by a stale fallback frame."""

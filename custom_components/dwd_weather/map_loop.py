@@ -339,11 +339,20 @@ class FutureImageLoop:
         if not candidates:
             return None
 
-        older_candidates = [candidate_time for candidate_time in candidates if candidate_time <= t]
+        step = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
+        max_lookback = step * 12
+        older_candidates = [
+            candidate_time
+            for candidate_time in candidates
+            if t - max_lookback <= candidate_time <= t
+        ]
         if older_candidates:
             nearest_time = older_candidates[-1]
         else:
-            nearest_time = candidates[0]
+            later_candidates = [candidate_time for candidate_time in candidates if candidate_time > t]
+            if not later_candidates:
+                return None
+            nearest_time = later_candidates[0]
         return available[nearest_time], nearest_time
 
     def _get_image_safe(self, date: datetime) -> ImageFile.ImageFile | None:
