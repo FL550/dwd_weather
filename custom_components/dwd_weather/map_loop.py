@@ -339,14 +339,11 @@ class FutureImageLoop:
         if not candidates:
             return None
 
-        nearest_time = min(
-            candidates,
-            key=lambda candidate_time: (
-                abs(candidate_time - t),
-                candidate_time > t,
-                candidate_time,
-            ),
-        )
+        older_candidates = [candidate_time for candidate_time in candidates if candidate_time <= t]
+        if older_candidates:
+            nearest_time = older_candidates[-1]
+        else:
+            nearest_time = candidates[0]
         return available[nearest_time], nearest_time
 
     def _get_image_safe(self, date: datetime) -> ImageFile.ImageFile | None:

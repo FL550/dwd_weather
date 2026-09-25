@@ -69,6 +69,19 @@ def test_future_image_loop_find_fallback():
     fallback = loop._find_fallback(target, available, now)
     assert fallback == (img_sample, now - timedelta(minutes=10))
 
+    # Prefer the latest earlier past frame over a later past frame
+    earlier_img = Image.new("RGB", (10, 10), color=(10, 10, 10))
+    later_img = Image.new("RGB", (10, 10), color=(20, 20, 20))
+    available = {
+        now - timedelta(minutes=5): later_img,
+        now - timedelta(minutes=15): earlier_img,
+    }
+    target = now - timedelta(minutes=10)
+    assert loop._find_fallback(target, available, now) == (
+        earlier_img,
+        now - timedelta(minutes=15),
+    )
+
     # Current or future timestamps should not get a fallback image
     assert loop._find_fallback(now, available, now) is None
     assert loop._find_fallback(now + timedelta(minutes=5), available, now) is None
@@ -76,11 +89,11 @@ def test_future_image_loop_find_fallback():
     # Empty available should return None
     assert loop._find_fallback(target, {}, now) is None
 
-    # Far-away timestamps eventually fall back to last available image
+    # Far-away timestamps fall back to the earliest later past image
     far_past = now - timedelta(hours=3)
     assert loop._find_fallback(far_past, available, now) == (
-        img_sample,
-        now - timedelta(minutes=10),
+        earlier_img,
+        now - timedelta(minutes=15),
     )
 
 
