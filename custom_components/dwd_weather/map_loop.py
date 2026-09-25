@@ -34,6 +34,12 @@ _WMS_TIMEOUT = 25
 # How long to cache model images before re-fetching (model runs update every ~3-6h)
 _MODEL_CACHE_TTL = timedelta(hours=1)
 
+# DWD publishes a new nowcast raster every five minutes.
+_NOWCAST_CACHE_TTL = timedelta(minutes=5)
+
+# Avoid retrying an incomplete window on every coordinator tick.
+_RETRY_COOLDOWN = timedelta(minutes=5)
+
 _FRAME_NOT_PUBLISHED = object()
 
 
@@ -93,9 +99,13 @@ class FutureImageLoop:
         self._model_cache: dict[datetime, ImageFile.ImageFile] = {}
         self._model_cache_time: datetime | None = None
 
+        # Cache for nowcast images until the next five-minute publication slot.
+        self._nowcast_cache: dict[datetime, tuple[datetime, ImageFile.ImageFile]] = {}
+
         self._images: list[ImageFile.ImageFile] = []
         self._last_now: datetime | None = None
         self._last_complete = False
+        self._last_attempt: datetime | None = None
         self._model_times: set[datetime] = set()
         self._all_times: list[datetime] = []
         # Actual valid-time of the image data shown at each slot in _all_times.
@@ -122,8 +132,18 @@ class FutureImageLoop:
             _LOGGER.debug("Skipping map loop rebuild for unchanged slot %s", now)
             return
 
+        attempt_time = datetime.now(timezone.utc)
+        if (
+            self._last_now == now
+            and self._last_attempt is not None
+            and attempt_time - self._last_attempt < _RETRY_COOLDOWN
+        ):
+            _LOGGER.debug("Skipping retry for incomplete map loop slot %s", now)
+            return
+
         previous_now = self._last_now
         self._last_now = now
+        self._last_attempt = attempt_time
         if previous_now != now:
             self._not_published_times = {}
         not_published_times = set(self._not_published_times.get(now, set()))
@@ -188,9 +208,18 @@ class FutureImageLoop:
             if t < now and t in self._past_cache:
                 # Past radar images are immutable — reuse from cache
                 already_have[t] = self._past_cache[t]
+            elif t < now and t in self._nowcast_cache:
+                # A nowcast frame becomes immutable once it is observed.
+                already_have[t] = self._nowcast_cache[t][1]
             elif t in self._model_times and t in self._model_cache:
                 # Model image cached and still valid
                 already_have[t] = self._model_cache[t]
+            elif t > now and t in self._nowcast_cache:
+                cached_at, image = self._nowcast_cache[t]
+                if attempt_time - cached_at < _NOWCAST_CACHE_TTL:
+                    already_have[t] = image
+                else:
+                    del self._nowcast_cache[t]
             elif t in not_published_times:
                 continue
             else:
@@ -210,6 +239,7 @@ class FutureImageLoop:
 
         # --- Fetch missing images in parallel ---
         fetched: dict[datetime, ImageFile.ImageFile] = {}
+        failed: list[datetime] = []
         if to_fetch:
             with ThreadPoolExecutor(max_workers=_FETCH_WORKERS) as executor:
                 futures = {
@@ -222,6 +252,15 @@ class FutureImageLoop:
                         not_published_times.add(t)
                     elif result is not None:
                         fetched[t] = result
+                    else:
+                        failed.append(t)
+
+        if failed:
+            _LOGGER.warning(
+                "Could not fetch %d weather image(s) for map loop slot %s",
+                len(failed),
+                now,
+            )
 
         # --- Merge results ---
         new_images: dict[datetime, ImageFile.ImageFile] = {}
@@ -251,9 +290,7 @@ class FutureImageLoop:
         # each slot, which can differ from the slot's nominal time when a
         # fallback/stale image had to be used (e.g. DWD hasn't published the
         # current frame yet).
-        actual_time_for: dict[datetime, datetime] = {
-            t: t for t in new_images
-        }
+        actual_time_for: dict[datetime, datetime] = {t: t for t in new_images}
         for t in unique_times:
             if t not in new_images:
                 # Try to find nearest available image for past timestamps only.
@@ -285,6 +322,12 @@ class FutureImageLoop:
         for t in model_times:
             if t in new_images:
                 self._model_cache[t] = new_images[t]
+        for t in nowcast_times:
+            if t in fetched:
+                self._nowcast_cache[t] = (attempt_time, fetched[t])
+        for t in list(self._nowcast_cache):
+            if t not in nowcast_times:
+                del self._nowcast_cache[t]
         # Evict model cache entries that are no longer in the model window
         current_model_set = set(model_times)
         stale_model = [t for t in self._model_cache if t not in current_model_set]
@@ -296,9 +339,7 @@ class FutureImageLoop:
         available_times = [t for t in loop_times if t in new_images]
         self._all_times = available_times
         self._images = [new_images[t] for t in available_times]
-        self._display_times = [
-            actual_time_for.get(t, t) for t in available_times
-        ]
+        self._display_times = [actual_time_for.get(t, t) for t in available_times]
 
     def _images_equal(
         self,
@@ -349,7 +390,9 @@ class FutureImageLoop:
         if older_candidates:
             nearest_time = older_candidates[-1]
         else:
-            later_candidates = [candidate_time for candidate_time in candidates if candidate_time > t]
+            later_candidates = [
+                candidate_time for candidate_time in candidates if candidate_time > t
+            ]
             if not later_candidates:
                 return None
             nearest_time = later_candidates[0]
@@ -363,7 +406,7 @@ class FutureImageLoop:
             _LOGGER.debug("Weather image for %s is not published yet", date)
             return _FRAME_NOT_PUBLISHED
         except Exception as e:
-            _LOGGER.warning("Could not fetch weather image for %s: %s", date, e)
+            _LOGGER.debug("Could not fetch weather image for %s: %s", date, e)
             return None
 
     def _get_image(self, date: datetime) -> ImageFile.ImageFile:
@@ -444,9 +487,7 @@ class FutureImageLoop:
                 raise FrameNotPublished(
                     f"Frame not published for {date.strftime('%Y-%m-%dT%H:%M:00.0Z')}"
                 )
-            raise TypeError(
-                f"Unexpected content type: {content_type}"
-            )
+            raise TypeError(f"Unexpected content type: {content_type}")
         try:
             image = Image.open(BytesIO(request.content))
         except Exception as e:

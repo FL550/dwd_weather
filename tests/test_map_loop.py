@@ -9,6 +9,7 @@ import pytest
 
 from custom_components.dwd_weather.map_loop import (
     _FRAME_NOT_PUBLISHED,
+    _RETRY_COOLDOWN,
     _WMS_TIMEOUT,
     FrameNotPublished,
     FutureImageLoop,
@@ -181,8 +182,45 @@ def test_future_image_loop_skips_refetch_for_complete_unchanged_slot():
     assert loop._last_complete is True
 
 
-def test_future_image_loop_retries_incomplete_unchanged_slot():
-    """An incomplete loop should retry within the same 5-minute slot."""
+def test_future_image_loop_reuses_nowcast_frames_across_slots():
+    """Only the newly current nowcast frame is fetched at the next slot."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        steps_past=1,
+        steps_future=2,
+        hours_future=0,
+    )
+
+    first_now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    second_now = first_now + timedelta(minutes=5)
+    image = Image.new("RGB", (10, 10))
+
+    with patch(
+        "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+        side_effect=[first_now, second_now],
+    ):
+        with patch.object(loop, "_get_image_safe", return_value=image) as mock_fetch:
+            loop.update()
+            loop.update()
+
+    assert sorted(call.args[0] for call in mock_fetch.call_args_list) == sorted(
+        [
+            first_now,
+            first_now + timedelta(minutes=5),
+            first_now + timedelta(minutes=10),
+            second_now,
+            second_now + timedelta(minutes=10),
+        ]
+    )
+
+
+def test_future_image_loop_cools_down_incomplete_unchanged_slot():
+    """An incomplete loop should not retry on every coordinator tick."""
     loop = FutureImageLoop(
         minx=9.0,
         miny=47.0,
@@ -210,7 +248,12 @@ def test_future_image_loop_retries_incomplete_unchanged_slot():
     ):
         with patch.object(loop, "_get_image_safe", side_effect=_first_fetch):
             loop.update()
-        with patch.object(loop, "_get_image_safe", return_value=future_img) as mock_retry:
+        with patch.object(
+            loop, "_get_image_safe", return_value=future_img
+        ) as mock_retry:
+            loop.update()
+            assert mock_retry.call_count == 0
+            loop._last_attempt = datetime.now(timezone.utc) - _RETRY_COOLDOWN
             loop.update()
 
     retried_times = sorted(call.args[0] for call in mock_retry.call_args_list)
@@ -560,7 +603,9 @@ def test_future_image_loop_get_image_raises_frame_not_published_for_service_exce
     response = MagicMock()
     response.status_code = 200
     response.headers = {"content-type": "text/xml"}
-    response.content = b"<ServiceExceptionReport><ServiceException/></ServiceExceptionReport>"
+    response.content = (
+        b"<ServiceExceptionReport><ServiceException/></ServiceExceptionReport>"
+    )
 
     with patch(
         "custom_components.dwd_weather.map_loop.requests.get", return_value=response
