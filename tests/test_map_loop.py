@@ -1,6 +1,7 @@
 """Tests for the FutureImageLoop weather map loop generator."""
 
 from datetime import datetime, timedelta, timezone
+import time
 from unittest.mock import MagicMock, patch
 
 from PIL import Image
@@ -268,6 +269,61 @@ def test_future_image_loop_keeps_timestamps_aligned_with_available_images():
 
     assert len(loop._images) == len(loop._all_times)
     assert loop._all_times == [now - timedelta(minutes=5)]
+
+
+def test_future_image_loop_preserves_chronological_image_order_with_out_of_order_fetches():
+    """Missing past frames should fall back by time, not fetch completion order."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        image_width=520,
+        image_height=580,
+        steps_past=4,
+        steps_future=0,
+        hours_future=0,
+    )
+
+    now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    colors = {
+        now - timedelta(minutes=10): (40, 40, 40),
+        now - timedelta(minutes=5): (80, 80, 80),
+        now: (120, 120, 120),
+    }
+
+    def _mock_fetch(date):
+        if date == now - timedelta(minutes=15):
+            return None
+        if date == now - timedelta(minutes=10):
+            time.sleep(0.01)
+        elif date == now - timedelta(minutes=5):
+            time.sleep(0.02)
+        elif date == now:
+            time.sleep(0.03)
+        return Image.new("RGB", (10, 10), color=colors[date])
+
+    with patch.object(loop, "_get_image_safe", side_effect=_mock_fetch):
+        with patch(
+            "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+            return_value=now,
+        ):
+            loop.update()
+
+    assert loop._all_times == [
+        now - timedelta(minutes=15),
+        now - timedelta(minutes=10),
+        now - timedelta(minutes=5),
+        now,
+    ]
+    assert [image.getpixel((0, 0)) for image in loop._images] == [
+        colors[now - timedelta(minutes=10)],
+        colors[now - timedelta(minutes=10)],
+        colors[now - timedelta(minutes=5)],
+        colors[now],
+    ]
 
 
 def test_future_image_loop_keeps_future_timestamps_when_images_are_identical():

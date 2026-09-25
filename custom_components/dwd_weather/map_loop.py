@@ -331,16 +331,23 @@ class FutureImageLoop:
             return None
         if now is not None and t >= now:
             return None
-        step = timedelta(hours=1) if t in self._model_times else timedelta(minutes=5)
-        # Look backward up to 12 steps
-        curr = t
-        for _ in range(12):
-            curr -= step
-            if curr in available:
-                return available[curr], curr
-        # Fall back to last available
-        last_time = list(available.keys())[-1]
-        return available[last_time], last_time
+        candidates = sorted(
+            candidate_time
+            for candidate_time in available
+            if now is None or candidate_time < now
+        )
+        if not candidates:
+            return None
+
+        nearest_time = min(
+            candidates,
+            key=lambda candidate_time: (
+                abs(candidate_time - t),
+                candidate_time > t,
+                candidate_time,
+            ),
+        )
+        return available[nearest_time], nearest_time
 
     def _get_image_safe(self, date: datetime) -> ImageFile.ImageFile | None:
         """Fetch a single WMS image, returning None on failure instead of raising."""
