@@ -1,6 +1,7 @@
 """Tests for the FutureImageLoop weather map loop generator."""
 
 from datetime import datetime, timedelta, timezone
+import time
 from unittest.mock import MagicMock, patch
 
 from PIL import Image
@@ -68,6 +69,19 @@ def test_future_image_loop_find_fallback():
     fallback = loop._find_fallback(target, available, now)
     assert fallback == (img_sample, now - timedelta(minutes=10))
 
+    # Prefer the latest earlier past frame over a later past frame
+    earlier_img = Image.new("RGB", (10, 10), color=(10, 10, 10))
+    later_img = Image.new("RGB", (10, 10), color=(20, 20, 20))
+    available = {
+        now - timedelta(minutes=5): later_img,
+        now - timedelta(minutes=15): earlier_img,
+    }
+    target = now - timedelta(minutes=10)
+    assert loop._find_fallback(target, available, now) == (
+        earlier_img,
+        now - timedelta(minutes=15),
+    )
+
     # Current or future timestamps should not get a fallback image
     assert loop._find_fallback(now, available, now) is None
     assert loop._find_fallback(now + timedelta(minutes=5), available, now) is None
@@ -75,12 +89,18 @@ def test_future_image_loop_find_fallback():
     # Empty available should return None
     assert loop._find_fallback(target, {}, now) is None
 
-    # Far-away timestamps eventually fall back to last available image
+    # Far-away timestamps fall back to the earliest later past image
     far_past = now - timedelta(hours=3)
     assert loop._find_fallback(far_past, available, now) == (
-        img_sample,
-        now - timedelta(minutes=10),
+        earlier_img,
+        now - timedelta(minutes=15),
     )
+
+    # Very stale older frames outside the bounded lookback window are ignored
+    stale_available = {
+        now - timedelta(hours=2): img_sample,
+    }
+    assert loop._find_fallback(target, stale_available, now) is None
 
 
 def test_future_image_loop_skips_now_frame_when_no_image_is_available():
@@ -268,6 +288,61 @@ def test_future_image_loop_keeps_timestamps_aligned_with_available_images():
 
     assert len(loop._images) == len(loop._all_times)
     assert loop._all_times == [now - timedelta(minutes=5)]
+
+
+def test_future_image_loop_preserves_chronological_image_order_with_out_of_order_fetches():
+    """Missing past frames should fall back by time, not fetch completion order."""
+    loop = FutureImageLoop(
+        minx=9.0,
+        miny=47.0,
+        maxx=15.0,
+        maxy=55.0,
+        map_types=["niederschlagsradar"],
+        background_types=[],
+        image_width=520,
+        image_height=580,
+        steps_past=4,
+        steps_future=0,
+        hours_future=0,
+    )
+
+    now = datetime(2026, 8, 9, 12, 0, 0, tzinfo=timezone.utc)
+    colors = {
+        now - timedelta(minutes=10): (40, 40, 40),
+        now - timedelta(minutes=5): (80, 80, 80),
+        now: (120, 120, 120),
+    }
+
+    def _mock_fetch(date):
+        if date == now - timedelta(minutes=15):
+            return None
+        if date == now - timedelta(minutes=10):
+            time.sleep(0.01)
+        elif date == now - timedelta(minutes=5):
+            time.sleep(0.02)
+        elif date == now:
+            time.sleep(0.03)
+        return Image.new("RGB", (10, 10), color=colors[date])
+
+    with patch.object(loop, "_get_image_safe", side_effect=_mock_fetch):
+        with patch(
+            "custom_components.dwd_weather.map_loop.get_time_last_5_min",
+            return_value=now,
+        ):
+            loop.update()
+
+    assert loop._all_times == [
+        now - timedelta(minutes=15),
+        now - timedelta(minutes=10),
+        now - timedelta(minutes=5),
+        now,
+    ]
+    assert [image.getpixel((0, 0)) for image in loop._images] == [
+        colors[now - timedelta(minutes=10)],
+        colors[now - timedelta(minutes=10)],
+        colors[now - timedelta(minutes=5)],
+        colors[now],
+    ]
 
 
 def test_future_image_loop_keeps_future_timestamps_when_images_are_identical():
