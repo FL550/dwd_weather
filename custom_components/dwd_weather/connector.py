@@ -1086,8 +1086,20 @@ class DWDWeatherData:
             if not hasattr(self, "_interpolate_value"):
                 self._interpolate_value = {}
             now_time_actual = datetime.now(timezone.utc)
-            if data_type not in self._interpolate_value:
+            if not hasattr(self, "_interpolate_report_stamp"):
+                self._interpolate_report_stamp = {}
+            report_data = getattr(self.dwd_weather, "report_data", None)
+            report_stamp = (
+                (report_data.get("date"), report_data.get("time"))
+                if isinstance(report_data, dict)
+                else None
+            )
+            if (
+                data_type not in self._interpolate_value
+                or self._interpolate_report_stamp.get(data_type) != report_stamp
+            ):
                 self._interpolate_value[data_type] = (value, now_time_actual)
+                self._interpolate_report_stamp[data_type] = report_stamp
             next_value = self.dwd_weather.get_forecast_data(
                 data_type,
                 now_time_actual + timedelta(hours=1),
