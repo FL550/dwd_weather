@@ -712,6 +712,14 @@ class DWDWeatherData:
                         False,
                     )
 
+                    # MOSMIX-S RR1c is the precipitation of the hour ending at its
+                    # label, so the hour starting at timestep is labelled timestep+1h
+                    precipitation_timestep = (
+                        timestep + timedelta(hours=1)
+                        if self._config[CONF_HOURLY_UPDATE]
+                        else timestep
+                    )
+
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                         ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_timeframe_max(
@@ -726,7 +734,7 @@ class DWDWeatherData:
                         else None,
                         ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                             WeatherDataType.PRECIPITATION,
-                            timestep,
+                            precipitation_timestep,
                             weather_interval,
                             False,
                         ),
