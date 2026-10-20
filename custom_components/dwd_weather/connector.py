@@ -2007,7 +2007,7 @@ class DWDMapData:
                             boxcolor = (225, 225, 225)
                             textcolor = (0, 0, 0)
 
-                        time_str = display_timestamp.astimezone().strftime(
+                        time_str = dt.as_local(display_timestamp).strftime(
                             "%d.%m.%Y %H:%M"
                         )
                         display_text = time_str
