@@ -639,6 +639,11 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
         )
+        if self._type.startswith("radar_"):
+            self._connector.register_radar_sensor(self._type)
+            self.async_on_remove(
+                lambda: self._connector.unregister_radar_sensor(self._type)
+            )
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""

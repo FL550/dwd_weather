@@ -529,6 +529,7 @@ def test_get_apparent_temperature_hourly_returns_empty_when_not_supported(
 def test_update_refreshes_radar_precipitation_only_when_enabled(mock_dwd_data):
     """Radar precipitation methods should be called during _update only when enabled."""
     mock_dwd_data._config["download_precipitation_sensors"] = True
+    mock_dwd_data.register_radar_sensor("radar_precipitation_now")
     mock_dwd_data.latest_update = None
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
@@ -543,6 +544,21 @@ def test_update_refreshes_radar_precipitation_only_when_enabled(mock_dwd_data):
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False
     )
+
+
+def test_update_skips_radar_precipitation_when_no_radar_sensor_enabled(mock_dwd_data):
+    """No radar download should happen if all radar sensors are disabled."""
+    mock_dwd_data._config["download_precipitation_sensors"] = True
+    mock_dwd_data.latest_update = None
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
+        return_value={}
+    )
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
+
+    assert mock_dwd_data._update() is True
+
+    mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_not_called()
+    mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_not_called()
 
 
 def test_update_skips_radar_precipitation_when_disabled(mock_dwd_data):

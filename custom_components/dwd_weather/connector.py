@@ -146,6 +146,7 @@ class DWDWeatherData:
         self.latest_update = None
         self.infos = {}
         self.entities = []
+        self._active_radar_sensors = set()
 
         # Holds the current data from DWD
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
@@ -333,6 +334,13 @@ class DWDWeatherData:
     def register_entity(self, entity):
         self.entities.append(entity)
 
+    def register_radar_sensor(self, sensor_type):
+        """Register an enabled radar sensor so radar data gets downloaded."""
+        self._active_radar_sensors.add(sensor_type)
+
+    def unregister_radar_sensor(self, sensor_type):
+        self._active_radar_sensors.discard(sensor_type)
+
     @staticmethod
     def _convert_sun_irradiance_to_watts_per_square_meter(
         value_kj_per_square_meter: float | None,
@@ -505,7 +513,10 @@ class DWDWeatherData:
         self._radar_precipitation_forecast = None
         self._radar_next_precipitation = None
 
-        if not self._config.get(CONF_DOWNLOAD_PRECIPITATION_SENSORS, False):
+        if (
+            not self._config.get(CONF_DOWNLOAD_PRECIPITATION_SENSORS, False)
+            or not self._active_radar_sensors
+        ):
             return
 
         lat = None
