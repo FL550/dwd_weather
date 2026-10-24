@@ -220,6 +220,8 @@ class FutureImageLoop:
                     already_have[t] = image
                 else:
                     del self._nowcast_cache[t]
+                    if t not in not_published_times:
+                        to_fetch.append(t)
             elif t in not_published_times:
                 continue
             else:
