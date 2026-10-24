@@ -101,6 +101,9 @@
       },
       "radar_next_precipitation": {
         "name": "Radar nächster Niederschlag"
+      },
+      "radar_next_precipitation_5_minutes": {
+        "name": "Radar Niederschlag nächste 5 Minuten"
       }
     }
   },

@@ -101,6 +101,9 @@
       },
       "radar_next_precipitation": {
         "name": "Radarowy następny opad"
+      },
+      "radar_next_precipitation_5_minutes": {
+        "name": "Radarowy opad na następne 5 minut"
       }
     }
   },

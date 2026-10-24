@@ -533,12 +533,18 @@ def test_update_refreshes_radar_precipitation_only_when_enabled(mock_dwd_data):
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
     )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock(
+        return_value={}
+    )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
 
     assert mock_dwd_data._update() is True
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_called_once_with(
         shouldUpdate=True
+    )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_called_once_with(
+        shouldUpdate=False
     )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False
@@ -552,11 +558,15 @@ def test_update_skips_radar_precipitation_when_disabled(mock_dwd_data):
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
     )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock(
+        return_value={}
+    )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
 
     assert mock_dwd_data._update() is True
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_not_called()
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_not_called()
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_not_called()
 
 
@@ -574,7 +584,13 @@ def test_radar_getters_do_not_trigger_refresh_calls(mock_dwd_data):
         "length": datetime(2026, 1, 1, 0, 10, tzinfo=timezone.utc)
         - datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
     }
+    mock_dwd_data._radar_next_precipitation_5_minutes = {
+        "time": datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc),
+        "intensity": 2.46,
+        "amount": 0.21,
+    }
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock()
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock()
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock()
 
     start = mock_dwd_data.get_radar_next_precipitation_start()
@@ -585,8 +601,13 @@ def test_radar_getters_do_not_trigger_refresh_calls(mock_dwd_data):
     assert attrs["max"] == 3.6
     assert attrs["sum"] == 0.9
     assert len(mock_dwd_data.get_radar_precipitation_hourly()) == 2
+    assert mock_dwd_data.get_radar_precipitation_next_5_minutes_intensity() == 2.5
+    next_5m_attrs = mock_dwd_data.get_radar_precipitation_next_5_minutes_attributes()
+    assert next_5m_attrs["time"] == "2026-01-01T00:05:00+00:00"
+    assert next_5m_attrs["amount"] == 0.21
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_not_called()
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_not_called()
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_not_called()
 
 
@@ -699,12 +720,18 @@ def test_update_radar_precipitation_uses_station_coords_by_default(mock_dwd_data
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
     )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock(
+        return_value={}
+    )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
 
     mock_dwd_data._update_radar_precipitation()
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_called_once_with(
         shouldUpdate=True
+    )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_called_once_with(
+        shouldUpdate=False
     )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False
@@ -723,12 +750,18 @@ def test_update_radar_precipitation_uses_custom_coords_when_enabled(mock_dwd_dat
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
     )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock(
+        return_value={}
+    )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
 
     mock_dwd_data._update_radar_precipitation()
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_called_once_with(
         shouldUpdate=True, lat=48.1, lon=11.6
+    )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_called_once_with(
+        shouldUpdate=False, lat=48.1, lon=11.6
     )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False, lat=48.1, lon=11.6
@@ -746,12 +779,18 @@ def test_update_radar_precipitation_falls_back_to_station_when_coords_missing(
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast = MagicMock(
         return_value={}
     )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes = MagicMock(
+        return_value={}
+    )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation = MagicMock(return_value={})
 
     mock_dwd_data._update_radar_precipitation()
 
     mock_dwd_data.dwd_weather.get_radar_precipitation_forecast.assert_called_once_with(
         shouldUpdate=True
+    )
+    mock_dwd_data.dwd_weather.get_radar_precipitation_next_5_minutes.assert_called_once_with(
+        shouldUpdate=False
     )
     mock_dwd_data.dwd_weather.get_radar_next_precipitation.assert_called_once_with(
         shouldUpdate=False
@@ -788,4 +827,3 @@ def test_map_data_get_image_returns_weather_loop_image():
     assert retrieved is not None
     assert isinstance(retrieved, bytes)
     assert len(retrieved) > 0
-

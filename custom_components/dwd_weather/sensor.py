@@ -363,6 +363,15 @@ SENSOR_TYPES = {
         None,
         True,
     ],
+    "radar_next_precipitation_5_minutes": [
+        "Radar Next Precipitation 5 Minutes",
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        "mdi:weather-rainy",
+        True,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
 }
 
 
@@ -514,6 +523,8 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.get_radar_precipitation_now()
         elif self._type == "radar_next_precipitation":
             result = self._connector.get_radar_next_precipitation_start()
+        elif self._type == "radar_next_precipitation_5_minutes":
+            result = self._connector.get_radar_precipitation_next_5_minutes_intensity()
         return result
 
     @property
@@ -616,6 +627,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_radar_precipitation_hourly()
         elif self._type == "radar_next_precipitation":
             attributes.update(self._connector.get_radar_next_precipitation_attributes())
+        elif self._type == "radar_next_precipitation_5_minutes":
+            attributes.update(
+                self._connector.get_radar_precipitation_next_5_minutes_attributes()
+            )
 
         attributes[ATTR_ISSUE_TIME] = self._connector.infos[ATTR_ISSUE_TIME]
         attributes[ATTR_LATEST_UPDATE] = self._connector.infos[ATTR_LATEST_UPDATE]

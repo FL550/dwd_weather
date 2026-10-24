@@ -169,6 +169,7 @@ class DWDWeatherData:
         self._airquality_hourly = None
         self._airquality_daily = None
         self._radar_precipitation_forecast = None
+        self._radar_next_precipitation_5_minutes = None
         self._radar_next_precipitation = None
         self._sunshine_store = Store(
             hass,
@@ -503,6 +504,7 @@ class DWDWeatherData:
     def _update_radar_precipitation(self) -> None:
         """Refresh radar precipitation data during connector update cycle only."""
         self._radar_precipitation_forecast = None
+        self._radar_next_precipitation_5_minutes = None
         self._radar_next_precipitation = None
 
         if not self._config.get(CONF_DOWNLOAD_PRECIPITATION_SENSORS, False):
@@ -526,6 +528,21 @@ class DWDWeatherData:
             )
         except Exception as error:
             _LOGGER.warning("Failed to update radar precipitation forecast: %s", error)
+
+        try:
+            # Reuse freshly downloaded data from forecast call where possible.
+            kwargs = {"shouldUpdate": False}
+            if lat is not None and lon is not None:
+                kwargs["lat"] = lat
+                kwargs["lon"] = lon
+            self._radar_next_precipitation_5_minutes = (
+                self.dwd_weather.get_radar_precipitation_next_5_minutes(**kwargs)
+            )
+        except Exception as error:
+            _LOGGER.warning(
+                "Failed to update radar precipitation next 5 minutes details: %s",
+                error,
+            )
 
         try:
             # Reuse freshly downloaded data from forecast call where possible.
@@ -1275,6 +1292,32 @@ class DWDWeatherData:
         if start is None:
             return None
         return start.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+    def get_radar_precipitation_next_5_minutes_intensity(self):
+        if not isinstance(self._radar_next_precipitation_5_minutes, dict):
+            return None
+
+        intensity = self._radar_next_precipitation_5_minutes.get("intensity")
+        if intensity is None:
+            return None
+
+        return round(intensity, 1)
+
+    def get_radar_precipitation_next_5_minutes_attributes(self):
+        if not isinstance(self._radar_next_precipitation_5_minutes, dict):
+            return {}
+
+        result = {}
+
+        radar_time = self._radar_next_precipitation_5_minutes.get("time")
+        if radar_time is not None:
+            result["time"] = radar_time.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+        amount = self._radar_next_precipitation_5_minutes.get("amount")
+        if amount is not None:
+            result["amount"] = round(amount, 2)
+
+        return result
 
     def get_radar_next_precipitation_attributes(self):
         if not isinstance(self._radar_next_precipitation, dict):

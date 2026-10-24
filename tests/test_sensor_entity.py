@@ -173,6 +173,37 @@ def test_airquality_pm10_sensor_state_and_attributes(hass_data):
     connector.get_airquality_component_hourly.assert_called_once_with("PM10")
 
 
+def test_radar_next_5_minutes_sensor_state_and_attributes(hass_data):
+    """Radar next 5 minutes sensor should expose intensity and details."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector._config[CONF_DOWNLOAD_PRECIPITATION_SENSORS] = True
+    connector.get_radar_precipitation_next_5_minutes_intensity = MagicMock(
+        return_value=2.4
+    )
+    connector.get_radar_precipitation_next_5_minutes_attributes = MagicMock(
+        return_value={
+            "time": "2026-01-01T00:05:00+00:00",
+            "amount": 0.2,
+        }
+    )
+    connector.infos = {
+        ATTR_ISSUE_TIME: "2026-01-01T00:00:00+00:00",
+        ATTR_LATEST_UPDATE: "2026-01-01T00:01:00+00:00",
+        ATTR_STATION_ID: "L732",
+        ATTR_STATION_NAME: "Test Station",
+    }
+    connector.latest_update = "2026-01-01T00:01:00+00:00"
+
+    entity = DWDWeatherForecastSensor(
+        MOCK_CONFIG, hass_data, "radar_next_precipitation_5_minutes"
+    )
+
+    assert entity.state == 2.4
+    attrs = entity.extra_state_attributes
+    assert attrs["time"] == "2026-01-01T00:05:00+00:00"
+    assert attrs["amount"] == 0.2
+
+
 @pytest.mark.asyncio
 async def test_sensor_async_update_requests_refresh(sensor_entity):
     """async_update should trigger coordinator refresh."""
@@ -229,4 +260,4 @@ async def test_async_setup_includes_radar_precipitation_sensors_when_enabled(
     radar_entities = [
         entity for entity in created_entities if entity._type.startswith("radar_")
     ]
-    assert len(radar_entities) == 2
+    assert len(radar_entities) == 3
