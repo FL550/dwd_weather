@@ -11,3 +11,6 @@ fi
 
 python3 -m pip install --requirement requirements.txt --pre
 cat custom_components/dwd_weather/manifest.json | jq -r '.requirements | .[]'  | python3 -m pip install -r /dev/stdin
+
+# Mixed installs can leave cffi's package and compiled backend on different versions.
+python3 -m pip install --force-reinstall --no-deps cffi
