@@ -238,6 +238,27 @@ def test_hourly_forecast_includes_airquality_when_both_options_enabled(mock_dwd_
     assert result[0]["airquality_pm10"] == 19.0
 
 
+def test_hourly_update_shifts_condition_to_period_end(mock_dwd_data):
+    """Hourly conditions should use the timestamp ending the forecast period."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["hourly_update"] = True
+    mock_dwd_data.dwd_weather.get_timeframe_condition = MagicMock(return_value="rainy")
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 1, 1, 12, tzinfo=timezone.utc)
+
+    with patch("custom_components.dwd_weather.connector.datetime", FrozenDateTime):
+        result = mock_dwd_data.get_forecast_hourly()
+
+    assert result is not None
+    assert result[0]["condition"] == "rainy"
+    assert mock_dwd_data.dwd_weather.get_timeframe_condition.call_args_list[0].args[
+        0
+    ] == datetime(2026, 1, 1, 13, tzinfo=timezone.utc)
+
+
 def test_hourly_forecast_converts_sun_irradiance_to_watts_per_square_meter(
     mock_dwd_data,
 ):

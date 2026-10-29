@@ -648,8 +648,14 @@ class DWDWeatherData:
             forecast_index = 0
             for _ in range(0, 9):
                 for _ in range(int(24 / weather_interval)):
+                    # MOSMIX-S RR1c and ww describe the hour ending at the label.
+                    period_timestep = (
+                        timestep + timedelta(hours=1)
+                        if self._config[CONF_HOURLY_UPDATE]
+                        else timestep
+                    )
                     condition = self.dwd_weather.get_timeframe_condition(
-                        timestep,
+                        period_timestep,
                         weather_interval,
                         False,
                     )
@@ -729,14 +735,6 @@ class DWDWeatherData:
                         False,
                     )
 
-                    # MOSMIX-S RR1c is the precipitation of the hour ending at its
-                    # label, so the hour starting at timestep is labelled timestep+1h
-                    precipitation_timestep = (
-                        timestep + timedelta(hours=1)
-                        if self._config[CONF_HOURLY_UPDATE]
-                        else timestep
-                    )
-
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                         ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_timeframe_max(
@@ -751,7 +749,7 @@ class DWDWeatherData:
                         else None,
                         ATTR_FORECAST_NATIVE_PRECIPITATION: self.dwd_weather.get_timeframe_sum(
                             WeatherDataType.PRECIPITATION,
-                            precipitation_timestep,
+                            period_timestep,
                             weather_interval,
                             False,
                         ),
