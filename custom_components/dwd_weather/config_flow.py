@@ -89,7 +89,6 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DWD weather integration."""
 
     VERSION = CONF_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def _supports_apparent_temperature(self, station_id: str) -> bool:
         """Return whether the selected station supports apparent temperature."""
