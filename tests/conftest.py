@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from collections import OrderedDict
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.dwd_weather.connector import DWDWeatherData, DWDMapData
 from custom_components.dwd_weather.sensor import DWDWeatherForecastSensor
@@ -21,8 +21,6 @@ from custom_components.dwd_weather.const import (
     ATTR_LATEST_UPDATE,
     ATTR_ISSUE_TIME,
 )
-
-pytest_plugins = "pytest_homeassistant_custom_component"  # pylint: disable=invalid-name
 
 
 # ============================================================================
