@@ -830,7 +830,7 @@ def test_map_data_get_image_returns_weather_loop_image():
         CONF_MAP_LOOP_SPEED,
     )
 
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from pytest_homeassistant.common import MockConfigEntry
 
     configdata = {
         CONF_MAP_FOREGROUND_TYPE: CONF_MAP_FOREGROUND_PRECIPITATION,
