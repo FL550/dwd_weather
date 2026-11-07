@@ -18,7 +18,7 @@ jobs:
       deployments: write
     steps:
       - name: 📥 Checkout the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Update version in manifest.json and const.py from current git tag
         run: |
           sed -i "s/0\\.0\\.0\\.dev0/${GITHUB_REF_NAME}/g" custom_components/dwd_weather/manifest.json
@@ -32,9 +32,9 @@ jobs:
         id: information
         run: |
           name=$(find custom_components/ -type d -maxdepth 1 | tail -n 1 | cut -d "/" -f2)
-          echo "::set-output name=name::$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
           min_ha_version=$(jq -r '.homeassistant' ${{ github.workspace }}/hacs.json)
-          echo "::set-output name=min_ha_version::$min_ha_version"
+          echo "min_ha_version=$min_ha_version" >> "$GITHUB_OUTPUT"
       - name: 🖊️ Set version number
         run: |
           sed -i '/INTEGRATION_VERSION = /c\INTEGRATION_VERSION = "${{ steps.version.outputs.version }}"' \
@@ -69,11 +69,9 @@ jobs:
           cd "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}"
           zip ${{ steps.information.outputs.name }}.zip -r ./
       - name: 📤 Upload the zip file as a release asset
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/${{ steps.information.outputs.name }}.zip"
-          asset_name: ${{ steps.information.outputs.name }}.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "${{ github.workspace }}/custom_components/${{ steps.information.outputs.name }}/${{ steps.information.outputs.name }}.zip" \
+            --clobber
