@@ -11,6 +11,7 @@ import PIL.ImageDraw
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 from io import BytesIO
 import warnings
@@ -385,7 +386,12 @@ class DWDWeatherData:
         #             )
         #     except Exception as error:
         #         _LOGGER.warning("Failed to initialize air quality data: %s", error)
-        if await self._hass.async_add_executor_job(self._update):
+        try:
+            updated = await self._hass.async_add_executor_job(self._update)
+        except dwdforecast.ForecastDownloadError as error:
+            # Downloads from opendata.dwd.de fail now and then; the next update retries
+            raise UpdateFailed(f"Failed to download the DWD forecast: {error}") from error
+        if updated:
             await self._async_process_sunshine_accumulator()
             for entity in self.entities:
                 await entity.async_update_listeners(("daily", "hourly"))
