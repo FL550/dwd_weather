@@ -1105,6 +1105,17 @@ class DWDWeatherData:
                 shouldUpdate=False,
             )
 
+        if value is None and data_type == WeatherDataType.SUN_IRRADIANCE:
+            now = datetime.now(timezone.utc)
+            try:
+                if (
+                    now.hour < self.sun.riseutc(now).hour
+                    or now.hour > self.sun.setutc(now).hour
+                ):
+                    return 0
+            except Exception as e:
+                _LOGGER.debug(f"Error determining sun position: {e}")
+
         if self._config[CONF_INTERPOLATE] and value is not None:
             if not hasattr(self, "_interpolate_value"):
                 self._interpolate_value = {}
