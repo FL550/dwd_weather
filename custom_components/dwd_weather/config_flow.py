@@ -723,7 +723,14 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    config_data = {}
+    def __init__(self) -> None:
+        """Start every options flow with data of its own.
+
+        A class attribute would be shared by all options flows, so the map flow
+        with the home marker carried keys from one entry over to the next.
+        """
+        super().__init__()
+        self.config_data: dict = {}
 
     def _supports_apparent_temperature(self) -> bool:
         """Return whether the configured station supports apparent temperature."""
