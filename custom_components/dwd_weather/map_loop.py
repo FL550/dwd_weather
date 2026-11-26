@@ -6,6 +6,7 @@ from typing import Iterable
 
 from PIL import Image, ImageFile
 import requests
+from simple_dwd_weatherforecast.basemap import BaseMap
 from simple_dwd_weatherforecast.dwdmap import (
     ImageBoundaries,
     Marker,
@@ -13,6 +14,8 @@ from simple_dwd_weatherforecast.dwdmap import (
     WeatherMapType,
     draw_marker,
     get_time_last_5_min,
+    put_on_basemap,
+    split_basemap,
 )
 
 try:
@@ -75,6 +78,8 @@ class FutureImageLoop:
         image_height: int = 580,
         markers: list[Marker] = [],
         dark_mode: bool = False,
+        basemap_cache_dir: str | None = None,
+        basemap_blend: bool = False,
     ):
         self._minx = minx
         self._miny = miny
@@ -91,6 +96,23 @@ class FutureImageLoop:
         self._image_height = image_height
         self.markers = markers
         self.dark_mode = dark_mode
+        # The BKG base map is drawn locally below the weather, so it is taken out of
+        # the layers requested from the DWD.
+        self._basemap, self._dwd_background_types = split_basemap(
+            background_types,
+            minx,
+            miny,
+            maxx,
+            maxy,
+            image_width,
+            image_height,
+            basemap_cache_dir,
+        )
+        self._basemap_blend = basemap_blend
+        # Set from the fetch threads when a frame had to be drawn without the base
+        # map. update() then retries the slot and drops the cached frames once the
+        # map is back.
+        self._basemap_missing = False
 
         # Cache for immutable past images (radar) — keyed by timestamp
         self._past_cache: dict[datetime, ImageFile.ImageFile] = {}
@@ -124,6 +146,11 @@ class FutureImageLoop:
     def get_images(self) -> Iterable[ImageFile.ImageFile]:
         return self._images
 
+    @property
+    def basemap(self) -> BaseMap | None:
+        """The BKG base map below the weather, None if another background is used."""
+        return self._basemap
+
     def update(self) -> None:
         """Update and rebuild the radar/nowcast/forecast loop image lists."""
         now = get_time_last_5_min(datetime.now(timezone.utc))
@@ -147,6 +174,14 @@ class FutureImageLoop:
         if previous_now != now:
             self._not_published_times = {}
         not_published_times = set(self._not_published_times.get(now, set()))
+
+        # Frames drawn while the base map was not available have a blank background.
+        if self._basemap_missing and self._basemap.available:
+            _LOGGER.info("Base map is available again, dropping the cached frames")
+            self._past_cache.clear()
+            self._nowcast_cache.clear()
+            self._model_cache.clear()
+            self._basemap_missing = False
 
         # --- Calculate all required timestamps ---
         # Past: steps_past-1 frames before now (not including now itself)
@@ -268,7 +303,9 @@ class FutureImageLoop:
         new_images: dict[datetime, ImageFile.ImageFile] = {}
         new_images.update(already_have)
         new_images.update(fetched)
-        self._last_complete = all(
+        # Without the base map the slot is retried, otherwise the blank frames
+        # would stay until the next slot.
+        self._last_complete = not self._basemap_missing and all(
             t in new_images or t in not_published_times for t in unique_times
         )
 
@@ -424,7 +461,7 @@ class FutureImageLoop:
         # Separate special layers and others for background types
         special_layers = [
             layer.value
-            for layer in self._background_types
+            for layer in self._dwd_background_types
             if layer
             in [
                 WeatherBackgroundMapType.SATELLIT,
@@ -434,7 +471,7 @@ class FutureImageLoop:
         ]
         other_layers = [
             layer.value
-            for layer in self._background_types
+            for layer in self._dwd_background_types
             if layer
             not in [
                 WeatherBackgroundMapType.SATELLIT,
@@ -472,6 +509,8 @@ class FutureImageLoop:
             f"&width={self._image_width}&height={self._image_height}&srs=EPSG:4326&styles={styles}&format=image/png"
             f"&TIME={date.strftime('%Y-%m-%dT%H:%M:00.0Z')}&bgcolor={bgcolor}"
         )
+        if self._basemap is not None:
+            url += "&transparent=true"
 
         _LOGGER.debug("Requesting WMS URL: %s", url)
         request = requests.get(url, timeout=_WMS_TIMEOUT)
@@ -494,6 +533,13 @@ class FutureImageLoop:
             image = Image.open(BytesIO(request.content))
         except Exception as e:
             raise RuntimeError(f"Error during image parsing: {url}") from e
+
+        if self._basemap is not None:
+            image, complete = put_on_basemap(
+                image, self._basemap, self.dark_mode, self._basemap_blend
+            )
+            if not complete:
+                self._basemap_missing = True
 
         image = draw_marker(
             image,

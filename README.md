@@ -63,6 +63,8 @@ Please see the [Wiki](https://github.com/FL550/dwd_weather/wiki)
 
 ![Screenshot Precipitation Chart](./Precipitation.png)
 
+As background you can also choose a map with towns, roads and rivers, light or dark. It is the TopPlusOpen web map by the German Federal Agency for Cartography and Geodesy (BKG) and is downloaded from its server (sgx.geodatenzentrum.de) once and then kept for 90 days. The licence (dl-de/by-2-0) requires a source note, which is drawn onto the map and shown as the attribution of the camera. With "Show the map through the weather" the names and roads stay readable below rain and warnings; the images become larger then, by about a quarter in widespread rain.
+
 # Installation
 
 1. Install integration via HACS or use the button below.
