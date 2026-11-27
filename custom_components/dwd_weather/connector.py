@@ -1088,8 +1088,12 @@ class DWDWeatherData:
         try:
             for offset in range(-1, 3):
                 day = start + timedelta(days=offset)
-                sunrise = self.sun.riseutc(day).replace(tzinfo=timezone.utc)
-                sunset = self.sun.setutc(day).replace(tzinfo=timezone.utc)
+                sunrise = self.sun.riseutc(day)
+                sunset = self.sun.setutc(day)
+                if sunrise == "PN" and sunset == "PN":
+                    continue
+                sunrise = sunrise.replace(tzinfo=timezone.utc)
+                sunset = sunset.replace(tzinfo=timezone.utc)
                 if sunrise >= sunset or (start < sunset and end > sunrise):
                     return False
         except (AttributeError, TypeError, ValueError, OverflowError) as err:
@@ -1135,6 +1139,7 @@ class DWDWeatherData:
                     report_time = None
                 if (
                     report_time is not None
+                    and timedelta(0) <= now - report_time <= timedelta(hours=2)
                     and self._is_nighttime_irradiance_hour(report_time)
                     and self._is_nighttime_irradiance_hour(now)
                 ):

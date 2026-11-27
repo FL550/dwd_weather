@@ -153,10 +153,11 @@ This integration allows you to add sensor entities with hourly forecasts for 10 
 - Humidity
 - Absolute humidity
 
-For the current Sun Irradiance sensor, a missing station report is shown as
-0 W/m² when both the reported hour and the preceding hour are entirely after
-sunset or before sunrise. Missing daytime or twilight values remain unavailable.
-Existing measurements and mixed-mode forecasts are not replaced.
+For the current Sun Irradiance sensor, a missing value in a recent station report
+(at most two hours old) is estimated as 0 W/m² when both the reported hour and the
+preceding hour are entirely after sunset or before sunrise. Missing daytime or
+twilight values remain unavailable. Existing measurements and mixed-mode forecasts
+are not replaced.
 
 The sensors entities are disabled per default, as they contain a lot of data.
 

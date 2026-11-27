@@ -199,6 +199,39 @@ def test_nighttime_irradiance_remains_missing_if_sun_times_unavailable(mock_dwd_
         assert mock_dwd_data.get_sun_irradiance() is None
 
 
+@pytest.mark.parametrize(
+    ("date", "time"),
+    [("26.11.26", "02:00"), ("27.11.26", "03:00"), ("27.11.26", "invalid")],
+)
+def test_missing_irradiance_requires_recent_report(mock_dwd_data, date, time):
+    """Old, future, or invalid reports cannot establish a current nighttime gap."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_REPORT
+    mock_dwd_data.dwd_weather.report_data = {"date": date, "time": time}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() is None
+
+
+@pytest.mark.parametrize(("sun_state", "expected"), [("PN", 0), ("PD", None)])
+def test_missing_irradiance_during_polar_night(mock_dwd_data, sun_state, expected):
+    """A polar night is dark, but polar day does not justify filling a gap."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_MIXED
+    mock_dwd_data.dwd_weather.report_data = {"date": "27.11.26", "time": "02:00"}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+    mock_dwd_data.sun = MagicMock()
+    mock_dwd_data.sun.riseutc.return_value = sun_state
+    mock_dwd_data.sun.setutc.return_value = sun_state
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() == expected
+
+
 @pytest.mark.asyncio
 async def test_connector_does_not_initialize_airquality_clients_while_disabled(
     hass: HomeAssistant, mock_dwd_weather_object
