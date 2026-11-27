@@ -171,6 +171,8 @@ class DWDWeatherData:
         self._radar_precipitation_forecast = None
         self._radar_next_precipitation_5_minutes = None
         self._radar_next_precipitation = None
+        self._initial_forecast_only = False
+        self._initial_details_pending = False
         self._sunshine_store = Store(
             hass,
             SUNSHINE_STORAGE_VERSION,
@@ -195,6 +197,7 @@ class DWDWeatherData:
         await self._async_restore_sunshine_state()
         if self._reset_sunshine_accumulator_if_new_day():
             await self._async_save_sunshine_state()
+        self._initial_forecast_only = True
 
     async def _async_restore_sunshine_state(self) -> None:
         """Restore the persisted sunshine accumulator state."""
@@ -396,11 +399,19 @@ class DWDWeatherData:
     def _update(self):
         """Get the latest data from DWD."""
         timestamp = datetime.now(timezone.utc)
+        forecast_only = self._initial_forecast_only
+        details_pending = self._initial_details_pending
         # Update precipitation more often
-        if timestamp.minute % 5 != 0 or self.latest_update is None:
+        if not forecast_only and (
+            details_pending or timestamp.minute % 5 != 0 or self.latest_update is None
+        ):
             self._update_radar_precipitation()
 
-        if timestamp.minute % 10 != 0 and self.latest_update is not None:
+        if (
+            not details_pending
+            and timestamp.minute % 10 != 0
+            and self.latest_update is not None
+        ):
             return False
 
         _LOGGER.info("Updating {}".format(self._config[CONF_STATION_NAME]))
@@ -418,12 +429,14 @@ class DWDWeatherData:
             CONF_DATA_TYPE_MIXED,
         )
         self.dwd_weather.update(
-            force_hourly=self._config[CONF_HOURLY_UPDATE],
-            with_forecast=True,
-            with_measurements=should_request_measurements,
-            with_report=True,
-            with_uv=True,
-            with_apparent_temperature=self.supports_apparent_temperature(),
+            force_hourly=self._config[CONF_HOURLY_UPDATE] and not details_pending,
+            with_forecast=not details_pending,
+            with_measurements=should_request_measurements and not forecast_only,
+            with_report=not forecast_only,
+            with_uv=not forecast_only,
+            with_apparent_temperature=(
+                not forecast_only and self.supports_apparent_temperature()
+            ),
         )
 
         # Air quality endpoint is currently unavailable upstream.
@@ -498,6 +511,8 @@ class DWDWeatherData:
             "time": match.group() if match is not None else None,
         }
 
+        self._initial_forecast_only = False
+        self._initial_details_pending = forecast_only
         _LOGGER.debug("Forecast data {}".format(self.dwd_weather.forecast_data))
         return True
 
@@ -1259,6 +1274,8 @@ class DWDWeatherData:
     def get_humidity_absolute(self):
         temperature = self.get_temperature()
         humidity = self.get_humidity()
+        if temperature is None or humidity is None:
+            return None
         abs_hum = self.calculate_absolute_humidity(temperature, humidity)
         return abs_hum
 
@@ -1987,6 +2004,9 @@ class DWDMapData:
                 image = self._images[self._image_nr]  # type: ignore
         else:
             image = self._image
+
+        if image is None:
+            return None
 
         if image:
             image = image.copy()

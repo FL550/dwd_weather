@@ -102,3 +102,17 @@ async def test_async_camera_image_state_update_disabled(mock_hass_data):
 
     assert camera.state == "Radar"
     assert not camera.async_write_ha_state.called
+
+
+@pytest.mark.asyncio
+async def test_camera_does_not_wait_for_missing_initial_image(mock_hass_data):
+    """An image request returns without waiting for the background refresh."""
+    data = mock_hass_data[DWDWEATHER_DATA]
+    data._images = None
+    data.get_image.return_value = None
+    camera = MyCamera(mock_hass_data)
+    camera.hass = MagicMock()
+    camera.async_write_ha_state = MagicMock()
+
+    assert await camera.async_camera_image() is None
+    mock_hass_data[DWDWEATHER_COORDINATOR].async_request_refresh.assert_not_awaited()

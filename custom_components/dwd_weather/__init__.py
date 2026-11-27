@@ -86,12 +86,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass,
             _LOGGER,
             name=f"DWD Weather Coordinator for {entry.data[CONF_STATION_ID]}",
+            config_entry=entry,
             update_method=dwd_weather_data.async_update,
             update_interval=DEFAULT_SCAN_INTERVAL + timedelta(seconds=random_delay),
         )
 
         # Fetch initial data so we have data when entities subscribe
-        if dwd_weather_data.dwd_weather.forecast_data is None:
+        needs_initial_refresh = dwd_weather_data.dwd_weather.forecast_data is None
+        if needs_initial_refresh:
             await dwdweather_coordinator.async_refresh()
         _LOGGER.debug("issue_time: {}".format(dwd_weather_data.dwd_weather.issue_time))
         if dwd_weather_data.dwd_weather.forecast_data is None:
@@ -109,6 +111,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         for component in PLATFORMS:
             await hass.config_entries.async_forward_entry_setups(entry, [component])
 
+        if needs_initial_refresh:
+            entry.async_create_background_task(
+                hass,
+                dwdweather_coordinator.async_refresh(),
+                "DWD initial station details",
+            )
+
     elif entry.data[CONF_ENTITY_TYPE] == CONF_ENTITY_TYPE_MAP:
         dwd_weather_data = DWDMapData(hass, entry)
 
@@ -117,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass,
             _LOGGER,
             name="DWD Map Coordinator",
+            config_entry=entry,
             update_method=dwd_weather_data.async_update,
             update_interval=DEFAULT_MAP_INTERVAL + timedelta(seconds=random_delay),
         )
@@ -127,10 +137,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             DWDWEATHER_COORDINATOR: dwdweather_coordinator,
         }
 
-        # Fetch initial map data/images on startup
-        await dwdweather_coordinator.async_refresh()
-
         await hass.config_entries.async_forward_entry_setups(entry, ["camera"])
+
+        entry.async_create_background_task(
+            hass,
+            dwdweather_coordinator.async_refresh(),
+            "DWD initial map images",
+        )
 
     return True
 

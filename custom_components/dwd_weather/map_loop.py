@@ -115,8 +115,7 @@ class FutureImageLoop:
         self._not_published_times: dict[datetime, set[datetime]] = {}
 
         # NOTE: Do NOT call self.update() here.
-        # WMS fetching is deferred to the first explicit update() call,
-        # which runs on a background executor thread and does not block HA startup.
+        # WMS fetching is deferred to the first explicit update() call.
 
     def __getitem__(self, key):
         return self._images[key]

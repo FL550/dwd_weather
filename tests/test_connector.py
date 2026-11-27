@@ -10,8 +10,14 @@ from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
-from custom_components.dwd_weather.connector import DWDWeatherData
-from custom_components.dwd_weather.const import CONF_STATION_ID
+from custom_components.dwd_weather.connector import DWDMapData, DWDWeatherData
+from custom_components.dwd_weather.const import (
+    CONF_DATA_TYPE_REPORT,
+    CONF_MAP_FOREGROUND_PRECIPITATION,
+    CONF_MAP_FOREGROUND_TYPE,
+    CONF_MAP_LOOP_COUNT,
+    CONF_STATION_ID,
+)
 from .const import MOCK_CONFIG
 
 
@@ -111,6 +117,69 @@ async def test_update_returns_false_when_refresh_not_due(mock_dwd_data):
         )
 
         assert mock_dwd_data._update() is False
+
+
+@pytest.mark.asyncio
+async def test_initial_refresh_defers_optional_data(mock_dwd_data):
+    """The first refresh fetches the forecast; the next fetches all details."""
+    data = mock_dwd_data
+    data.latest_update = None
+    data._config.update(
+        {
+            "data_type": CONF_DATA_TYPE_REPORT,
+            "hourly_update": True,
+            "download_precipitation_sensors": True,
+            "download_apparent_temperature": True,
+        }
+    )
+    data.dwd_weather.supports_apparent_temperature = MagicMock(return_value=True)
+    data._update_radar_precipitation = MagicMock()
+    await data.async_initialize()
+
+    assert data._update() is True
+    data._update_radar_precipitation.assert_not_called()
+    data.dwd_weather.update.assert_called_once_with(
+        force_hourly=True,
+        with_forecast=True,
+        with_measurements=False,
+        with_report=False,
+        with_uv=False,
+        with_apparent_temperature=False,
+    )
+
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as now:
+        now.now.return_value = datetime(2026, 1, 1, 12, 1, tzinfo=timezone.utc)
+        assert data._update() is True
+    data._update_radar_precipitation.assert_called_once()
+    data.dwd_weather.update.assert_called_with(
+        force_hourly=False,
+        with_forecast=False,
+        with_measurements=True,
+        with_report=True,
+        with_uv=True,
+        with_apparent_temperature=True,
+    )
+    assert not data._initial_details_pending
+
+
+@pytest.mark.parametrize("foreground", [CONF_MAP_FOREGROUND_PRECIPITATION, "other"])
+def test_missing_map_image_returns_none(hass, foreground):
+    """A map has no image until its background refresh finishes."""
+    entry = MagicMock()
+    entry.data = {CONF_MAP_FOREGROUND_TYPE: foreground, CONF_MAP_LOOP_COUNT: 6}
+    data = DWDMapData(hass, entry)
+
+    assert data.get_image() is None
+
+
+def test_absolute_humidity_waits_for_measurements(mock_dwd_data):
+    """Missing initial measurements do not break absolute humidity."""
+    mock_dwd_data.get_temperature = MagicMock(return_value=None)
+    mock_dwd_data.get_humidity = MagicMock(return_value=50)
+
+    assert mock_dwd_data.get_humidity_absolute() is None
 
 
 def test_mock_config_contains_required_keys():
