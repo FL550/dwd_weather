@@ -54,7 +54,9 @@ def test_camera_properties(mock_hass_data):
     assert camera.translation_key == "weather_maps"
     assert camera.frame_interval == 1.5
     assert camera.state == "Radar"
-    assert camera.device_info["name"] == "DWD weather maps"
+    device_info = camera.device_info
+    assert device_info is not None
+    assert device_info.name == "DWD weather maps"
 
 
 @pytest.mark.asyncio
