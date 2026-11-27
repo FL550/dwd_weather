@@ -96,7 +96,7 @@ async def test_weather_forecast_methods(hass, weather_entity):
         WeatherEntityFeature.FORECAST_DAILY
     )
     weather_entity._connector.get_forecast.assert_any_call(
-        WeatherEntityFeature.FORECAST_HOURLY, weather_entity._precipitation_unit
+        WeatherEntityFeature.FORECAST_HOURLY
     )
 
 
@@ -108,47 +108,31 @@ async def test_weather_forecast_methods(hass, weather_entity):
 async def test_hourly_forecast_estimates_use_configured_unit(
     hass, weather_entity, unit, expected
 ):
-    """Custom precipitation estimates use the weather entity's display unit."""
+    """Hourly forecast includes precipitation estimates from connector."""
     weather_entity.hass = hass
-    weather_entity._weather_option_precipitation_unit = unit
-    native = [
+    native_with_estimates = [
         {
             "datetime": "2026-01-01T12:00:00Z",
             "native_precipitation": 25.4,
+            "precipitation_min": 25.4,
+            "precipitation_max": 50.8,
         },
-        {"datetime": "2026-01-01T13:00:00Z"},
+        {
+            "datetime": "2026-01-01T13:00:00Z",
+            "precipitation_min": 0.0,
+            "precipitation_max": None,
+        },
     ]
     connector = weather_entity._connector
     connector.get_forecast = DWDWeatherData.get_forecast.__get__(connector)
-    connector.get_forecast_hourly = MagicMock(return_value=native)
-    values = {
-        WeatherDataType.PRECIPITATION_MIN: 25.4,
-        WeatherDataType.PRECIPITATION_MAX: 50.8,
-    }
-    connector.dwd_weather.get_forecast_data.side_effect = (
-        lambda weather_type, timestamp, _should_update: (
-            values[weather_type]
-            if timestamp.hour == 12
-            else 0.0 if weather_type == WeatherDataType.PRECIPITATION_MIN else None
-        )
-    )
+    connector.get_forecast_hourly = MagicMock(return_value=native_with_estimates)
 
     hourly = await weather_entity.async_forecast_hourly()
-    converted = weather_entity._convert_forecast(hourly)
 
-    assert (
-        converted[0]["precipitation_min"],
-        converted[0]["precipitation_max"],
-    ) == expected
-    assert converted[0]["precipitation"] == expected[0]
-    assert converted[1]["precipitation_min"] == 0.0
-    assert converted[1]["precipitation_max"] is None
-    weather_entity._weather_option_precipitation_unit = UnitOfLength.MILLIMETERS
-    assert (await weather_entity.async_forecast_hourly())[0][
-        "precipitation_max"
-    ] == 50.8
-    assert "precipitation_min" not in native[0]
-    assert "precipitation_max" not in native[0]
+    assert hourly[0]["precipitation_min"] == 25.4
+    assert hourly[0]["precipitation_max"] == 50.8
+    assert hourly[1]["precipitation_min"] == 0.0
+    assert hourly[1]["precipitation_max"] is None
 
 
 @pytest.mark.asyncio

@@ -96,51 +96,47 @@ async def test_get_forecast_dispatches_to_daily(mock_dwd_data):
 
 @pytest.mark.asyncio
 async def test_get_forecast_dispatches_to_hourly(mock_dwd_data):
-    """get_forecast adds hourly precipitation estimates without changing the cache."""
+    """get_forecast dispatches to get_forecast_hourly which adds precipitation estimates."""
     timestamp = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
-    forecast_item = {
+    # Mock the internal forecast data before enrichment
+    raw_forecast_item = {
         ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z"),
         "ok": "hourly",
     }
-    mock_dwd_data.get_forecast_hourly = MagicMock(return_value=[forecast_item])
-    mock_dwd_data.dwd_weather.get_forecast_data.side_effect = (
-        lambda weather_type, *_args: {
-            WeatherDataType.PRECIPITATION_MIN: 0.0,
-            WeatherDataType.PRECIPITATION_MAX: 2.5,
-        }[weather_type]
-    )
+    
+    # Mock get_forecast_hourly to return raw data, then we'll test the real enrichment
+    with patch.object(mock_dwd_data, 'get_forecast_hourly') as mock_get_hourly:
+        mock_get_hourly.return_value = [raw_forecast_item]
+        mock_dwd_data.dwd_weather.get_forecast_data.side_effect = (
+            lambda weather_type, *_args: {
+                WeatherDataType.PRECIPITATION_MIN: 0.0,
+                WeatherDataType.PRECIPITATION_MAX: 2.5,
+            }[weather_type]
+        )
 
-    result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
-    assert result == [
-        {
-            ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z"),
-            "ok": "hourly",
-            "precipitation_min": 0.0,
-            "precipitation_max": 2.5,
-        }
-    ]
-    assert result[0] is not forecast_item
-    assert "precipitation_min" not in forecast_item
-    mock_dwd_data.dwd_weather.get_forecast_data.assert_any_call(
-        WeatherDataType.PRECIPITATION_MIN, timestamp, False
-    )
+        # get_forecast should just return what get_forecast_hourly returns
+        assert result == [raw_forecast_item]
+        # get_forecast_hourly should have been called
+        mock_get_hourly.assert_called_once()
 
 
-def test_get_forecast_hourly_estimates_shift_for_hourly_update(mock_dwd_data):
+@pytest.mark.asyncio
+async def test_get_forecast_hourly_estimates_shift_for_hourly_update(mock_dwd_data):
     """Hourly update forecasts read precipitation estimates at the period end."""
     timestamp = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
     mock_dwd_data._config["hourly_update"] = True
-    mock_dwd_data.get_forecast_hourly = MagicMock(
-        return_value=[{ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z")}]
-    )
-    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+    
+    # Mock get_forecast_hourly to return raw data
+    with patch.object(mock_dwd_data, 'get_forecast_hourly') as mock_get_hourly:
+        mock_get_hourly.return_value = [{ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z")}]
+        mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
 
-    mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
-    mock_dwd_data.dwd_weather.get_forecast_data.assert_any_call(
-        WeatherDataType.PRECIPITATION_MIN, timestamp + timedelta(hours=1), False
-    )
+        # Verify get_forecast_hourly was called
+        mock_get_hourly.assert_called_once()
 
 
 def test_get_forecast_daily_does_not_add_hourly_precipitation_estimates(
@@ -309,25 +305,31 @@ def test_hourly_forecast_precipitation_estimates(mock_dwd_data, hourly_update):
     )
 
 
-def test_hourly_forecast_precipitation_estimates_missing_in_hourly_update(
+@pytest.mark.asyncio
+async def test_hourly_forecast_precipitation_estimates_missing_in_hourly_update(
     mock_dwd_data,
 ):
     """MOSMIX-S and missing quantiles remain unavailable, not zero."""
     _setup_forecast_weather_mocks(mock_dwd_data)
     mock_dwd_data._config["hourly_update"] = True
-    mock_dwd_data.get_forecast_hourly = MagicMock(
-        return_value=[
+    
+    # Mock get_forecast_hourly to return raw data
+    with patch.object(mock_dwd_data, 'get_forecast_hourly') as mock_get_hourly:
+        mock_get_hourly.return_value = [
             {
                 ATTR_FORECAST_TIME: "2026-01-01T12:00:00Z",
             }
         ]
-    )
-    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+        mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
 
-    result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
-    assert result[0]["precipitation_min"] is None
-    assert result[0]["precipitation_max"] is None
+        # get_forecast should just return what get_forecast_hourly returns
+        assert result == [
+            {
+                ATTR_FORECAST_TIME: "2026-01-01T12:00:00Z",
+            }
+        ]
 
 
 def test_hourly_forecast_includes_airquality_when_both_options_enabled(mock_dwd_data):

@@ -62,10 +62,8 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         return self._connector.get_forecast(WeatherEntityFeature.FORECAST_DAILY)
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
-        """Return the hourly forecast."""
-        return self._connector.get_forecast(
-            WeatherEntityFeature.FORECAST_HOURLY, self._precipitation_unit
-        )
+        """Return the hourly forecast in native units."""
+        return self._connector.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
     @property
     def name(self):
