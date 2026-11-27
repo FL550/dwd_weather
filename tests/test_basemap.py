@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 from PIL import Image
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from custom_components.dwd_weather.camera import MyCamera

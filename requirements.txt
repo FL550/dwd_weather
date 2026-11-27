@@ -1,10 +1,12 @@
 homeassistant
-pip>=21.3.1
-ruff==0.6.2
+pip>=25.3
+ruff>=0.6.2
 pytest>=7.0
 pytest-cov
 pytest-asyncio
-pytest-homeassistant==2026.11.0
+pytest-homeassistant>=2026.11.0
 pytest-xdist
 PyTurboJPEG
 pytest-timeout
+markdownify
+suntimes

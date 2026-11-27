@@ -9,6 +9,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 	chmod +x .githooks/pre-push
 fi
 
+python3 -m pip install --upgrade "pip>=25.3"
 python3 -m pip install --requirement requirements.txt --pre
 cat custom_components/dwd_weather/manifest.json | jq -r '.requirements | .[]'  | python3 -m pip install -r /dev/stdin
 
