@@ -83,6 +83,11 @@ class MyCamera(Camera):
         return self._name
 
     @property
+    def attribution(self) -> str | None:
+        """Return the source note the BKG base map requires."""
+        return self._dwd_data.basemap_attribution
+
+    @property
     def unique_id(self):
         """Return the unique of the sensor."""
         _LOGGER.debug("camera unique id: {}".format(self._unique_id))

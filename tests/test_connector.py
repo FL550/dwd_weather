@@ -1,21 +1,21 @@
 """Tests for connector data object."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from collections import OrderedDict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.components.weather import ATTR_FORECAST_NATIVE_TEMP
 from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
-from custom_components.dwd_weather.connector import DWDMapData, DWDWeatherData
+from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.const import (
+    CONF_DATA_TYPE_FORECAST,
+    CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
-    CONF_MAP_FOREGROUND_PRECIPITATION,
-    CONF_MAP_FOREGROUND_TYPE,
-    CONF_MAP_LOOP_COUNT,
     CONF_STATION_ID,
 )
 from .const import MOCK_CONFIG
@@ -186,6 +186,114 @@ def test_mock_config_contains_required_keys():
     """Sanity-check minimal config shape required by connector."""
     for key in ("station_id", "station_name", "data_type"):
         assert key in MOCK_CONFIG
+
+
+@pytest.mark.parametrize(
+    ("now", "report_time", "expected"),
+    [
+        ("2026-11-27T02:30:00+00:00", "02:00", 0),
+        ("2026-11-27T06:30:00+00:00", "06:00", 0),
+        ("2026-11-27T07:00:00+00:00", "07:00", None),
+        ("2026-11-27T07:30:00+00:00", "07:00", None),
+        ("2026-11-27T16:30:00+00:00", "16:00", None),
+        ("2026-11-27T17:00:00+00:00", "17:00", 0),
+    ],
+)
+def test_missing_report_irradiance_only_filled_for_full_night_hours(
+    mock_dwd_data, now, report_time, expected
+):
+    """Missing reports are filled only when both report and current hours are dark."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_REPORT
+    mock_dwd_data.dwd_weather.report_data = {
+        "date": "27.11.26",
+        "time": report_time,
+    }
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime.fromisoformat(now)
+        assert mock_dwd_data.get_sun_irradiance() == expected
+
+
+@pytest.mark.parametrize("data_type", [CONF_DATA_TYPE_REPORT, CONF_DATA_TYPE_MIXED])
+def test_nighttime_irradiance_preserves_available_values(mock_dwd_data, data_type):
+    """Reported or mixed-mode forecast values take precedence over a night fill."""
+    mock_dwd_data._config["data_type"] = data_type
+    mock_dwd_data._config["interpolate"] = False
+    mock_dwd_data.dwd_weather.report_data = {"date": "27.11.26", "time": "02:00"}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = (
+        36 if data_type == CONF_DATA_TYPE_REPORT else None
+    )
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = 72
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() == (
+            10 if data_type == CONF_DATA_TYPE_REPORT else 20
+        )
+
+
+@pytest.mark.parametrize("data_type", [CONF_DATA_TYPE_REPORT, CONF_DATA_TYPE_FORECAST])
+def test_missing_irradiance_without_report_remains_missing(mock_dwd_data, data_type):
+    """An unavailable source is not treated as an observed nighttime gap."""
+    mock_dwd_data._config["data_type"] = data_type
+    mock_dwd_data.dwd_weather.report_data = None
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() is None
+
+
+def test_nighttime_irradiance_remains_missing_if_sun_times_unavailable(mock_dwd_data):
+    """Do not fill when the station's sunrise and sunset cannot be calculated."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_REPORT
+    mock_dwd_data.dwd_weather.report_data = {"date": "27.11.26", "time": "02:00"}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    mock_dwd_data.sun = MagicMock()
+    mock_dwd_data.sun.riseutc.return_value = "polar night"
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() is None
+
+
+@pytest.mark.parametrize(
+    ("date", "time"),
+    [("26.11.26", "02:00"), ("27.11.26", "03:00"), ("27.11.26", "invalid")],
+)
+def test_missing_irradiance_requires_recent_report(mock_dwd_data, date, time):
+    """Old, future, or invalid reports cannot establish a current nighttime gap."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_REPORT
+    mock_dwd_data.dwd_weather.report_data = {"date": date, "time": time}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() is None
+
+
+@pytest.mark.parametrize(("sun_state", "expected"), [("PN", 0), ("PD", None)])
+def test_missing_irradiance_during_polar_night(mock_dwd_data, sun_state, expected):
+    """A polar night is dark, but polar day does not justify filling a gap."""
+    mock_dwd_data._config["data_type"] = CONF_DATA_TYPE_MIXED
+    mock_dwd_data.dwd_weather.report_data = {"date": "27.11.26", "time": "02:00"}
+    mock_dwd_data.dwd_weather.get_reported_weather.return_value = None
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+    mock_dwd_data.sun = MagicMock()
+    mock_dwd_data.sun.riseutc.return_value = sun_state
+    mock_dwd_data.sun.setutc.return_value = sun_state
+    with patch(
+        "custom_components.dwd_weather.connector.datetime", wraps=datetime
+    ) as clock:
+        clock.now.return_value = datetime(2026, 11, 27, 2, 30, tzinfo=timezone.utc)
+        assert mock_dwd_data.get_sun_irradiance() == expected
 
 
 @pytest.mark.asyncio
@@ -362,6 +470,36 @@ def test_daily_forecast_converts_sun_irradiance_to_watts_per_square_meter(
 
     assert result is not None
     assert result[0]["sun_irradiance"] == 100.0
+
+
+@pytest.mark.parametrize("last_temperature", [280.0, None])
+def test_daily_forecast_includes_tenth_day(mock_dwd_data, last_temperature):
+    """Daily forecast includes ten consecutive dates, even with missing values."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["daily_temp_high_precision"] = True
+    now = datetime(2026, 1, 25, 12, tzinfo=timezone.utc)
+    last_day = (now + timedelta(days=9)).date()
+    mock_dwd_data.dwd_weather.get_daily_max.side_effect = (
+        lambda weather_type, timestep, *_args: (
+            last_temperature
+            if weather_type == WeatherDataType.TEMPERATURE
+            and timestep.date() == last_day
+            else 280.0
+        )
+    )
+
+    with patch("custom_components.dwd_weather.connector.dt.now", return_value=now):
+        result = mock_dwd_data.get_forecast_daily()
+        cached_result = mock_dwd_data.get_forecast_daily()
+
+    assert result is not None
+    assert [entry["datetime"] for entry in result] == [
+        (now + timedelta(days=day)).strftime("%Y-%m-%dT00:00:00Z") for day in range(10)
+    ]
+    assert result[-1][ATTR_FORECAST_NATIVE_TEMP] == (
+        6.9 if last_temperature is not None else None
+    )
+    assert cached_result is result
 
 
 def _make_forecast_snapshot(values_by_hour: dict[str, object]) -> OrderedDict:

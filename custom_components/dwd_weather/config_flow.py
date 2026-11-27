@@ -52,6 +52,9 @@ from .const import (
     CONF_MAP_BACKGROUND_KREISE,
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
+    CONF_MAP_BACKGROUND_TOPPLUS_LIGHT,
+    CONF_MAP_BACKGROUND_TOPPLUS_DARK,
+    CONF_MAP_BASEMAP_BLEND,
     CONF_MAP_HOMEMARKER,
     CONF_MAP_HOMEMARKER_COLOR,
     CONF_MAP_HOMEMARKER_SHAPE,
@@ -505,6 +508,8 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_MAP_BACKGROUND_KREISE,
                                 CONF_MAP_BACKGROUND_GEMEINDEN,
                                 CONF_MAP_BACKGROUND_SATELLIT,
+                                CONF_MAP_BACKGROUND_TOPPLUS_LIGHT,
+                                CONF_MAP_BACKGROUND_TOPPLUS_DARK,
                             ]
                         ),
                         "custom_value": False,
@@ -522,6 +527,10 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): BooleanSelector({}),
                 vol.Required(
                     CONF_MAP_DARK_MODE,
+                    default=False,
+                ): BooleanSelector({}),
+                vol.Required(
+                    CONF_MAP_BASEMAP_BLEND,
                     default=False,
                 ): BooleanSelector({}),
             }
@@ -723,7 +732,14 @@ class DWDWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    config_data = {}
+    def __init__(self) -> None:
+        """Start every options flow with data of its own.
+
+        A class attribute would be shared by all options flows, so the map flow
+        with the home marker carried keys from one entry over to the next.
+        """
+        super().__init__()
+        self.config_data: dict = {}
 
     def _supports_apparent_temperature(self) -> bool:
         """Return whether the configured station supports apparent temperature."""
@@ -909,6 +925,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                     CONF_MAP_BACKGROUND_KREISE,
                                     CONF_MAP_BACKGROUND_GEMEINDEN,
                                     CONF_MAP_BACKGROUND_SATELLIT,
+                                    CONF_MAP_BACKGROUND_TOPPLUS_LIGHT,
+                                    CONF_MAP_BACKGROUND_TOPPLUS_DARK,
                                 ]
                             ),
                             "custom_value": False,
@@ -916,6 +934,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             "translation_key": CONF_MAP_BACKGROUND_TYPE,
                         }
                     ),
+                    vol.Required(
+                        CONF_MAP_BASEMAP_BLEND,
+                        default=self.config_entry.data.get(
+                            CONF_MAP_BASEMAP_BLEND, False
+                        ),
+                    ): BooleanSelector({}),
                 }
             )
             if (

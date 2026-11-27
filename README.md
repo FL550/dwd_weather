@@ -63,6 +63,8 @@ Please see the [Wiki](https://github.com/FL550/dwd_weather/wiki)
 
 ![Screenshot Precipitation Chart](./Precipitation.png)
 
+As background you can also choose a map with towns, roads and rivers, light or dark. It is the TopPlusOpen web map by the German Federal Agency for Cartography and Geodesy (BKG) and is downloaded from its server (sgx.geodatenzentrum.de) once and then kept for 90 days. The licence (dl-de/by-2-0) requires a source note, which is drawn onto the map and shown as the attribution of the camera. With "Show the map through the weather" the names and roads stay readable below rain and warnings; the images become larger then, by about a quarter in widespread rain.
+
 # Installation
 
 1. Install integration via HACS or use the button below.
@@ -152,6 +154,12 @@ This integration allows you to add sensor entities with hourly forecasts for 10 
 - Fog Probability
 - Humidity
 - Absolute humidity
+
+For the current Sun Irradiance sensor, a missing value in a recent station report
+(at most two hours old) is estimated as 0 W/m² when both the reported hour and the
+preceding hour are entirely after sunset or before sunrise. Missing daytime or
+twilight values remain unavailable. Existing measurements and mixed-mode forecasts
+are not replaced.
 
 The sensors entities are disabled per default, as they contain a lot of data.
 

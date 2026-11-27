@@ -198,7 +198,12 @@
           "map_background_type": "Co powinno być wyświetlane w tle?",
           "map_marker": "Czy środek mapy powinien być oznaczony?",
           "map_homemarker": "Czy mapa powinna zawierać znacznik domu?",
-          "map_dark_mode": "Czy mapa powinna być wyświetlana w trybie ciemnym?"
+          "map_dark_mode": "Czy mapa powinna być wyświetlana w trybie ciemnym?",
+          "map_basemap_blend": "Pokazuj mapę przez warstwę pogody"
+        },
+        "data_description": {
+          "map_background_type": "Obie mapy BKG są pobierane z serwera Federalnej Agencji Kartografii i Geodezji (sgx.geodatenzentrum.de), pozostałe tła pochodzą z DWD.",
+          "map_basemap_blend": "Tylko z mapą BKG: nazwy i drogi pozostają czytelne pod deszczem i ostrzeżeniami. Obrazy są większe, przy rozległym deszczu o około jedną czwartą."
         }
       },
       "select_map_loop": {
@@ -258,6 +263,7 @@
           "sensor_forecast_steps": "Ogranicz dostępne kroki prognozy w atrybutach czujnika",
           "map_options_message": "Niedostępne ustawienie",
           "map_background_type": "Co powinno być wyświetlane w tle?",
+          "map_basemap_blend": "Pokazuj mapę przez warstwę pogody",
           "map_marker": "Czy środek mapy powinien być oznaczony?",
           "map_homemarker": "Czy na mapie należy umieścić znacznik domu?",
           "map_timestamp": "Czy na obrazie powinien być wyświetlany czas?",
@@ -294,7 +300,9 @@
           "map_update_state": "Jeśli włączone, stan kamery jest aktualizowany za każdym razem, gdy zmienia się wyświetlany typ obrazu, co powoduje częste wpisy w dzienniku o zmianie stanu.",
           "sensor_forecast_steps": "Może to być przydatne, jeśli używasz tylko ograniczonej liczby kroków prognozowania i chcesz zwiększyć przejrzystość atrybutów czujnika.",
           "additional_forecast_attributes": "Spowoduje to dodanie do obiektu pogodowego dodatkowych atrybutów prognozy, takich jak prawdopodobieństwo wystąpienia mgły, parowania, czasu trwania nasłonecznienia itp.",
-          "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych."
+          "daily_temp_high_precision": "Zwiększy to dokładność wyświetlania dziennych wartości maksymalnej i minimalnej temperatury do miejsc dziesiętnych.",
+          "map_background_type": "Obie mapy BKG są pobierane z serwera Federalnej Agencji Kartografii i Geodezji (sgx.geodatenzentrum.de), pozostałe tła pochodzą z DWD.",
+          "map_basemap_blend": "Tylko z mapą BKG: nazwy i drogi pozostają czytelne pod deszczem i ostrzeżeniami. Obrazy są większe, przy rozległym deszczu o około jedną czwartą."
         }
       },
       "station_radar_location": {
@@ -364,7 +372,9 @@
         "map_background_bundeslaender": "Niemieckie kraje związkowe (landy)",
         "map_background_kreise": "Niemieckie powiaty",
         "map_background_gemeinden": "Niemieckie gminy",
-        "map_background_satellit": "Obraz satelitarny"
+        "map_background_satellit": "Obraz satelitarny",
+        "map_background_topplus_light": "Mapa z miejscowościami i drogami (BKG), jasna",
+        "map_background_topplus_dark": "Mapa z miejscowościami i drogami (BKG), ciemna"
       }
     },
     "map_homemarker_shape": {

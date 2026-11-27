@@ -149,7 +149,7 @@ If multiple interpretations are possible, explain them and request the minimum c
 
 # Phase 6: Produce the Assessment Report
 
-Before proposing an implementation, provide a structured report using this format:
+Before proposing an implementation, provide a structured report using this format and post it as a comment on the issue:
 
 ## Issue Assessment
 
@@ -259,7 +259,7 @@ Whenever asked to work on a GitHub Issue:
 3. Validate the technical plausibility and expected behavior.
 4. Investigate alternative explanations and counterarguments.
 5. Assign an assessment status.
-6. Produce the assessment report.
+6. Produce the assessment report and post it as a comment.
 7. Decide whether implementation is justified and authorized.
 8. Implement only if the implementation gate is satisfied.
 9. Validate the changes and report the results.

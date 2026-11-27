@@ -11,6 +11,7 @@ import PIL.ImageDraw
 from markdownify import markdownify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt
 from io import BytesIO
 import warnings
@@ -38,7 +39,7 @@ from homeassistant.components.weather.const import (
     WeatherEntityFeature,
 )
 
-from simple_dwd_weatherforecast import dwdforecast, dwdmap
+from simple_dwd_weatherforecast import basemap, dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
@@ -121,6 +122,9 @@ from .const import (
     CONF_MAP_BACKGROUND_KREISE,
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
+    CONF_MAP_BACKGROUND_TOPPLUS_LIGHT,
+    CONF_MAP_BACKGROUND_TOPPLUS_DARK,
+    CONF_MAP_BASEMAP_BLEND,
     DOMAIN,
 )
 
@@ -388,7 +392,12 @@ class DWDWeatherData:
         #             )
         #     except Exception as error:
         #         _LOGGER.warning("Failed to initialize air quality data: %s", error)
-        if await self._hass.async_add_executor_job(self._update):
+        try:
+            updated = await self._hass.async_add_executor_job(self._update)
+        except dwdforecast.ForecastDownloadError as error:
+            # Downloads from opendata.dwd.de fail now and then; the next update retries
+            raise UpdateFailed(f"Failed to download the DWD forecast: {error}") from error
+        if updated:
             await self._async_process_sunshine_accumulator()
             for entity in self.entities:
                 await entity.async_update_listeners(("daily", "hourly"))
@@ -910,7 +919,7 @@ class DWDWeatherData:
                 tzinfo=now.tzinfo,
             )
 
-            for day_index in range(0, 9):
+            for day_index in range(0, 10):
                 _LOGGER.debug("Timestep {}".format(timestep))
                 condition = self.dwd_weather.get_daily_condition(
                     timestep,
@@ -1097,9 +1106,29 @@ class DWDWeatherData:
     def get_weather_report(self):
         return self._report["text"] if self._report else None
 
+    def _is_nighttime_irradiance_hour(self, end: datetime) -> bool:
+        """Check that the entire preceding hour is outside daylight."""
+        start = end - timedelta(hours=1)
+        try:
+            for offset in range(-1, 3):
+                day = start + timedelta(days=offset)
+                sunrise = self.sun.riseutc(day)
+                sunset = self.sun.setutc(day)
+                if sunrise == "PN" and sunset == "PN":
+                    continue
+                sunrise = sunrise.replace(tzinfo=timezone.utc)
+                sunset = sunset.replace(tzinfo=timezone.utc)
+                if sunrise >= sunset or (start < sunset and end > sunrise):
+                    return False
+        except (AttributeError, TypeError, ValueError, OverflowError) as err:
+            _LOGGER.debug("Could not determine nighttime irradiance: %s", err)
+            return False
+        return True
+
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
         conf_data_type = self._config[CONF_DATA_TYPE]
+        report_available = False
         if (
             conf_data_type == CONF_DATA_TYPE_REPORT
             or conf_data_type == CONF_DATA_TYPE_MIXED
@@ -1109,6 +1138,7 @@ class DWDWeatherData:
                     data_type,
                     shouldUpdate=False,
                 )
+                report_available = isinstance(self.dwd_weather.report_data, dict)
             except Exception as e:
                 _LOGGER.debug(f"Error getting reported weather: {e}")
         if conf_data_type == CONF_DATA_TYPE_FORECAST or (
@@ -1119,6 +1149,25 @@ class DWDWeatherData:
                 datetime.now(timezone.utc),
                 shouldUpdate=False,
             )
+
+        if value is None and data_type == WeatherDataType.SUN_IRRADIANCE:
+            now = datetime.now(timezone.utc)
+            report_data = getattr(self.dwd_weather, "report_data", None)
+            if report_available:
+                try:
+                    report_time = datetime.strptime(
+                        f"{report_data['date']} {report_data['time']}",
+                        "%d.%m.%y %H:%M",
+                    ).replace(tzinfo=timezone.utc)
+                except (KeyError, TypeError, ValueError):
+                    report_time = None
+                if (
+                    report_time is not None
+                    and timedelta(0) <= now - report_time <= timedelta(hours=2)
+                    and self._is_nighttime_irradiance_hour(report_time)
+                    and self._is_nighttime_irradiance_hour(now)
+                ):
+                    return 0
 
         if self._config[CONF_INTERPOLATE] and value is not None:
             if not hasattr(self, "_interpolate_value"):
@@ -1829,6 +1878,10 @@ class DWDMapData:
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                            basemap_cache_dir=self.basemap_cache_dir,
+                            basemap_blend=self._configdata.get(
+                                CONF_MAP_BASEMAP_BLEND, False
+                            ),
                         )
                         # Trigger the first fetch (deferred from __init__)
                         self._maploop.update()
@@ -1887,6 +1940,10 @@ class DWDMapData:
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                            basemap_cache_dir=self.basemap_cache_dir,
+                            basemap_blend=self._configdata.get(
+                                CONF_MAP_BASEMAP_BLEND, False
+                            ),
                         )
                         # Trigger the first fetch (deferred from __init__)
                         self._maploop.update()
@@ -1950,6 +2007,8 @@ class DWDMapData:
                     image_height=self._height,
                     markers=markers,
                     dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                    basemap_cache_dir=self.basemap_cache_dir,
+                    basemap_blend=self._configdata.get(CONF_MAP_BASEMAP_BLEND, False),
                 )
             else:
                 _LOGGER.debug(
@@ -1977,6 +2036,8 @@ class DWDMapData:
                     image_width=self._width,
                     image_height=self._height,
                     markers=markers,
+                    basemap_cache_dir=self.basemap_cache_dir,
+                    basemap_blend=self._configdata.get(CONF_MAP_BASEMAP_BLEND, False),
                 )
 
     def get_image(self):
@@ -2238,6 +2299,28 @@ class DWDMapData:
             return dwdmap.WeatherBackgroundMapType.GEMEINDEN
         elif map_type == CONF_MAP_BACKGROUND_SATELLIT:
             return dwdmap.WeatherBackgroundMapType.SATELLIT
+        elif map_type == CONF_MAP_BACKGROUND_TOPPLUS_LIGHT:
+            return dwdmap.WeatherBackgroundMapType.TOPPLUS_LIGHT
+        elif map_type == CONF_MAP_BACKGROUND_TOPPLUS_DARK:
+            return dwdmap.WeatherBackgroundMapType.TOPPLUS_DARK
+
+    @property
+    def basemap_cache_dir(self) -> str:
+        """Where the BKG base map is kept, so it survives restarts."""
+        return self._hass.config.cache_path(DOMAIN)
+
+    @property
+    def basemap_attribution(self) -> str | None:
+        """Source note of the BKG base map, None without one."""
+        style = dwdmap.BASEMAP_STYLES.get(
+            self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])
+        )
+        if style is None:
+            return None
+        loop_basemap = getattr(self._maploop, "basemap", None)
+        if loop_basemap is not None:
+            return loop_basemap.attribution
+        return basemap.attribution(style)
 
     def set_size(
         self,
