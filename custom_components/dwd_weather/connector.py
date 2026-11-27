@@ -34,10 +34,13 @@ from homeassistant.components.weather import (
 )
 
 from homeassistant.components.weather.const import (
+    ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_UV_INDEX,
+    UNIT_CONVERSIONS,
     WeatherEntityFeature,
 )
+from homeassistant.const import UnitOfLength
 
 from simple_dwd_weatherforecast import basemap, dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
@@ -572,7 +575,9 @@ class DWDWeatherData:
             )
 
     def get_forecast(
-        self, forecast_feature: WeatherEntityFeature
+        self,
+        forecast_feature: WeatherEntityFeature,
+        precipitation_unit: str = UnitOfLength.MILLIMETERS,
     ) -> list[Forecast] | None:
         forecast_getters = {
             WeatherEntityFeature.FORECAST_HOURLY: self.get_forecast_hourly,
@@ -595,8 +600,18 @@ class DWDWeatherData:
                 (WeatherDataType.PRECIPITATION_MIN, ATTR_FORECAST_PRECIPITATION_MIN),
                 (WeatherDataType.PRECIPITATION_MAX, ATTR_FORECAST_PRECIPITATION_MAX),
             ):
-                forecast_item[attribute] = self.dwd_weather.get_forecast_data(
+                value = self.dwd_weather.get_forecast_data(
                     weather_type, precipitation_time, False
+                )
+                forecast_item[attribute] = (
+                    round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                            float(value), UnitOfLength.MILLIMETERS, precipitation_unit
+                        ),
+                        2,
+                    )
+                    if value is not None
+                    else None
                 )
             forecast_with_precipitation_estimates.append(forecast_item)
         return forecast_with_precipitation_estimates

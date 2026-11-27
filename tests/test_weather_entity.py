@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.const import (
     UnitOfLength,
@@ -12,6 +13,7 @@ from homeassistant.const import (
 )
 
 from custom_components.dwd_weather.const import ATTRIBUTION
+from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.weather import DWDWeather
 from .const import MOCK_CONFIG
 
@@ -82,13 +84,20 @@ def test_weather_attribution_and_extra_attributes(weather_entity):
 
 
 @pytest.mark.asyncio
-async def test_weather_forecast_methods(weather_entity):
+async def test_weather_forecast_methods(hass, weather_entity):
     """Forecast helper methods should call connector with proper feature flags."""
+    weather_entity.hass = hass
     daily = await weather_entity.async_forecast_daily()
     hourly = await weather_entity.async_forecast_hourly()
 
     assert daily == [{"condition": "sunny"}]
     assert hourly == [{"condition": "sunny"}]
+    weather_entity._connector.get_forecast.assert_any_call(
+        WeatherEntityFeature.FORECAST_DAILY
+    )
+    weather_entity._connector.get_forecast.assert_any_call(
+        WeatherEntityFeature.FORECAST_HOURLY, weather_entity._precipitation_unit
+    )
 
 
 @pytest.mark.asyncio
@@ -104,13 +113,25 @@ async def test_hourly_forecast_estimates_use_configured_unit(
     weather_entity._weather_option_precipitation_unit = unit
     native = [
         {
+            "datetime": "2026-01-01T12:00:00Z",
             "native_precipitation": 25.4,
-            "precipitation_min": 25.4,
-            "precipitation_max": 50.8,
         },
-        {"precipitation_min": 0.0, "precipitation_max": None},
+        {"datetime": "2026-01-01T13:00:00Z"},
     ]
-    weather_entity._connector.get_forecast.return_value = native
+    connector = weather_entity._connector
+    connector.get_forecast = DWDWeatherData.get_forecast.__get__(connector)
+    connector.get_forecast_hourly = MagicMock(return_value=native)
+    values = {
+        WeatherDataType.PRECIPITATION_MIN: 25.4,
+        WeatherDataType.PRECIPITATION_MAX: 50.8,
+    }
+    connector.dwd_weather.get_forecast_data.side_effect = (
+        lambda weather_type, timestamp, _should_update: (
+            values[weather_type]
+            if timestamp.hour == 12
+            else 0.0 if weather_type == WeatherDataType.PRECIPITATION_MIN else None
+        )
+    )
 
     hourly = await weather_entity.async_forecast_hourly()
     converted = weather_entity._convert_forecast(hourly)
@@ -126,8 +147,17 @@ async def test_hourly_forecast_estimates_use_configured_unit(
     assert (await weather_entity.async_forecast_hourly())[0][
         "precipitation_max"
     ] == 50.8
-    assert native[0]["precipitation_min"] == 25.4
-    assert native[0]["precipitation_max"] == 50.8
+    assert "precipitation_min" not in native[0]
+    assert "precipitation_max" not in native[0]
+
+
+@pytest.mark.asyncio
+async def test_hourly_forecast_propagates_missing_forecast(hass, weather_entity):
+    """The weather entity preserves an unavailable connector forecast."""
+    weather_entity.hass = hass
+    weather_entity._connector.get_forecast.return_value = None
+
+    assert await weather_entity.async_forecast_hourly() is None
 
 
 @pytest.mark.asyncio
