@@ -644,3 +644,67 @@ async def test_options_flow_map_options_updates_future_loop_params():
     assert result["data"]["map_show_timeline"] is True
     assert result["data"]["map_timestamp_font_size"] == 32
 
+
+@pytest.mark.asyncio
+async def test_options_flows_of_two_maps_do_not_share_data():
+    """The home marker step must not carry keys of one map over to another."""
+    custom_precipitation = {
+        **dict(MOCK_CONFIG_MAP),
+        "map_id": "AAAA",
+        "map_type": "map_custom",
+        "map_window": {"latitude": 49.8, "longitude": 9.9, "radius": 100},
+        "map_foreground_type": "map_foreground_precipitation",
+        "map_background_type": "map_background_kreise",
+        CONF_MAP_LOOP_COUNT: 6,
+        CONF_MAP_LOOP_SPEED: 0.5,
+        CONF_MAP_LOOP_COUNT_FUTURE: 24,
+    }
+    germany_maxtemp = {
+        **dict(MOCK_CONFIG_MAP),
+        "map_id": "BBBB",
+        "map_foreground_type": "map_foreground_maxtemp",
+        "map_background_type": "map_background_bundeslaender",
+    }
+    form = {
+        CONF_MAP_CENTERMARKER: False,
+        CONF_MAP_HOMEMARKER: True,
+        CONF_MAP_DARK_MODE: False,
+        "map_background_type": "map_background_kreise",
+    }
+    precipitation_form = {
+        **form,
+        CONF_MAP_TIMESTAMP: True,
+        CONF_MAP_LOOP_COUNT: 30,
+        CONF_MAP_LOOP_COUNT_FUTURE: 120,
+        CONF_MAP_LOOP_SPEED: 0.5,
+    }
+    marker = {
+        "map_homemarker_shape": "map_homemarker_shape_cross",
+        "map_homemarker_size": 10,
+        "map_homemarker_color": [255, 0, 0],
+    }
+
+    results = []
+    for data, user_input in (
+        (custom_precipitation, precipitation_form),
+        (germany_maxtemp, form),
+    ):
+        flow = OptionsFlowHandler()
+        flow.hass = MagicMock()
+        config_entry = MagicMock()
+        config_entry.data = data
+        config_entry.options = {}
+        with patch.object(
+            OptionsFlowHandler,
+            "config_entry",
+            new_callable=PropertyMock,
+            return_value=config_entry,
+        ):
+            await flow.async_step_init(dict(user_input))
+            results.append(await flow.async_step_homemarker(dict(marker)))
+
+    second = results[1]["data"]
+    assert second["map_id"] == "BBBB"
+    assert "map_window" not in second
+    assert CONF_MAP_LOOP_COUNT_FUTURE not in second
+    assert CONF_MAP_TIMESTAMP not in second
