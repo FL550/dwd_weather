@@ -34,10 +34,13 @@ from homeassistant.components.weather import (
 )
 
 from homeassistant.components.weather.const import (
+    ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_UV_INDEX,
+    UNIT_CONVERSIONS,
     WeatherEntityFeature,
 )
+from homeassistant.const import UnitOfLength
 
 from simple_dwd_weatherforecast import basemap, dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
@@ -60,6 +63,8 @@ from .const import (
     ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_HUMIDITY_ABSOLUTE,
     ATTR_FORECAST_PRECIPITATION_DURATION,
+    ATTR_FORECAST_PRECIPITATION_MIN,
+    ATTR_FORECAST_PRECIPITATION_MAX,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_SUN_IRRADIANCE,
     ATTR_FORECAST_VISIBILITY,
@@ -396,7 +401,9 @@ class DWDWeatherData:
             updated = await self._hass.async_add_executor_job(self._update)
         except dwdforecast.ForecastDownloadError as error:
             # Downloads from opendata.dwd.de fail now and then; the next update retries
-            raise UpdateFailed(f"Failed to download the DWD forecast: {error}") from error
+            raise UpdateFailed(
+                f"Failed to download the DWD forecast: {error}"
+            ) from error
         if updated:
             await self._async_process_sunshine_accumulator()
             for entity in self.entities:
@@ -590,7 +597,8 @@ class DWDWeatherData:
             WeatherEntityFeature.FORECAST_DAILY: self.get_forecast_daily,
         }
         getter = forecast_getters.get(forecast_feature)
-        return getter() if getter is not None else None
+        forecast = getter() if getter is not None else None
+        return forecast
 
     def _should_add_airquality_to_forecast(self) -> bool:
         return self._config.get(
@@ -657,7 +665,7 @@ class DWDWeatherData:
             _LOGGER.info(
                 f"get_forecast_hourly (cached) executed in {end_time - start_time:.4f} seconds"
             )
-            return self._forecast_hourly_cache
+            return [dict(item) for item in self._forecast_hourly_cache]
 
         forecast_data = []
         if self.latest_update and self.dwd_weather.is_in_timerange(now):
@@ -758,7 +766,6 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
-
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                         ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_timeframe_max(
@@ -882,15 +889,45 @@ class DWDWeatherData:
                     forecast_data.append(data_item)
                     forecast_index += 1
                     timestep += timedelta(hours=weather_interval)
+        
+        # Add precipitation estimates to forecast items
+        precipitation_unit = self._hass.config.units.accumulated_precipitation_unit
+        forecast_with_precipitation_estimates = []
+        for item in forecast_data:
+            forecast_item = dict(item)
+            precipitation_time = datetime.strptime(
+                forecast_item[ATTR_FORECAST_TIME], "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=timezone.utc)
+            if self._config[CONF_HOURLY_UPDATE]:
+                precipitation_time += timedelta(hours=1)
+            for weather_type, attribute in (
+                (WeatherDataType.PRECIPITATION_MIN, ATTR_FORECAST_PRECIPITATION_MIN),
+                (WeatherDataType.PRECIPITATION_MAX, ATTR_FORECAST_PRECIPITATION_MAX),
+            ):
+                value = self.dwd_weather.get_forecast_data(
+                    weather_type, precipitation_time, False
+                )
+                forecast_item[attribute] = (
+                    round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                            float(value), UnitOfLength.MILLIMETERS, precipitation_unit
+                        ),
+                        2,
+                    )
+                    if value is not None
+                    else None
+                )
+            forecast_with_precipitation_estimates.append(forecast_item)
+        
         end_time = time.perf_counter()
         _LOGGER.info(
             f"get_forecast_hourly executed in {end_time - start_time:.4f} seconds"
         )
         # Update cache
-        self._forecast_hourly_cache = forecast_data
+        self._forecast_hourly_cache = forecast_with_precipitation_estimates
         self._forecast_hourly_cache_update = self.latest_update
         self._forecast_hourly_cache_hour = current_hour
-        return forecast_data
+        return forecast_with_precipitation_estimates
 
     def get_forecast_daily(self) -> list[Forecast] | None:
         start_time = time.perf_counter()

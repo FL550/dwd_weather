@@ -170,6 +170,12 @@ The sensor values will be set when the next update of dwd_weather is scheduled b
 Note:
 If you activate the option for hourly updates during setup of a weather station, DWD does not provide data for precipitation duration and probability. If this or other data is not available for a certain weather station, this component does not create sensors for it. As a workaround you can create setup the same station without activating the hourly updates option and use the slightly less acurate sensor data that is refreshed twice daily.
 
+Hourly weather forecasts also expose `precipitation_min` and `precipitation_max`
+for compatible cards. These are estimated 10th and 90th percentiles derived from
+MOSMIX-L precipitation probabilities, not guaranteed bounds. They can be
+unavailable, including when hourly updates use MOSMIX-S. Daily estimates are not
+provided because hourly percentiles cannot be summed into daily percentiles.
+
 ## Weather charts
 
 This integration provides also some weather charts as camera entities. They can be configured the same as a weather station.
