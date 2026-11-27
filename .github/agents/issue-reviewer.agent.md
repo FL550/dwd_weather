@@ -149,7 +149,7 @@ If multiple interpretations are possible, explain them and request the minimum c
 
 # Phase 6: Produce the Assessment Report
 
-Before proposing an implementation, provide a structured report using this format:
+Before proposing an implementation, provide a structured report using this format and post it as a comment on the issue:
 
 ## Issue Assessment
 
