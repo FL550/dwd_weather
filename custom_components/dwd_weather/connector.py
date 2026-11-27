@@ -895,7 +895,7 @@ class DWDWeatherData:
                 tzinfo=now.tzinfo,
             )
 
-            for day_index in range(0, 9):
+            for day_index in range(0, 10):
                 _LOGGER.debug("Timestep {}".format(timestep))
                 condition = self.dwd_weather.get_daily_condition(
                     timestep,
