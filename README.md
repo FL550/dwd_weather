@@ -155,6 +155,14 @@ This integration allows you to add sensor entities with hourly forecasts for 10 
 - Humidity
 - Absolute humidity
 
+The woodland fire danger index (WBI) and grassland fire danger index (GLFI)
+sensors provide today's level (1–5) and up to seven daily values in their
+`data` attribute. The indices come from the nearest DWD fire-index station,
+which may differ from the selected weather station. Missing or out-of-date
+values are shown as unknown. When additional forecast attributes are enabled,
+`wbi` and `glfi` are also included in weather forecasts; hourly entries repeat
+the corresponding daily index.
+
 For the current Sun Irradiance sensor, a missing value in a recent station report
 (at most two hours old) is estimated as 0 W/m² when both the reported hour and the
 preceding hour are entirely after sunset or before sunrise. Missing daytime or

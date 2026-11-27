@@ -81,6 +81,12 @@
       "uv_index": {
         "name": "UV-Index"
       },
+      "wbi": {
+        "name": "Woodland fire danger index"
+      },
+      "glfi": {
+        "name": "Grassland fire danger index"
+      },
       "evaporation": {
         "name": "Evaporation in the next 24 hours"
       },

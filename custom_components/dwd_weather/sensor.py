@@ -300,6 +300,24 @@ SENSOR_TYPES = {
         SensorStateClass.MEASUREMENT,
         True,
     ],
+    "wbi": [
+        "Woodland Fire Danger Index",
+        None,
+        None,
+        "mdi:forest",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
+    "glfi": [
+        "Grassland Fire Danger Index",
+        None,
+        None,
+        "mdi:grass",
+        False,
+        SensorStateClass.MEASUREMENT,
+        True,
+    ],
     "evaporation": [
         "Evaporation",
         None,
@@ -509,6 +527,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             result = self._connector.infos[ATTR_ISSUE_TIME]
         elif self._type == "uv_index":
             result = self._connector.get_uv_index()
+        elif self._type in ("wbi", "glfi"):
+            result = self._connector.get_fire_index(
+                "woodland" if self._type == "wbi" else "grassland"
+            )
         elif self._type == "evaporation":
             result = self._connector.get_evaporation()
         elif self._type == "airquality":
@@ -610,6 +632,10 @@ class DWDWeatherForecastSensor(DWDWeatherEntity, SensorEntity):
             attributes["data"] = self._connector.get_humidity_absolute_hourly()
         elif self._type == "uv_index":
             attributes["data"] = self._connector.get_uv_index_daily()
+        elif self._type in ("wbi", "glfi"):
+            attributes["data"] = self._connector.get_fire_index_daily(
+                "woodland" if self._type == "wbi" else "grassland"
+            )
         elif self._type == "evaporation":
             attributes["data"] = self._connector.get_evaporation_daily()
         elif self._type == "airquality":

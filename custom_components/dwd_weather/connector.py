@@ -158,6 +158,7 @@ class DWDWeatherData:
 
         # Holds the current data from DWD
         self.dwd_weather = dwdforecast.Weather(self._config[CONF_STATION_ID])
+        self.dwd_weather.fire_indexes = {}
         if self.dwd_weather.station:
             self.sun = SunTimes(
                 self.dwd_weather.station["lon"],
@@ -450,6 +451,7 @@ class DWDWeatherData:
             with_measurements=should_request_measurements and not forecast_only,
             with_report=not forecast_only,
             with_uv=not forecast_only,
+            with_fire_index=not forecast_only,
             with_apparent_temperature=(
                 not forecast_only and self.supports_apparent_temperature()
             ),
@@ -830,6 +832,12 @@ class DWDWeatherData:
                             )
                         data_item.update(
                             {
+                                "wbi": self.get_fire_index(
+                                    "woodland", dt.as_local(timestep).date()
+                                ),
+                                "glfi": self.get_fire_index(
+                                    "grassland", dt.as_local(timestep).date()
+                                ),
                                 ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_timeframe_max(
                                     WeatherDataType.EVAPORATION,
                                     timestep,
@@ -1068,6 +1076,8 @@ class DWDWeatherData:
                 if self._config[CONF_ADDITIONAL_FORECAST_ATTRIBUTES]:
                     data_item.update(
                         {
+                            "wbi": self.get_fire_index("woodland", timestep.date()),
+                            "glfi": self.get_fire_index("grassland", timestep.date()),
                             ATTR_FORECAST_EVAPORATION: self.dwd_weather.get_daily_max(
                                 WeatherDataType.EVAPORATION,
                                 timestep,
@@ -1367,6 +1377,28 @@ class DWDWeatherData:
 
     def get_uv_index(self):
         return self.dwd_weather.get_uv_index(days_from_today=0, shouldUpdate=False)
+
+    def get_fire_index(self, kind, day=None):
+        day = day or dt.now().date()
+        report = self.dwd_weather.fire_indexes.get(kind)
+        if not report or not report.get("issued"):
+            return None
+        offset = (day - report["issued"]).days
+        if not 0 <= offset <= 6:
+            return None
+        return self.dwd_weather.get_fire_index(offset, kind=kind, shouldUpdate=False)
+
+    def get_fire_index_daily(self, kind):
+        today = dt.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        steps = self._config[CONF_SENSOR_FORECAST_STEPS]
+        count = min(7, int(steps)) if steps else 7
+        return [
+            {
+                ATTR_FORECAST_TIME: (today + timedelta(days=day)).isoformat(),
+                "value": self.get_fire_index(kind, (today + timedelta(days=day)).date()),
+            }
+            for day in range(count)
+        ]
 
     def get_radar_precipitation_now(self):
         forecast = self._radar_precipitation_forecast
