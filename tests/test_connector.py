@@ -197,6 +197,7 @@ async def test_initial_refresh_defers_optional_data(mock_dwd_data):
         with_measurements=False,
         with_report=False,
         with_uv=False,
+        with_fire_index=False,
         with_apparent_temperature=False,
     )
 
@@ -212,6 +213,7 @@ async def test_initial_refresh_defers_optional_data(mock_dwd_data):
         with_measurements=True,
         with_report=True,
         with_uv=True,
+        with_fire_index=True,
         with_apparent_temperature=True,
     )
     assert not data._initial_details_pending
@@ -441,6 +443,72 @@ def _setup_forecast_weather_mocks(mock_dwd_data):
     dwd_weather.get_daily_avg = MagicMock(return_value=180.0)
     dwd_weather.get_daily_sum = MagicMock(return_value=1.0)
     dwd_weather.get_uv_index = MagicMock(return_value=2)
+
+
+def test_fire_index_uses_report_issue_date_and_handles_missing(mock_dwd_data):
+    """A report's values are aligned to its issue date, not the current day."""
+    data = mock_dwd_data
+    data.dwd_weather.fire_indexes = {
+        "woodland": {"issued": datetime(2026, 1, 31).date(), "values": [1] * 7}
+    }
+    data.dwd_weather.get_fire_index.return_value = 4
+    assert data.get_fire_index("woodland", datetime(2026, 2, 1).date()) == 4
+    data.dwd_weather.get_fire_index.assert_called_once_with(
+        1, kind="woodland", shouldUpdate=False
+    )
+    assert data.get_fire_index("grassland", datetime(2026, 2, 1).date()) is None
+    assert data.get_fire_index("woodland", datetime(2026, 2, 7).date()) is None
+    assert data.get_fire_index("woodland", datetime(2026, 1, 30).date()) is None
+    data.dwd_weather.get_fire_index.assert_called_once()
+
+
+def test_fire_index_cache_is_isolated_per_station(hass, mock_dwd_weather_object):
+    """Upstream's class-level fire cache must not leak between stations."""
+    other_weather = MagicMock()
+    other_weather.station = mock_dwd_weather_object.station
+    entry = MagicMock()
+    entry.data = dict(MOCK_CONFIG)
+    with patch(
+        "custom_components.dwd_weather.connector.dwdforecast.Weather",
+        side_effect=[mock_dwd_weather_object, other_weather],
+    ):
+        first = DWDWeatherData(hass, entry)
+        second = DWDWeatherData(hass, entry)
+    first.dwd_weather.fire_indexes["woodland"] = {"issued": datetime.now().date()}
+    assert second.dwd_weather.fire_indexes == {}
+
+
+def test_fire_index_daily_respects_forecast_limit(mock_dwd_data):
+    """Daily values include today and respect the sensor forecast limit."""
+    now = datetime(2026, 2, 1, 12, tzinfo=timezone.utc)
+    mock_dwd_data._config["sensor_forecast_steps"] = 2
+    mock_dwd_data.get_fire_index = MagicMock(side_effect=[3, None])
+    with patch("custom_components.dwd_weather.connector.dt.now", return_value=now):
+        result = mock_dwd_data.get_fire_index_daily("grassland")
+    assert [item["value"] for item in result] == [3, None]
+    assert [item[ATTR_FORECAST_TIME] for item in result] == [
+        "2026-02-01T00:00:00+00:00",
+        "2026-02-02T00:00:00+00:00",
+    ]
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+@pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
+def test_fire_index_forecast_attributes(mock_dwd_data, enabled, forecast_type):
+    """Additional weather forecast fields follow the existing option."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["additional_forecast_attributes"] = enabled
+    mock_dwd_data.get_fire_index = MagicMock(
+        side_effect=lambda kind, day: 2 if kind == "woodland" else 4
+    )
+    forecast = getattr(mock_dwd_data, f"get_forecast_{forecast_type}")()
+    assert forecast
+    for item in forecast:
+        if enabled:
+            assert item["wbi"] == 2
+            assert item["glfi"] == 4
+        else:
+            assert "wbi" not in item and "glfi" not in item
 
 
 @pytest.mark.parametrize("hourly_update", [False, True])

@@ -81,6 +81,12 @@
       "uv_index": {
         "name": "UV-Index"
       },
+      "wbi": {
+        "name": "Waldbrandgefahrenindex"
+      },
+      "glfi": {
+        "name": "Graslandfeuerindex"
+      },
       "evaporation": {
         "name": "Verdunstung in den nächsten 24 Stunden"
       },

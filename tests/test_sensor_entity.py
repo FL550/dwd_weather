@@ -78,6 +78,27 @@ def test_sensor_state_and_unit(sensor_entity):
     assert sensor_entity.unit_of_measurement == UnitOfTemperature.CELSIUS
 
 
+@pytest.mark.parametrize(
+    ("sensor_type", "kind"), [("wbi", "woodland"), ("glfi", "grassland")]
+)
+def test_fire_index_sensor_state_and_forecast(hass_data, sensor_type, kind):
+    """Fire-index sensors expose numeric state and daily forecast data."""
+    connector = hass_data[DWDWEATHER_DATA]
+    connector.get_fire_index = MagicMock(return_value=3)
+    connector.get_fire_index_daily = MagicMock(return_value=[{"value": 3}])
+    connector.infos = {
+        ATTR_ISSUE_TIME: None,
+        ATTR_LATEST_UPDATE: None,
+        ATTR_STATION_ID: "L732",
+        ATTR_STATION_NAME: "Test Station",
+    }
+    entity = DWDWeatherForecastSensor(MOCK_CONFIG, hass_data, sensor_type)
+    assert entity.state == 3
+    assert entity.extra_state_attributes["data"] == [{"value": 3}]
+    connector.get_fire_index.assert_called_once_with(kind)
+    connector.get_fire_index_daily.assert_called_once_with(kind)
+
+
 def test_sensor_extra_attributes(sensor_entity):
     """Sensor should expose common metadata attributes."""
     attrs = sensor_entity.extra_state_attributes

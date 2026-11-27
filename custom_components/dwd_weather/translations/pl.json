@@ -81,6 +81,12 @@
       "uv_index": {
         "name": "Indeks UV"
       },
+      "wbi": {
+        "name": "Indeks zagrożenia pożarowego lasu"
+      },
+      "glfi": {
+        "name": "Indeks zagrożenia pożarowego użytków zielonych"
+      },
       "evaporation": {
         "name": "Parowanie w ciągu następnych 24 godzin"
       },
