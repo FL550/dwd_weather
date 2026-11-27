@@ -6,10 +6,13 @@ from collections import OrderedDict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.weather import ATTR_FORECAST_NATIVE_TEMP
+from homeassistant.components.weather import (
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_TIME,
+)
 from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
-from simple_dwd_weatherforecast.dwdforecast import Weather, WeatherDataType
+from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
 from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.const import CONF_STATION_ID
@@ -93,12 +96,63 @@ async def test_get_forecast_dispatches_to_daily(mock_dwd_data):
 
 @pytest.mark.asyncio
 async def test_get_forecast_dispatches_to_hourly(mock_dwd_data):
-    """get_forecast should route hourly requests to get_forecast_hourly."""
-    mock_dwd_data.get_forecast_hourly = MagicMock(return_value=[{"ok": "hourly"}])
+    """get_forecast adds hourly precipitation estimates without changing the cache."""
+    timestamp = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    forecast_item = {
+        ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z"),
+        "ok": "hourly",
+    }
+    mock_dwd_data.get_forecast_hourly = MagicMock(return_value=[forecast_item])
+    mock_dwd_data.dwd_weather.get_forecast_data.side_effect = (
+        lambda weather_type, *_args: {
+            WeatherDataType.PRECIPITATION_MIN: 0.0,
+            WeatherDataType.PRECIPITATION_MAX: 2.5,
+        }[weather_type]
+    )
 
     result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
-    assert result == [{"ok": "hourly"}]
+    assert result == [
+        {
+            ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z"),
+            "ok": "hourly",
+            "precipitation_min": 0.0,
+            "precipitation_max": 2.5,
+        }
+    ]
+    assert result[0] is not forecast_item
+    assert "precipitation_min" not in forecast_item
+    mock_dwd_data.dwd_weather.get_forecast_data.assert_any_call(
+        WeatherDataType.PRECIPITATION_MIN, timestamp, False
+    )
+
+
+def test_get_forecast_hourly_estimates_shift_for_hourly_update(mock_dwd_data):
+    """Hourly update forecasts read precipitation estimates at the period end."""
+    timestamp = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    mock_dwd_data._config["hourly_update"] = True
+    mock_dwd_data.get_forecast_hourly = MagicMock(
+        return_value=[{ATTR_FORECAST_TIME: timestamp.strftime("%Y-%m-%dT%H:00:00Z")}]
+    )
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
+
+    mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+
+    mock_dwd_data.dwd_weather.get_forecast_data.assert_any_call(
+        WeatherDataType.PRECIPITATION_MIN, timestamp + timedelta(hours=1), False
+    )
+
+
+def test_get_forecast_daily_does_not_add_hourly_precipitation_estimates(
+    mock_dwd_data,
+):
+    """Daily forecast dispatch does not request hourly precipitation estimates."""
+    mock_dwd_data.get_forecast_daily = MagicMock(return_value=[{"ok": "daily"}])
+
+    result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_DAILY)
+
+    assert result == [{"ok": "daily"}]
+    mock_dwd_data.dwd_weather.get_forecast_data.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -205,7 +259,6 @@ def _setup_forecast_weather_mocks(mock_dwd_data):
     dwd_weather.get_timeframe_max = MagicMock(return_value=280.0)
     dwd_weather.get_timeframe_min = MagicMock(return_value=278.0)
     dwd_weather.get_timeframe_sum = MagicMock(return_value=1.0)
-    dwd_weather.get_timeframe_values = MagicMock(return_value=[])
     dwd_weather.get_timeframe_avg = MagicMock(return_value=180.0)
     dwd_weather.get_daily_condition = MagicMock(return_value="sunny")
     dwd_weather.get_daily_max = MagicMock(return_value=280.0)
@@ -227,10 +280,10 @@ def test_hourly_forecast_precipitation_estimates(mock_dwd_data, hourly_update):
         WeatherDataType.PRECIPITATION_MIN.value[0]: 0.0,
         WeatherDataType.PRECIPITATION_MAX.value[0]: 2.5,
     }
-    weather = Weather.__new__(Weather)
-    weather.forecast_data = {period.strftime("%Y-%m-%dT%H:00:00.000Z"): values}
-    mock_dwd_data.dwd_weather.get_timeframe_values.side_effect = (
-        weather.get_timeframe_values
+    mock_dwd_data.dwd_weather.get_forecast_data.side_effect = (
+        lambda weather_type, timestamp, _should_update: (
+            values.get(weather_type.value[0]) if timestamp == period else None
+        )
     )
 
     class FrozenDateTime(datetime):
@@ -239,18 +292,21 @@ def test_hourly_forecast_precipitation_estimates(mock_dwd_data, hourly_update):
             return now
 
     with patch("custom_components.dwd_weather.connector.datetime", FrozenDateTime):
-        result = mock_dwd_data.get_forecast_hourly()
-        cached = mock_dwd_data.get_forecast_hourly()
+        result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        cached = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
     assert result[0]["precipitation_min"] == 0.0
     assert result[0]["precipitation_max"] == 2.5
     assert result[1]["precipitation_min"] is None
     assert result[1]["precipitation_max"] is None
-    assert cached is result
+    assert cached[0] == result[0]
+    assert cached[0] is not result[0]
     mock_dwd_data.dwd_weather.get_timeframe_sum.assert_any_call(
         WeatherDataType.PRECIPITATION, period, 1, False
     )
-    mock_dwd_data.dwd_weather.get_timeframe_values.assert_any_call(period, 1)
+    mock_dwd_data.dwd_weather.get_forecast_data.assert_any_call(
+        WeatherDataType.PRECIPITATION_MIN, period, False
+    )
 
 
 def test_hourly_forecast_precipitation_estimates_missing_in_hourly_update(
@@ -259,14 +315,16 @@ def test_hourly_forecast_precipitation_estimates_missing_in_hourly_update(
     """MOSMIX-S and missing quantiles remain unavailable, not zero."""
     _setup_forecast_weather_mocks(mock_dwd_data)
     mock_dwd_data._config["hourly_update"] = True
-    mock_dwd_data.dwd_weather.get_timeframe_values.return_value = [
-        {
-            WeatherDataType.PRECIPITATION_MIN.value[0]: None,
-            WeatherDataType.PRECIPITATION_MAX.value[0]: None,
-        }
-    ]
+    mock_dwd_data.get_forecast_hourly = MagicMock(
+        return_value=[
+            {
+                ATTR_FORECAST_TIME: "2026-01-01T12:00:00Z",
+            }
+        ]
+    )
+    mock_dwd_data.dwd_weather.get_forecast_data.return_value = None
 
-    result = mock_dwd_data.get_forecast_hourly()
+    result = mock_dwd_data.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
 
     assert result[0]["precipitation_min"] is None
     assert result[0]["precipitation_max"] is None

@@ -395,7 +395,9 @@ class DWDWeatherData:
             updated = await self._hass.async_add_executor_job(self._update)
         except dwdforecast.ForecastDownloadError as error:
             # Downloads from opendata.dwd.de fail now and then; the next update retries
-            raise UpdateFailed(f"Failed to download the DWD forecast: {error}") from error
+            raise UpdateFailed(
+                f"Failed to download the DWD forecast: {error}"
+            ) from error
         if updated:
             await self._async_process_sunshine_accumulator()
             for entity in self.entities:
@@ -577,7 +579,27 @@ class DWDWeatherData:
             WeatherEntityFeature.FORECAST_DAILY: self.get_forecast_daily,
         }
         getter = forecast_getters.get(forecast_feature)
-        return getter() if getter is not None else None
+        forecast = getter() if getter is not None else None
+        if forecast is None or forecast_feature != WeatherEntityFeature.FORECAST_HOURLY:
+            return forecast
+
+        forecast_with_precipitation_estimates = []
+        for item in forecast:
+            forecast_item = dict(item)
+            precipitation_time = datetime.strptime(
+                forecast_item[ATTR_FORECAST_TIME], "%Y-%m-%dT%H:%M:%SZ"
+            ).replace(tzinfo=timezone.utc)
+            if self._config[CONF_HOURLY_UPDATE]:
+                precipitation_time += timedelta(hours=1)
+            for weather_type, attribute in (
+                (WeatherDataType.PRECIPITATION_MIN, ATTR_FORECAST_PRECIPITATION_MIN),
+                (WeatherDataType.PRECIPITATION_MAX, ATTR_FORECAST_PRECIPITATION_MAX),
+            ):
+                forecast_item[attribute] = self.dwd_weather.get_forecast_data(
+                    weather_type, precipitation_time, False
+                )
+            forecast_with_precipitation_estimates.append(forecast_item)
+        return forecast_with_precipitation_estimates
 
     def _should_add_airquality_to_forecast(self) -> bool:
         return self._config.get(
@@ -745,11 +767,6 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
-                    period_values = self.dwd_weather.get_timeframe_values(
-                        period_timestep, weather_interval
-                    )
-                    period_data = period_values[0] if period_values else {}
-
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
                         ATTR_FORECAST_CLOUD_COVERAGE: self.dwd_weather.get_timeframe_max(
@@ -767,12 +784,6 @@ class DWDWeatherData:
                             period_timestep,
                             weather_interval,
                             False,
-                        ),
-                        ATTR_FORECAST_PRECIPITATION_MIN: period_data.get(
-                            WeatherDataType.PRECIPITATION_MIN.value[0]
-                        ),
-                        ATTR_FORECAST_PRECIPITATION_MAX: period_data.get(
-                            WeatherDataType.PRECIPITATION_MAX.value[0]
                         ),
                         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
                         ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)
