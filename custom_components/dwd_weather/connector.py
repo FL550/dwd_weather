@@ -1082,9 +1082,25 @@ class DWDWeatherData:
     def get_weather_report(self):
         return self._report["text"] if self._report else None
 
+    def _is_nighttime_irradiance_hour(self, end: datetime) -> bool:
+        """Check that the entire preceding hour is outside daylight."""
+        start = end - timedelta(hours=1)
+        try:
+            for offset in range(-1, 3):
+                day = start + timedelta(days=offset)
+                sunrise = self.sun.riseutc(day).replace(tzinfo=timezone.utc)
+                sunset = self.sun.setutc(day).replace(tzinfo=timezone.utc)
+                if sunrise >= sunset or (start < sunset and end > sunrise):
+                    return False
+        except (AttributeError, TypeError, ValueError, OverflowError) as err:
+            _LOGGER.debug("Could not determine nighttime irradiance: %s", err)
+            return False
+        return True
+
     def get_weather_value(self, data_type: WeatherDataType):
         value = None
         conf_data_type = self._config[CONF_DATA_TYPE]
+        report_available = False
         if (
             conf_data_type == CONF_DATA_TYPE_REPORT
             or conf_data_type == CONF_DATA_TYPE_MIXED
@@ -1094,6 +1110,7 @@ class DWDWeatherData:
                     data_type,
                     shouldUpdate=False,
                 )
+                report_available = isinstance(self.dwd_weather.report_data, dict)
             except Exception as e:
                 _LOGGER.debug(f"Error getting reported weather: {e}")
         if conf_data_type == CONF_DATA_TYPE_FORECAST or (
@@ -1107,14 +1124,21 @@ class DWDWeatherData:
 
         if value is None and data_type == WeatherDataType.SUN_IRRADIANCE:
             now = datetime.now(timezone.utc)
-            try:
+            report_data = getattr(self.dwd_weather, "report_data", None)
+            if report_available:
+                try:
+                    report_time = datetime.strptime(
+                        f"{report_data['date']} {report_data['time']}",
+                        "%d.%m.%y %H:%M",
+                    ).replace(tzinfo=timezone.utc)
+                except (KeyError, TypeError, ValueError):
+                    report_time = None
                 if (
-                    now.hour < self.sun.riseutc(now).hour
-                    or now.hour > self.sun.setutc(now).hour
+                    report_time is not None
+                    and self._is_nighttime_irradiance_hour(report_time)
+                    and self._is_nighttime_irradiance_hour(now)
                 ):
                     return 0
-            except Exception as e:
-                _LOGGER.debug(f"Error determining sun position: {e}")
 
         if self._config[CONF_INTERPOLATE] and value is not None:
             if not hasattr(self, "_interpolate_value"):
