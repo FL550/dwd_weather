@@ -11,11 +11,14 @@ from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 
-from custom_components.dwd_weather.connector import DWDWeatherData
+from custom_components.dwd_weather.connector import DWDMapData, DWDWeatherData
 from custom_components.dwd_weather.const import (
     CONF_DATA_TYPE_FORECAST,
     CONF_DATA_TYPE_MIXED,
     CONF_DATA_TYPE_REPORT,
+    CONF_MAP_FOREGROUND_PRECIPITATION,
+    CONF_MAP_FOREGROUND_TYPE,
+    CONF_MAP_LOOP_COUNT,
     CONF_STATION_ID,
 )
 from .const import MOCK_CONFIG
