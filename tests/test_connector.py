@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.weather import ATTR_FORECAST_NATIVE_TEMP
 from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.core import HomeAssistant
-from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
+from simple_dwd_weatherforecast.dwdforecast import Weather, WeatherDataType
 
 from custom_components.dwd_weather.connector import DWDWeatherData
 from custom_components.dwd_weather.const import CONF_STATION_ID
@@ -205,6 +205,7 @@ def _setup_forecast_weather_mocks(mock_dwd_data):
     dwd_weather.get_timeframe_max = MagicMock(return_value=280.0)
     dwd_weather.get_timeframe_min = MagicMock(return_value=278.0)
     dwd_weather.get_timeframe_sum = MagicMock(return_value=1.0)
+    dwd_weather.get_timeframe_values = MagicMock(return_value=[])
     dwd_weather.get_timeframe_avg = MagicMock(return_value=180.0)
     dwd_weather.get_daily_condition = MagicMock(return_value="sunny")
     dwd_weather.get_daily_max = MagicMock(return_value=280.0)
@@ -212,6 +213,63 @@ def _setup_forecast_weather_mocks(mock_dwd_data):
     dwd_weather.get_daily_avg = MagicMock(return_value=180.0)
     dwd_weather.get_daily_sum = MagicMock(return_value=1.0)
     dwd_weather.get_uv_index = MagicMock(return_value=2)
+
+
+@pytest.mark.parametrize("hourly_update", [False, True])
+def test_hourly_forecast_precipitation_estimates(mock_dwd_data, hourly_update):
+    """Estimates follow the precipitation period and preserve zero and missing data."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["hourly_update"] = hourly_update
+    mock_dwd_data._config["additional_forecast_attributes"] = False
+    now = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
+    period = now + timedelta(hours=int(hourly_update))
+    values = {
+        WeatherDataType.PRECIPITATION_MIN.value[0]: 0.0,
+        WeatherDataType.PRECIPITATION_MAX.value[0]: 2.5,
+    }
+    weather = Weather.__new__(Weather)
+    weather.forecast_data = {period.strftime("%Y-%m-%dT%H:00:00.000Z"): values}
+    mock_dwd_data.dwd_weather.get_timeframe_values.side_effect = (
+        weather.get_timeframe_values
+    )
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now
+
+    with patch("custom_components.dwd_weather.connector.datetime", FrozenDateTime):
+        result = mock_dwd_data.get_forecast_hourly()
+        cached = mock_dwd_data.get_forecast_hourly()
+
+    assert result[0]["precipitation_min"] == 0.0
+    assert result[0]["precipitation_max"] == 2.5
+    assert result[1]["precipitation_min"] is None
+    assert result[1]["precipitation_max"] is None
+    assert cached is result
+    mock_dwd_data.dwd_weather.get_timeframe_sum.assert_any_call(
+        WeatherDataType.PRECIPITATION, period, 1, False
+    )
+    mock_dwd_data.dwd_weather.get_timeframe_values.assert_any_call(period, 1)
+
+
+def test_hourly_forecast_precipitation_estimates_missing_in_hourly_update(
+    mock_dwd_data,
+):
+    """MOSMIX-S and missing quantiles remain unavailable, not zero."""
+    _setup_forecast_weather_mocks(mock_dwd_data)
+    mock_dwd_data._config["hourly_update"] = True
+    mock_dwd_data.dwd_weather.get_timeframe_values.return_value = [
+        {
+            WeatherDataType.PRECIPITATION_MIN.value[0]: None,
+            WeatherDataType.PRECIPITATION_MAX.value[0]: None,
+        }
+    ]
+
+    result = mock_dwd_data.get_forecast_hourly()
+
+    assert result[0]["precipitation_min"] is None
+    assert result[0]["precipitation_max"] is None
 
 
 def test_hourly_forecast_includes_airquality_when_both_options_enabled(mock_dwd_data):

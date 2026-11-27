@@ -60,6 +60,8 @@ from .const import (
     ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_HUMIDITY_ABSOLUTE,
     ATTR_FORECAST_PRECIPITATION_DURATION,
+    ATTR_FORECAST_PRECIPITATION_MIN,
+    ATTR_FORECAST_PRECIPITATION_MAX,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_SUN_IRRADIANCE,
     ATTR_FORECAST_VISIBILITY,
@@ -743,6 +745,10 @@ class DWDWeatherData:
                         weather_interval,
                         False,
                     )
+                    period_values = self.dwd_weather.get_timeframe_values(
+                        period_timestep, weather_interval
+                    )
+                    period_data = period_values[0] if period_values else {}
 
                     data_item = {
                         ATTR_FORECAST_TIME: timestep.strftime("%Y-%m-%dT%H:00:00Z"),
@@ -761,6 +767,12 @@ class DWDWeatherData:
                             period_timestep,
                             weather_interval,
                             False,
+                        ),
+                        ATTR_FORECAST_PRECIPITATION_MIN: period_data.get(
+                            WeatherDataType.PRECIPITATION_MIN.value[0]
+                        ),
+                        ATTR_FORECAST_PRECIPITATION_MAX: period_data.get(
+                            WeatherDataType.PRECIPITATION_MAX.value[0]
                         ),
                         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_prop,
                         ATTR_FORECAST_PRESSURE: round(pressure / 100, 1)

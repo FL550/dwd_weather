@@ -10,6 +10,8 @@ from homeassistant.components.weather import (
 )
 
 from homeassistant.components.weather.const import (
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    UNIT_CONVERSIONS,
     WeatherEntityFeature,
 )
 
@@ -24,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTRIBUTION,
+    ATTR_FORECAST_PRECIPITATION_MAX,
+    ATTR_FORECAST_PRECIPITATION_MIN,
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
@@ -62,8 +66,29 @@ class DWDWeather(DWDWeatherEntity, WeatherEntity):
         return self._connector.get_forecast(WeatherEntityFeature.FORECAST_DAILY)
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
-        """Return the hourly forecast in native units."""
-        return self._connector.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        """Return the hourly forecast, converting custom precipitation fields."""
+        forecast = self._connector.get_forecast(WeatherEntityFeature.FORECAST_HOURLY)
+        if forecast is None:
+            return None
+
+        result = []
+        for item in forecast:
+            converted = dict(item)
+            for key in (
+                ATTR_FORECAST_PRECIPITATION_MIN,
+                ATTR_FORECAST_PRECIPITATION_MAX,
+            ):
+                if (value := converted.get(key)) is not None:
+                    converted[key] = round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                            float(value),
+                            self.native_precipitation_unit,
+                            self._precipitation_unit,
+                        ),
+                        2,
+                    )
+            result.append(converted)
+        return result
 
     @property
     def name(self):

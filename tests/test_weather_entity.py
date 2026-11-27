@@ -92,6 +92,45 @@ async def test_weather_forecast_methods(weather_entity):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [(UnitOfLength.MILLIMETERS, (25.4, 50.8)), (UnitOfLength.INCHES, (1.0, 2.0))],
+)
+async def test_hourly_forecast_estimates_use_configured_unit(
+    hass, weather_entity, unit, expected
+):
+    """Custom precipitation estimates use the weather entity's display unit."""
+    weather_entity.hass = hass
+    weather_entity._weather_option_precipitation_unit = unit
+    native = [
+        {
+            "native_precipitation": 25.4,
+            "precipitation_min": 25.4,
+            "precipitation_max": 50.8,
+        },
+        {"precipitation_min": 0.0, "precipitation_max": None},
+    ]
+    weather_entity._connector.get_forecast.return_value = native
+
+    hourly = await weather_entity.async_forecast_hourly()
+    converted = weather_entity._convert_forecast(hourly)
+
+    assert (
+        converted[0]["precipitation_min"],
+        converted[0]["precipitation_max"],
+    ) == expected
+    assert converted[0]["precipitation"] == expected[0]
+    assert converted[1]["precipitation_min"] == 0.0
+    assert converted[1]["precipitation_max"] is None
+    weather_entity._weather_option_precipitation_unit = UnitOfLength.MILLIMETERS
+    assert (await weather_entity.async_forecast_hourly())[0][
+        "precipitation_max"
+    ] == 50.8
+    assert native[0]["precipitation_min"] == 25.4
+    assert native[0]["precipitation_max"] == 50.8
+
+
+@pytest.mark.asyncio
 async def test_weather_async_update_requests_refresh(weather_entity):
     """Entity async_update should delegate to coordinator refresh."""
     weather_entity._coordinator.async_request_refresh = AsyncMock()
