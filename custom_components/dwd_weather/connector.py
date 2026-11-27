@@ -38,7 +38,7 @@ from homeassistant.components.weather.const import (
     WeatherEntityFeature,
 )
 
-from simple_dwd_weatherforecast import dwdforecast, dwdmap
+from simple_dwd_weatherforecast import basemap, dwdforecast, dwdmap
 from simple_dwd_weatherforecast.dwdforecast import WeatherDataType
 from simple_dwd_weatherforecast.dwdmap import MarkerShape
 
@@ -121,6 +121,9 @@ from .const import (
     CONF_MAP_BACKGROUND_KREISE,
     CONF_MAP_BACKGROUND_GEMEINDEN,
     CONF_MAP_BACKGROUND_SATELLIT,
+    CONF_MAP_BACKGROUND_TOPPLUS_LIGHT,
+    CONF_MAP_BACKGROUND_TOPPLUS_DARK,
+    CONF_MAP_BASEMAP_BLEND,
     DOMAIN,
 )
 
@@ -1812,6 +1815,10 @@ class DWDMapData:
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                            basemap_cache_dir=self.basemap_cache_dir,
+                            basemap_blend=self._configdata.get(
+                                CONF_MAP_BASEMAP_BLEND, False
+                            ),
                         )
                         # Trigger the first fetch (deferred from __init__)
                         self._maploop.update()
@@ -1870,6 +1877,10 @@ class DWDMapData:
                             image_height=self._height,
                             markers=markers,
                             dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                            basemap_cache_dir=self.basemap_cache_dir,
+                            basemap_blend=self._configdata.get(
+                                CONF_MAP_BASEMAP_BLEND, False
+                            ),
                         )
                         # Trigger the first fetch (deferred from __init__)
                         self._maploop.update()
@@ -1933,6 +1944,8 @@ class DWDMapData:
                     image_height=self._height,
                     markers=markers,
                     dark_mode=self._configdata[CONF_MAP_DARK_MODE],
+                    basemap_cache_dir=self.basemap_cache_dir,
+                    basemap_blend=self._configdata.get(CONF_MAP_BASEMAP_BLEND, False),
                 )
             else:
                 _LOGGER.debug(
@@ -1960,6 +1973,8 @@ class DWDMapData:
                     image_width=self._width,
                     image_height=self._height,
                     markers=markers,
+                    basemap_cache_dir=self.basemap_cache_dir,
+                    basemap_blend=self._configdata.get(CONF_MAP_BASEMAP_BLEND, False),
                 )
 
     def get_image(self):
@@ -2218,6 +2233,28 @@ class DWDMapData:
             return dwdmap.WeatherBackgroundMapType.GEMEINDEN
         elif map_type == CONF_MAP_BACKGROUND_SATELLIT:
             return dwdmap.WeatherBackgroundMapType.SATELLIT
+        elif map_type == CONF_MAP_BACKGROUND_TOPPLUS_LIGHT:
+            return dwdmap.WeatherBackgroundMapType.TOPPLUS_LIGHT
+        elif map_type == CONF_MAP_BACKGROUND_TOPPLUS_DARK:
+            return dwdmap.WeatherBackgroundMapType.TOPPLUS_DARK
+
+    @property
+    def basemap_cache_dir(self) -> str:
+        """Where the BKG base map is kept, so it survives restarts."""
+        return self._hass.config.cache_path(DOMAIN)
+
+    @property
+    def basemap_attribution(self) -> str | None:
+        """Source note of the BKG base map, None without one."""
+        style = dwdmap.BASEMAP_STYLES.get(
+            self.map_maptype(self._configdata[CONF_MAP_BACKGROUND_TYPE])
+        )
+        if style is None:
+            return None
+        loop_basemap = getattr(self._maploop, "basemap", None)
+        if loop_basemap is not None:
+            return loop_basemap.attribution
+        return basemap.attribution(style)
 
     def set_size(
         self,

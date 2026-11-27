@@ -198,7 +198,12 @@
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
           "map_homemarker": "Soll auf der Karte ein Home-Marker dargestellt werden?",
-          "map_dark_mode": "Soll die Karte als Dark Mode angezeigt werden?"
+          "map_dark_mode": "Soll die Karte als Dark Mode angezeigt werden?",
+          "map_basemap_blend": "Karte durch das Wetter hindurch zeigen"
+        },
+        "data_description": {
+          "map_background_type": "Die beiden BKG-Karten werden von einem Server des Bundesamts für Kartographie und Geodäsie (sgx.geodatenzentrum.de) geladen, alle anderen Hintergründe vom DWD.",
+          "map_basemap_blend": "Nur mit einer BKG-Karte: Orte und Straßen bleiben unter Regen und Warnungen lesbar. Die Bilder werden größer, bei großflächigem Regen um etwa ein Viertel."
         }
       },
       "select_map_loop": {
@@ -256,6 +261,7 @@
           "radar_custom_location": "Eigenen Ort für Radar-Niederschlag verwenden",
           "radar_location_coordinates": "Ort für Radar-Niederschlag",
           "map_background_type": "Was soll im Hintergrund angezeigt werden?",
+          "map_basemap_blend": "Karte durch das Wetter hindurch zeigen",
           "map_marker": "Soll die Mitte der Karte markiert werden?",
           "map_homemarker": "Soll die eingestellte Position von HA auf der Karte markiert werden?",
           "map_timestamp": "Soll die Zeit auf dem Bild angezeigt werden?",
@@ -293,7 +299,9 @@
           "map_update_state": "Wenn aktiviert, wird der Kamera-Status bei jedem Wechsel des angezeigten Bildtyps aktualisiert, was zu häufigen Statusänderungs-Logeinträgen führt.",
           "sensor_forecast_steps": "Dies kann nützlich sein, wenn Sie nur eine begrenzte Anzahl von Vorhersageschritten verwenden und die Übersichtlichkeit der Sensorattribute erhöhen möchten.",
           "additional_forecast_attributes": "Fügt dem Wetterobjekt zusätzliche Vorhersageattribute wie Nebelwahrscheinlichkeit, Verdunstung, Sonnenscheindauer und weitere hinzu.",
-          "daily_temp_high_precision": "Die Vorhersage der täglichen Höchst- und Tiefsttemperatur wird auf eine Kommastelle genau angezeigt."
+          "daily_temp_high_precision": "Die Vorhersage der täglichen Höchst- und Tiefsttemperatur wird auf eine Kommastelle genau angezeigt.",
+          "map_background_type": "Die beiden BKG-Karten werden von einem Server des Bundesamts für Kartographie und Geodäsie (sgx.geodatenzentrum.de) geladen, alle anderen Hintergründe vom DWD.",
+          "map_basemap_blend": "Nur mit einer BKG-Karte: Orte und Straßen bleiben unter Regen und Warnungen lesbar. Die Bilder werden größer, bei großflächigem Regen um etwa ein Viertel."
         }
       },
       "station_radar_location": {
@@ -363,7 +371,9 @@
         "map_background_bundeslaender": "Bundesländer",
         "map_background_kreise": "Kreise",
         "map_background_gemeinden": "Gemeinden",
-        "map_background_satellit": "Satellitenbild"
+        "map_background_satellit": "Satellitenbild",
+        "map_background_topplus_light": "Karte mit Orten und Straßen (BKG), hell",
+        "map_background_topplus_dark": "Karte mit Orten und Straßen (BKG), dunkel"
       }
     },
     "map_homemarker_shape": {

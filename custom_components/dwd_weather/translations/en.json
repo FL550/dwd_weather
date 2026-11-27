@@ -198,7 +198,12 @@
           "map_background_type": "What should be displayed in the background?",
           "map_marker": "Should the middle of the map be marked?",
           "map_homemarker": "Should the map contain a home marker?",
-          "map_dark_mode": "Should the map be displayed in dark mode?"
+          "map_dark_mode": "Should the map be displayed in dark mode?",
+          "map_basemap_blend": "Show the map through the weather"
+        },
+        "data_description": {
+          "map_background_type": "The two BKG maps are downloaded from a server of the German Federal Agency for Cartography and Geodesy (sgx.geodatenzentrum.de), all other backgrounds come from the DWD.",
+          "map_basemap_blend": "Only with a BKG map: names and roads stay readable below rain and warnings. The images become larger, by about a quarter in widespread rain."
         }
       },
       "select_map_loop": {
@@ -258,6 +263,7 @@
           "sensor_forecast_steps": "Limit available forecast steps in sensor attributes",
           "map_options_message": "Unavailable setting",
           "map_background_type": "What should be displayed in the background?",
+          "map_basemap_blend": "Show the map through the weather",
           "map_marker": "Should the middle of the map be marked?",
           "map_homemarker": "Should a home-marker be displayed on the map?",
           "map_timestamp": "Should the time of the image be visible on the image?",
@@ -294,7 +300,9 @@
           "map_update_state": "When enabled, the camera state updates every time the displayed image type changes, which causes frequent state-changed log entries.",
           "sensor_forecast_steps": "This can be useful if you only use a limited amount of forecast steps and want to increase the clarity of the sensor attributes.",
           "additional_forecast_attributes": "This will add additional forecast attributes like fog probability, evaporation and sun duration, etc. to the weather object.",
-          "daily_temp_high_precision": "This will increase the display precision of the daily maximum and minimum temperature values to a decimal place."
+          "daily_temp_high_precision": "This will increase the display precision of the daily maximum and minimum temperature values to a decimal place.",
+          "map_background_type": "The two BKG maps are downloaded from a server of the German Federal Agency for Cartography and Geodesy (sgx.geodatenzentrum.de), all other backgrounds come from the DWD.",
+          "map_basemap_blend": "Only with a BKG map: names and roads stay readable below rain and warnings. The images become larger, by about a quarter in widespread rain."
         }
       },
       "station_radar_location": {
@@ -364,7 +372,9 @@
         "map_background_bundeslaender": "German Federal states",
         "map_background_kreise": "German Districts",
         "map_background_gemeinden": "German Municipalities",
-        "map_background_satellit": "Satellite image"
+        "map_background_satellit": "Satellite image",
+        "map_background_topplus_light": "Map with towns and roads (BKG), light",
+        "map_background_topplus_dark": "Map with towns and roads (BKG), dark"
       }
     },
     "map_homemarker_shape": {
